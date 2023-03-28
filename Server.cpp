@@ -110,7 +110,7 @@ void	Server::Run()
 						clientData[currEvent->ident] += "Content-Length: 91505\r\n";
 						clientData[currEvent->ident] += "Connection: keep-alive\r\n\r\n";
 
-						std::ifstream	html("JPEG.jpeg");
+						std::ifstream	html("./img/JPEG.jpeg");
 
 						if (html.is_open())
 						{
