@@ -21,7 +21,7 @@ void	Server::CreateListenSock()
 	// addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	// addr.sin_port = htons(PORT);
 
-	serverSock.initAddr();
+	serverSock.initServerAddr();
 
 	if (bind(serverSock.getFD(), (const sockaddr *)&serverSock.getAddr(), sizeof(addr)) == -1)
 		throwError("bind: ");
@@ -49,6 +49,7 @@ void	Server::Run()
 		newEvents = kevent(queue, &changeList[0], changeList.size(), eventList, 8, NULL);
 		if (newEvents == -1)
 			throwError("kevent: ");
+
 		changeList.clear();
 
 		for (int i = 0; i < newEvents; i++)
@@ -94,15 +95,16 @@ void	Server::Run()
 					{
 						if (ret < 0)
 							throwError("recv: ");
+						std::cout << "EOF" << std::endl;
 						close(currEvent->ident);
 						clientData.erase(currEvent->ident);
 					}
 					else
 					{
 						buf[ret] = 0;
-						std::cout	<< "received data from "
-									<< currEvent->ident << ": "
-									<< buf
+						std::cout	<< "received request from "
+									<< currEvent->ident << ": \n\n"
+									<< GRN << buf << BLK
 									<< std::endl;
 
 						clientData[currEvent->ident] = "HTTP/1.1 200 OK\r\n";
@@ -129,15 +131,14 @@ void	Server::Run()
 			}
 			else if (currEvent->filter == EVFILT_WRITE)
 			{
-				// std::cout << "Write Event fd: " << currEvent->ident << std::endl;
 
 				std::map<int, std::string>::iterator it = clientData.find(currEvent->ident);
 				if (it != clientData.end())
 				{
+					// std::cout << "Write Event fd: " << currEvent->ident << std::endl;
 					if (clientData[currEvent->ident] != "")
 					{
 						int ret;
-						std::cout << "send!" << std::endl;
 						ret = send(currEvent->ident, clientData[currEvent->ident].c_str(),
 						clientData[currEvent->ident].size(), 0);
 						if (ret == -1)
