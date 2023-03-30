@@ -1,1 +1,4 @@
 Webserv file/
+*.d
+*.o
+webserv
