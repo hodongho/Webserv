@@ -14,7 +14,7 @@ int main(int ac, char **av)
 {
 	int sock;
 	std::string	recvMsg;
-	char message[] = "GET /temp HTTP/1.0\r\nHost: www.example.com\r\n\r\n";
+	char message[] = "";
 	int str_len, recv_len, recv_cnt;
 	struct sockaddr_in serv_addr;
 
@@ -30,7 +30,7 @@ int main(int ac, char **av)
 
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = htonl(atoi(av[1]));
+	inet_pton(AF_INET ,av[1] ,&serv_addr.sin_addr);
 	serv_addr.sin_port = htons(atoi(av[2]));
 
 	if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
@@ -40,24 +40,28 @@ int main(int ac, char **av)
 
 	while(1)
 	{
-		// std::cout << "Input message(Q to quit):" << std::endl;
-		// std::cin >> message;
+		std::cout << "Input message(Q to quit):" << std::endl;
+		std::cin >> message;
 
-		// if (!strcmp(message, "q") || !strcmp(message, "Q"))
-		// 	break ;
+		if (!strcmp(message, "q") || !strcmp(message, "Q"))
+			break ;
 
 		send(sock, message, strlen(message), 0);
-
+		std::cout << message << std::endl;
 		char buf[BUF_SIZE];
 		recv_cnt = 0;
+		int i = 0;
 		while(recv_cnt < BUF_SIZE - 1)
 		{
+			i++;
 			memset(buf, 0, BUF_SIZE);
 			recv_cnt = recv(sock, buf, BUF_SIZE - 1, 0);
 			if (recv_cnt < 0)
 				error_handling("read() error");
 			recvMsg += buf;
+			std::cout << i << std::endl;
 			std::cout << buf << std::endl;
+			break;
 		}
 		// recvMsg[recv_len] = 0;
 		std::cout << recvMsg << std::endl;

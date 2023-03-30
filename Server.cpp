@@ -83,12 +83,12 @@ void	Server::Run()
 					fcntl(clientSock, F_SETFL, O_NONBLOCK);
 
 					ChangeEvent(clientSock, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, NULL);
-					ChangeEvent(clientSock, EVFILT_WRITE, EV_ADD | EV_EOF, 0, NULL, NULL);
+					ChangeEvent(clientSock, EVFILT_WRITE, EV_ADD | EV_EOF | EV_DISABLE, 0, NULL, NULL);
 					clientData[clientSock] = "";
 				}
 				else if (clientData.find(currEvent->ident) != clientData.end())
 				{
-					char	buf[1024];
+					char	buf[50];
 					int		ret = recv(currEvent->ident, buf, sizeof(buf), 0);
 
 					if (ret <= 0)
@@ -99,17 +99,13 @@ void	Server::Run()
 						close(currEvent->ident);
 						clientData.erase(currEvent->ident);
 					}
-					else
+					else if (strstr(buf, "\r\n\r\n") != NULL)
 					{
 						buf[ret] = 0;
-						std::cout	<< "received request from "
-									<< currEvent->ident << ": \n\n"
-									<< GRN << buf << BLK
-									<< std::endl;
 
 						clientData[currEvent->ident] = "HTTP/1.1 200 OK\r\n";
 						clientData[currEvent->ident] += "Content-Type: image/jpeg\r\n";
-						clientData[currEvent->ident] += "Content-Length: 91505\r\n";
+						clientData[currEvent->ident] += "Content-Length: 40000\r\n";
 						clientData[currEvent->ident] += "Connection: keep-alive\r\n\r\n";
 
 						std::ifstream	html("./img/JPEG.jpeg");
@@ -126,6 +122,19 @@ void	Server::Run()
 							}
 							clientData[currEvent->ident] += "\r\n\r\n";
 						}
+						ChangeEvent(currEvent->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, NULL);
+						std::cout	<< "received request from "
+									<< currEvent->ident << ": \n\n"
+									<< GRN << buf << BLK
+									<< std::endl;
+						std::cout << "i'm here" << std::endl;
+					}
+					else
+					{
+						std::cout	<< "received request from "
+									<< currEvent->ident << ": \n\n"
+									<< GRN << buf << BLK
+									<< std::endl;
 					}
 				}
 			}
@@ -135,7 +144,8 @@ void	Server::Run()
 				std::map<int, std::string>::iterator it = clientData.find(currEvent->ident);
 				if (it != clientData.end())
 				{
-					// std::cout << "Write Event fd: " << currEvent->ident << std::endl;
+					std::cout << "Write Event fd: " << currEvent->ident << std::endl;
+					std::cout << "New Events: " << newEvents << std::endl;
 					if (clientData[currEvent->ident] != "")
 					{
 						int ret;
@@ -151,7 +161,7 @@ void	Server::Run()
 						{
 							// std::cout << clientData[currEvent->ident] << std::endl;
 							clientData[currEvent->ident].clear();
-							// ChangeEvent(currEvent->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, NULL);
+							ChangeEvent(currEvent->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, NULL);
 							// close(currEvent->ident);
 						}
 					}
