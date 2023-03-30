@@ -1,5 +1,133 @@
 #include "Server.hpp"
 
+Server::Server()
+{};
+
+Server::~Server()
+{
+	close(serverSock.getFD());
+};
+
+void	Server::keventError(struct kevent * const & currEvent)
+{
+	if (currEvent->ident == (uintptr_t)serverSock.getFD())
+		throwError("sever socket: ");
+	else
+	{
+		close(currEvent->ident);
+		clientData.erase(currEvent->ident);
+		throwError("client socket: ");
+	}
+}
+void	Server::addClient(void)
+{
+	int clientSock;
+
+	clientSock = accept(serverSock.getFD(), NULL, NULL);
+	if (clientSock == -1)
+		throwError("accept: ");
+	std::cout << "accept new client: " << clientSock << std::endl;
+
+	// bool	tmp = true;
+	// setsockopt(clientSock, SOL_SOCKET, SO_KEEPALIVE, &tmp, sizeof(tmp));
+	fcntl(clientSock, F_SETFL, O_NONBLOCK);
+
+	ChangeEvent(clientSock, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, NULL);
+	ChangeEvent(clientSock, EVFILT_WRITE, EV_ADD | EV_EOF | EV_DISABLE, 0, NULL, NULL);
+	clientData[clientSock] = "";
+}
+
+static void	printRecvData(const int& fd, const std::string& data, const ssize_t& recv_size)
+{
+	std::cout << "received request from "
+			<< fd << ": \n\n"
+			<< "received data size: "
+			<< recv_size << "\n\n"
+			<< GRN << data << BLK
+			<< std::endl;
+}
+
+void	Server::recvClient(struct kevent * const & currEvent)
+{
+	char	buf[1024];
+	ssize_t	ret = recv(currEvent->ident, buf, sizeof(buf), 0);
+
+	buf[ret] = 0;
+	clientData[currEvent->ident] += buf;
+	printRecvData(currEvent->ident, buf, ret);
+	if (ret <= 0)
+	{
+		if (ret < 0)
+			throwError("recv: ");
+		close(currEvent->ident);
+		std::cout << "socket closed sucessfully." << std::endl;
+		std::cerr << strerror(errno) << std::endl;
+		clientData.erase(currEvent->ident);
+	}
+	else if (clientData[currEvent->ident].rfind("\r\n\r\n") != std::string::npos)
+	{
+		ChangeEvent(currEvent->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, NULL);
+	}
+}
+
+void	Server::keventRead(struct kevent * const & currEvent)
+{
+	if (currEvent->ident == (uintptr_t)serverSock.getFD())
+		addClient();
+	else if (clientData.find(currEvent->ident) != clientData.end())
+		recvClient(currEvent);
+}
+
+std::string	Server::makeResponse(void)
+{
+	std::string	res_msg;
+
+	res_msg = "HTTP/1.1 200 OK\r\n";
+	res_msg += "Content-Type: image/jpeg\r\n";
+	res_msg += "Content-Length: 40000\r\n";
+	res_msg += "Connection: keep-alive\r\n\r\n";
+
+	std::ifstream	html("./img/JPEG.jpeg");
+
+	if (html.is_open())
+	{
+		std::string	buf;
+
+		while (!html.eof())
+		{
+			std::getline(html, buf);
+			res_msg += buf;
+			res_msg += "\n";
+		}
+	}
+	return (res_msg);
+}
+
+void	Server::keventWrite(struct kevent * const & currEvent)
+{
+	std::map<int, std::string>::iterator it = clientData.find(currEvent->ident);
+	
+	if (it != clientData.end())
+	{
+		ssize_t ret;
+		std::string res;
+
+		res = makeResponse();
+		ret = send(currEvent->ident, res.c_str(), res.size(), 0);
+		if (ret == -1)
+		{
+			close(currEvent->ident);
+			clientData.erase(currEvent->ident);
+			throwError("send: ");
+		}
+		else
+		{
+			clientData[currEvent->ident].clear();
+			ChangeEvent(currEvent->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, NULL);
+		}
+	}
+}
+
 void	Server::CreateListenSock()
 {
 	sockaddr_in	addr;
@@ -57,116 +185,11 @@ void	Server::Run()
 			currEvent = &eventList[i];
 
 			if (currEvent->flags & EV_ERROR)
-			{
-				if (currEvent->ident == (uintptr_t)serverSock.getFD())
-					throwError("sever socket: ");
-				else
-				{
-					close(currEvent->ident);
-					clientData.erase(currEvent->ident);
-					throwError("client socket: ");
-				}
-			}
+				keventError(currEvent);
 			else if (currEvent->filter == EVFILT_READ)
-			{
-				if (currEvent->ident == (uintptr_t)serverSock.getFD())
-				{
-					int clientSock;
-
-					clientSock = accept(serverSock.getFD(), NULL, NULL);
-					if (clientSock == -1)
-						throwError("accept: ");
-					std::cout << "accept new client: " << clientSock << std::endl;
-
-					// bool	tmp = true;
-					// setsockopt(clientSock, SOL_SOCKET, SO_KEEPALIVE, &tmp, sizeof(tmp));
-					fcntl(clientSock, F_SETFL, O_NONBLOCK);
-
-					ChangeEvent(clientSock, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, NULL);
-					ChangeEvent(clientSock, EVFILT_WRITE, EV_ADD | EV_EOF | EV_DISABLE, 0, NULL, NULL);
-					clientData[clientSock] = "";
-				}
-				else if (clientData.find(currEvent->ident) != clientData.end())
-				{
-					char	buf[50];
-					int		ret = recv(currEvent->ident, buf, sizeof(buf), 0);
-
-					if (ret <= 0)
-					{
-						if (ret < 0)
-							throwError("recv: ");
-						std::cout << "EOF" << std::endl;
-						close(currEvent->ident);
-						clientData.erase(currEvent->ident);
-					}
-					else if (strstr(buf, "\r\n\r\n") != NULL)
-					{
-						buf[ret] = 0;
-
-						clientData[currEvent->ident] = "HTTP/1.1 200 OK\r\n";
-						clientData[currEvent->ident] += "Content-Type: image/jpeg\r\n";
-						clientData[currEvent->ident] += "Content-Length: 40000\r\n";
-						clientData[currEvent->ident] += "Connection: keep-alive\r\n\r\n";
-
-						std::ifstream	html("./img/JPEG.jpeg");
-
-						if (html.is_open())
-						{
-							std::string	buf;
-
-							while (!html.eof())
-							{
-								std::getline(html, buf);
-								clientData[currEvent->ident] += buf;
-								clientData[currEvent->ident] += "\n";
-							}
-							clientData[currEvent->ident] += "\r\n\r\n";
-						}
-						ChangeEvent(currEvent->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, NULL);
-						std::cout	<< "received request from "
-									<< currEvent->ident << ": \n\n"
-									<< GRN << buf << BLK
-									<< std::endl;
-						std::cout << "i'm here" << std::endl;
-					}
-					else
-					{
-						std::cout	<< "received request from "
-									<< currEvent->ident << ": \n\n"
-									<< GRN << buf << BLK
-									<< std::endl;
-					}
-				}
-			}
+				keventRead(currEvent);
 			else if (currEvent->filter == EVFILT_WRITE)
-			{
-
-				std::map<int, std::string>::iterator it = clientData.find(currEvent->ident);
-				if (it != clientData.end())
-				{
-					std::cout << "Write Event fd: " << currEvent->ident << std::endl;
-					std::cout << "New Events: " << newEvents << std::endl;
-					if (clientData[currEvent->ident] != "")
-					{
-						int ret;
-						ret = send(currEvent->ident, clientData[currEvent->ident].c_str(),
-						clientData[currEvent->ident].size(), 0);
-						if (ret == -1)
-						{
-							close(currEvent->ident);
-							clientData.erase(currEvent->ident);
-							throwError("send: ");
-						}
-						else
-						{
-							// std::cout << clientData[currEvent->ident] << std::endl;
-							clientData[currEvent->ident].clear();
-							ChangeEvent(currEvent->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, NULL);
-							// close(currEvent->ident);
-						}
-					}
-				}
-			}
+				keventWrite(currEvent);
 		}
 	}
 }
