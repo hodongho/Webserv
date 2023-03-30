@@ -6,7 +6,7 @@
 #    By: yolee <yolee@student.42seoul.kr>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/03/31 01:14:02 by yolee             #+#    #+#              #
-#    Updated: 2023/03/31 04:19:32 by yolee            ###   ########.fr        #
+#    Updated: 2023/03/31 04:32:06 by yolee            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,10 +23,9 @@ SRCS = Server.cpp \
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 
-$(NAME) :
-	$(MAKE) all
+all : $(NAME)
 
-all : $(OBJS)
+$(NAME) : $(OBJS)
 	$(CC) $(CXXFLAGS) $(CPPFLAGS) $(OBJS) -o $(NAME)
 
 .cpp.o :

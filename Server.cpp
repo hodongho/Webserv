@@ -61,7 +61,6 @@ void	Server::recvClient(struct kevent * const & currEvent)
 			throwError("recv: ");
 		close(currEvent->ident);
 		std::cout << "socket closed sucessfully." << std::endl;
-		std::cerr << strerror(errno) << std::endl;
 		clientData.erase(currEvent->ident);
 	}
 	else if (clientData[currEvent->ident].rfind("\r\n\r\n") != std::string::npos)
