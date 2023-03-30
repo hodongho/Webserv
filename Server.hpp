@@ -12,7 +12,6 @@ class Server {
 
 	public:
 		Server() {};
-		Server(const Server& copy) {};
 		virtual ~Server() { close(serverSock.getFD()); };
 
 		void	CreateListenSock();

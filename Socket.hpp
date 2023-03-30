@@ -10,9 +10,8 @@ class Socket {
 		sockaddr_in	addr;
 
 	public:
-		Socket() {};
-		Socket(int& _fd):fd(_fd) { getsockname(fd, (sockaddr *)&addr, 0); };
-		Socket(const Socket& copy) {};
+		Socket();
+		Socket(int& _fd);
 
 		virtual ~Socket() {};
 

@@ -6,7 +6,7 @@
 #    By: yolee <yolee@student.42seoul.kr>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/03/31 01:14:02 by yolee             #+#    #+#              #
-#    Updated: 2023/03/31 01:22:09 by yolee            ###   ########.fr        #
+#    Updated: 2023/03/31 01:37:33 by yolee            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ CPPFLAGS = -MMD
 
 SRCS = Server.cpp \
 	Socket.cpp \
-	utills.cpp \
+	utils.cpp \
 	main.cpp \
 
 OBJS = $(SRCS:.cpp=.o)

@@ -58,7 +58,7 @@ void	Server::Run()
 
 			if (currEvent->flags & EV_ERROR)
 			{
-				if (currEvent->ident == serverSock.getFD())
+				if (currEvent->ident == (uintptr_t)serverSock.getFD())
 					throwError("sever socket: ");
 				else
 				{
@@ -69,7 +69,7 @@ void	Server::Run()
 			}
 			else if (currEvent->filter == EVFILT_READ)
 			{
-				if (currEvent->ident == serverSock.getFD())
+				if (currEvent->ident == (uintptr_t)serverSock.getFD())
 				{
 					int clientSock;
 
@@ -78,7 +78,7 @@ void	Server::Run()
 						throwError("accept: ");
 					std::cout << "accept new client: " << clientSock << std::endl;
 
-					bool	tmp = true;
+					// bool	tmp = true;
 					// setsockopt(clientSock, SOL_SOCKET, SO_KEEPALIVE, &tmp, sizeof(tmp));
 					fcntl(clientSock, F_SETFL, O_NONBLOCK);
 
