@@ -10,8 +10,8 @@ void	Server::CreateListenSock()
 	if (serverSock.getFD() == -1)
 		throwError("socket: ");
 
-	if (fcntl(serverSock.getFD(), F_SETFL, O_NONBLOCK) == -1)
-		throwError("fcntl: ");
+	// if (fcntl(serverSock.getFD(), F_SETFL, O_NONBLOCK) == -1)
+	// 	throwError("fcntl: ");
 
 	if (setsockopt(serverSock.getFD(), SOL_SOCKET, SO_REUSEADDR, (char *)&bf, (int)sizeof(bf)) == -1)
 		throwError("setsockopt: ");
@@ -42,6 +42,8 @@ void	Server::Run()
 		throwError("kqueue: ");
 
 	ChangeEvent(serverSock.getFD(), EVFILT_READ, EV_ADD, 0, NULL, NULL);
+
+	HTTPRequest	request;
 
 	while (1)
 	{
@@ -78,9 +80,9 @@ void	Server::Run()
 						throwError("accept: ");
 					std::cout << "accept new client: " << clientSock << std::endl;
 
-					bool	tmp = true;
+					// bool	tmp = true;
 					// setsockopt(clientSock, SOL_SOCKET, SO_KEEPALIVE, &tmp, sizeof(tmp));
-					fcntl(clientSock, F_SETFL, O_NONBLOCK);
+					// fcntl(clientSock, F_SETFL, O_NONBLOCK);
 
 					ChangeEvent(clientSock, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, NULL);
 					ChangeEvent(clientSock, EVFILT_WRITE, EV_ADD | EV_EOF | EV_DISABLE, 0, NULL, NULL);
@@ -90,6 +92,8 @@ void	Server::Run()
 				{
 					char	buf[50];
 					int		ret = recv(currEvent->ident, buf, sizeof(buf), 0);
+
+					buf[ret] = 0;
 
 					if (ret <= 0)
 					{
@@ -101,8 +105,10 @@ void	Server::Run()
 					}
 					else if (strstr(buf, "\r\n\r\n") != NULL)
 					{
-						buf[ret] = 0;
+						clientData[currEvent->ident] += buf;
+						request.parseRequestMessage(clientData[currEvent->ident]);
 
+						clientData[currEvent->ident].clear();
 						clientData[currEvent->ident] = "HTTP/1.1 200 OK\r\n";
 						clientData[currEvent->ident] += "Content-Type: image/jpeg\r\n";
 						clientData[currEvent->ident] += "Content-Length: 40000\r\n";
@@ -122,19 +128,22 @@ void	Server::Run()
 							}
 							clientData[currEvent->ident] += "\r\n\r\n";
 						}
+						// std::cout	<< "received request from "
+						// std::cout	\
+									// << currEvent->ident << ": \n\n"
+									// << GRN << buf << BLK;
+									// << std::endl;
+						// std::cout << "i'm here" << std::endl;
 						ChangeEvent(currEvent->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, NULL);
-						std::cout	<< "received request from "
-									<< currEvent->ident << ": \n\n"
-									<< GRN << buf << BLK
-									<< std::endl;
-						std::cout << "i'm here" << std::endl;
 					}
 					else
 					{
-						std::cout	<< "received request from "
-									<< currEvent->ident << ": \n\n"
-									<< GRN << buf << BLK
-									<< std::endl;
+						// std::cout	<< "received request from "
+						// std::cout	\
+									// << currEvent->ident << ": \n\n"
+									// << GRN << buf << BLK;
+									// << std::endl;
+						clientData[currEvent->ident] += buf;
 					}
 				}
 			}
@@ -145,7 +154,7 @@ void	Server::Run()
 				if (it != clientData.end())
 				{
 					std::cout << "Write Event fd: " << currEvent->ident << std::endl;
-					std::cout << "New Events: " << newEvents << std::endl;
+					// std::cout << "New Events: " << newEvents << std::endl;
 					if (clientData[currEvent->ident] != "")
 					{
 						int ret;

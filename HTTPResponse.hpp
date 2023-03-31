@@ -10,6 +10,8 @@ class HTTPResponse : public HTTPMessage
 		std::string	status_message;
 
 	public:
+		HTTPResponse() {};
+		~HTTPResponse() {};
 		std::string	makeResponseMessage(void);
 
 		void		setVersion(std::string _version);

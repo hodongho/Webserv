@@ -17,9 +17,9 @@
 
 # define PORT 4242
 
-# define BLK "\e[0;30m"
+# define WHI "\e[1;37m"
 # define RED "\e[0;31m"
 # define GRN "\e[0;32m"
-# define CYN "\e[0;34m"
+# define BLU "\e[0;34m"
 
 #endif

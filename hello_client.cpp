@@ -14,7 +14,20 @@ int main(int ac, char **av)
 {
 	int sock;
 	std::string	recvMsg;
-	char message[] = "";
+	char message[] = "GET/ HTTP/1.1\n\
+Host: 127.0.0.1:4242\n\
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/111.0\n\
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\n\
+Accept-Language: ko-KR,ko;q=0.8,en-US;q=0.5,en;q=0.3\n\
+Accept-Encoding: gzip, deflate, br\n\
+DNT: 1\n\
+Connection: keep-alive\n\
+Upgrade-Insecure-Requests: 1\n\
+Sec-Fetch-Dest: document\n\
+Sec-Fetch-Mode: navigate\n\
+Sec-Fetch-Site: cross-site\n\
+Pragma: no-cache\n\
+Cache-Control: no-cache\r\n\r\n";
 	int str_len, recv_len, recv_cnt;
 	struct sockaddr_in serv_addr;
 
@@ -40,14 +53,14 @@ int main(int ac, char **av)
 
 	while(1)
 	{
-		std::cout << "Input message(Q to quit):" << std::endl;
-		std::cin >> message;
+		// std::cout << "Input message(Q to quit):" << std::endl;
+		// std::cin >> message;
 
-		if (!strcmp(message, "q") || !strcmp(message, "Q"))
-			break ;
+		// if (!strcmp(message, "q") || !strcmp(message, "Q"))
+		// 	break ;
 
 		send(sock, message, strlen(message), 0);
-		std::cout << message << std::endl;
+		// std::cout << message << std::endl;
 		char buf[BUF_SIZE];
 		recv_cnt = 0;
 		int i = 0;

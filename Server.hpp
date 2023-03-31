@@ -2,6 +2,8 @@
 # define SERVER_HPP
 
 # include "Webserv.hpp"
+# include "HTTPRequest.hpp"
+# include "HTTPResponse.hpp"
 
 class Server {
 	private:
