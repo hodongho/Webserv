@@ -10,12 +10,12 @@ class Server {
 		struct kevent				eventList[8];
 		std::map<int, std::string>	clientData;
 
-		void	keventError(struct kevent * const & currEvent);
-		void	addClient(void);
-		void	recvClient(struct kevent * const & currEvent);
-		void	keventRead(struct kevent * const & currEvent);
+		void		keventError(struct kevent * const & currEvent);
+		void		addClient(void);
+		void		recvClient(struct kevent * const & currEvent);
+		void		keventRead(struct kevent * const & currEvent);
 		std::string	makeResponse(void);
-		void	keventWrite(struct kevent * const & currEvent);
+		void		keventWrite(struct kevent * const & currEvent);
 	public:
 		Server();
 		virtual ~Server();
