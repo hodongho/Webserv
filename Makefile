@@ -6,7 +6,7 @@
 #    By: yolee <yolee@student.42seoul.kr>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/03/31 01:14:02 by yolee             #+#    #+#              #
-#    Updated: 2023/04/01 15:24:56 by yolee            ###   ########.fr        #
+#    Updated: 2023/04/02 03:41:46 by yolee            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,7 @@ CC = c++
 CXXFLAGS = -Wall -Wextra -Werror
 CPPFLAGS = -MMD
 
-SRCS = Server.cpp \
+SRCS = ServerHandler.cpp \
 	SocketData.cpp \
 	utils.cpp \
 	webserv.cpp \
