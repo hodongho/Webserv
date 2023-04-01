@@ -4,6 +4,58 @@
 #include <string>
 // #include "config.hpp"
 
+/*
+	- vaildate validation
+		- file name rule *.conf
+	- vaildate file content
+		- culry bracket pair
+		- each line
+			- key *{value} 
+			- key가 유효한지 확인
+			- 유효하더라도 중복이되는지 확인
+			- 없어도 되는지 있게된다면 어떻게 있어야하는지 확인
+			- 각 항목마다 rule이 다름 
+				- server와 "{" 가 존재가능
+				// - server밑에 {}블럭으로 되어있을수도 있따.
+				- host는 옆에 IP가 있어야함
+					- IPv4형식에 맞아야함 
+				- port
+					- 0 ~ 65525 범위
+						- 예약된 port 신경쓰지 않음
+				- index
+					- 단 하나의 문자열 값
+				- root
+					- 단 하나의 문자열 값
+				- client_max_body_size
+					- unsigned int 범위
+				- location block!!
+					- 아래와 같이 빈줄로 떨어져 있어도 허용됨, 구현하기 나름
+						location
+
+						{}
+					- location path
+						- 단 하나의 문자열 값
+						- 절대 경로만 허용
+							- 별도의 ~, = 같은 옵션 쓰지 않음!!
+					- allow_method
+						- 허용되는 메소드
+							- GET,POST,DELTE중에 있는지 확인필요
+							- 중복 허용안됨
+					- autoindex
+						- 단 하나의 문자열 값
+						- on, off인지 확인
+					- root
+						단 하나의 문자열
+					- index
+						단 하나의 문자열
+					- redirection
+						return으로 시작되는 형식
+						split으로 return될 vector<std::string>에는 3개 항목만이 있다.
+						location ~ / {
+							return 301 https://primarydomain/en$request_uri;
+						}
+}
+*/
 void ConfigParser::parseConfig(const char *file)
 {
     //prev
