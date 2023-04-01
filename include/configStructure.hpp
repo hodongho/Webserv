@@ -12,6 +12,8 @@ struct LocationConfig
 {
 	std::string					location_path;
 	std::vector<std::string>	allow_method;
+	std::string					root;
+	std::string					index;
 	bool						autoindex;
 	std::map<int, std::string>	redirection_path;
 	/* to be added cgi infomation */
