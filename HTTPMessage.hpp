@@ -10,6 +10,10 @@ class HTTPMessage
 		std::string							version;
 		std::map<std::string, std::string>	header;
 		std::string							body;
+	
+	public:
+		HTTPMessage();
+		~HTTPMessage();
 };
 
 

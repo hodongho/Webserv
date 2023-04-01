@@ -10,6 +10,9 @@ class HTTPRequest : public HTTPMessage
 		std::string	URI;
 
 	public:
+		HTTPRequest();
+		~HTTPRequest();
+
 		void										parseRequestMessage(std::string msg);
 
 		const std::string&							getVersion(void) const;
