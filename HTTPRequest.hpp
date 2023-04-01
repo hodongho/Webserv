@@ -1,15 +1,26 @@
 #ifndef HTTPREQUEST_HPP
 # define HTTPREQUEST_HPP
 
+# include <string>
 # include <sstream>
 # include <iostream>
+# include <unistd.h> //path validation
 # include "HTTPMessage.hpp"
+
+# include <iomanip>
+
+# define HOST "Host"
+# define USER_AGENT "User-Agent"
+# define ACCEPT "Accept"
+# define CONNECTION "Connection"
 
 # define WHI "\e[1;37m"
 # define RED "\e[0;31m"
 # define GRN "\e[0;32m"
+# define BRW "\e[0;33m"
 # define BLU "\e[0;34m"
-
+# define PUP "\e[0;35m"
+# define CYN "\e[0;36m"
 class HTTPRequest : public HTTPMessage
 {
 	private:
@@ -17,10 +28,23 @@ class HTTPRequest : public HTTPMessage
 		std::string	URI;
 
 	public:
-		HTTPRequest() {};
-		~HTTPRequest() {};
+		HTTPRequest();
+		~HTTPRequest();
 
-		void										parseRequestMessage(std::string msg);
+		/**
+		 * @brief HTTP Request start-line과 Header field를 파싱하는 함수입니다.
+		 * 멤버변수에 값을 넣어준 뒤 start-line과 Header field의 유효성을 검사합니다.
+		 *
+		 *
+		 * @param msg HTTP Request
+		 */
+		void										parseRequestMessage(std::string& msg);
+		void										parseStartLine(std::stringstream& request_stream);
+		void										validateStartLine();
+		void										parseHeaderField(std::stringstream& request_stream);
+		void										validateHeaderField();
+
+		void										saveBody(std::string& _body);
 
 		const std::string&							getVersion(void) const;
 		const std::string&							getMethod(void) const;

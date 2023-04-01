@@ -3,16 +3,26 @@
 
 # include "HTTPMessage.hpp"
 
+# define DATE "Date"
+# define SERVER "Server"
+# define CONTACT_LENGTH "Contact-length"
+# define CONTENT_TYPE "Contact-type"
+
 class HTTPResponse : public HTTPMessage
 {
 	private:
+		std::string response;
 		std::string	status_code;
 		std::string	status_message;
 
 	public:
-		HTTPResponse() {};
-		~HTTPResponse() {};
+		HTTPResponse();
+		~HTTPResponse();
+
 		std::string	makeResponseMessage(void);
+		void		makeStatusLine();
+		void		makeHeaderField();
+		void		makeBody();
 
 		void		setVersion(std::string _version);
 		void		setStatusCode(std::string _status_code);

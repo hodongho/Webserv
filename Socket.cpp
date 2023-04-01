@@ -1,5 +1,13 @@
 #include "Socket.hpp"
 
+Socket::Socket() {};
+
+Socket::Socket(int& _fd)
+:fd(_fd)
+{ 
+	getsockname(fd, (sockaddr *)&addr, 0); 
+};
+
 void	Socket::setFD(int _fd)
 {
 	getsockname(fd, (sockaddr *)&addr, 0);

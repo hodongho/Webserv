@@ -14,8 +14,8 @@ int main(int ac, char **av)
 {
 	int sock;
 	std::string	recvMsg;
-	char message[] = "GET/ HTTP/1.1\n\
-Host: 127.0.0.1:4242\n\
+	char message[] = "GET / HTTP/1.1\n\
+Host:    127.0.0.1:4242\n\
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/111.0\n\
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\n\
 Accept-Language: ko-KR,ko;q=0.8,en-US;q=0.5,en;q=0.3\n\

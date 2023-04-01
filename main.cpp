@@ -4,8 +4,6 @@ int main()
 {
 	Server kqueueServer;
 
-	std::cout << WHI;
-
 	try
 	{
 		kqueueServer.CreateListenSock();
