@@ -1,6 +1,9 @@
-#include <vector>
-#include <map>
-#include <string>
+#ifndef CONFIG_HPP
+# define CONFIG_HPP
+
+# include <vector>
+# include <map>
+# include <string>
 
 struct ServerConfig;
 struct LocationConfig;
@@ -28,3 +31,4 @@ struct ServerConfig
 	std::vector<LocationConfig>	locations;
 };
 
+#endif
