@@ -40,11 +40,25 @@ index의 경우 nginx에서는 여러개 들어와도 처리해주지만
     - location
     - error page
 
-
 # 문제재정의
 
 
 # 문제해결방법
+1. config 파일을 읽는다
+2. config 파일의 유효성 검사를 한다.
+    - 파일명 형식이 맞는지 확인 .conf
+    - 파일 내부를 읽어서 {}짝이 맞는지
+    내부 값들이 있어야할것이 있고 없어도 되는게 있는지 확인한다.
+3. config parsing
+    - 유효성 검사도 끝났으니 파싱하여 저장
+    - 한줄씩 읽은 뒤 trim으로 whitespace를 제거한다.
+        - split(line, whitespace)로 공백기준으로 쪼갠다.
+            - 반환값 타입은 vector<std::string>
+        - 맨 왼쪽에 있는 문자열이 key가 된다.
+            - 구조체에 담으며 이후에 오는 문자열은 value가 된다.
+        - 각 config에 따라 달라진다.
+            - error_page의 경우 마지막에 오는 것이 값이며 중간 값들은 각 status_code가 된다.
+    - 
 
 
 # 검증
