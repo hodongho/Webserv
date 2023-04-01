@@ -8,8 +8,6 @@
 struct ServerConfig;
 struct LocationConfig;
 
-std::vector<ServerConfig>	webserv_config;
-
 struct LocationConfig
 {
 	std::string					location_path;
