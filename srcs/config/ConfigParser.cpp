@@ -1,7 +1,9 @@
-#include "ConfigParser.hpp"
-#include "configStructure.hpp"
-#include <fstream>
+#include "../../include/ConfigParser.hpp"
+#include "../../include/configStructure.hpp"
+#include <iostream>
 #include <string>
+#include <fstream>
+
 // #include "config.hpp"
 
 /*
@@ -119,25 +121,146 @@ void ConfigParser::parseServer() {
 // 	return (res);
 // }
 
+
+static bool	checkFileName(const char *file_name_parms)
+{
+	std::string	file_name(file_name_parms);
+	size_t		pos;
+
+	pos = file_name.rfind(".conf");
+	if (pos != std::string::npos && \
+		file_name.compare(pos, file_name.size() - pos, ".conf") == 0)
+		return (true);
+	return (false);
+}
+
+std::string readFile(std::string file_name)
+{
+    std::string     s;
+    std::ifstream   ifs(file_name);
+
+    if (ifs.is_open())
+    {
+        ifs.seekg(0, std::ios::end);
+        int size = ifs.tellg();
+        s.resize(size);
+        ifs.seekg(0, std::ios::beg);
+        ifs.read(&s[0], size);
+    }
+    else
+    {
+        // error_handling("Fail to open file", 1);
+        exit(1);
+    }
+    return (s);
+}
+
+
+
+/*
+	- #주석이후로는 제외
+	- key value 짝이 맞아야함
+		- value가 list로 나올 수도 있다.
+		- 들어온 key가 유효한지, 중복이 된것은 없는지 확인해야한다.
+			- 소문자만 허용!!
+			- host, port index, server_name, root, client_max_body_size
+		- value역시 해당 key에 허용하는 형식인지 확인해야한다
+	- 
+	
+*/
+bool	checkEachLine(const std::string& file_content)
+{
+	// prepareValidateKeyList()
+	// check key, value
+	if (true)
+	{
+
+		return (false);
+	}
+	return (true);
+}
+
+
+
+bool	checkCurlyBrackeyPair(const std::ifstream& config_file_ifs, const std::string& file_content)
+{
+	std::string	str;
+
+	std::getline(std::cin, str);
+	// std::getline(config_file_ifs, str);
+	// while ()
+	if (true)
+	{
+
+		return (false);
+	}
+	return (true);
+}
+
+bool	validateConfigFile(const std::ifstream& config_file_ifs, const std::string& file_content)
+{
+	// checkCurlyBrackeyPair();
+	// checkEachLine();
+	// 
+	if (true)
+	{
+
+		return (false);
+	}
+	return (true);
+}
+
+// bool	openFile();
+
 int main(int argc, char *argv[])
 {
 	// std::string line;
 
-	// if (argc > 2) {
-	//	std::cout << "Usage : string" << std::endl;
-	//	return (1);
-	//}
-	// line = std::string(argv[1]);
-	// ft_split(line, white_space);
-	// std::string str = "   \n\thi!  \r\n ";
-	// std::cout << trim(str) << std::endl;
+	if (argc != 2) {
+		std::cout << "Usage : string" << std::endl;
+		return (1);
+	}
 
-	ConfigParser configParser;
-	configParser.parseConfig(argv[1]);
+	// check file name rule
+	if (checkFileName(argv[1]))
+		std::cout << "file name is correct to the config file name rule" << std::endl;
+	else
+	{
+		std::cout << "file name is not correct to the config file name rule!!!" << std::endl;
+		exit(1);
+	}
+	// open and read file
+	std::ifstream   config_file_ifs(argv[1]);
+	std::string		file_content;
+
+	if (config_file_ifs.is_open())
+    {
+        config_file_ifs.seekg(0, std::ios::end);
+        int size = config_file_ifs.tellg();
+        file_content.resize(size);
+        config_file_ifs.seekg(0, std::ios::beg);
+        config_file_ifs.read(&file_content[0], size);
+    }
+    else
+    {
+        // error_handling("Fail to open file", 1);
+        exit(1);
+    }
+	// read file
+	// file_content = readFile(argv[1]);
+
+	std::cout << "file_content : $" << file_content << "$" << std::endl;
+	// validation
+	if (validateConfigFile(config_file_ifs, file_content))
+		std::cout << "Config file content is validate" << std::endl;
+	else
+		std::cout << "Config file content is N.O.T validate" << std::endl;
+
+	// ConfigParser configParser;
+	// parsing
+	// ParseConfig(); // 결국 이 안으로 들어가야함
+	// configParser.parseConfig(argv[1]);
 	//std::cout << configParser.config << std::endl;
-
-	configParser.parseServer();
-
-
+	// configParser.parseServer();
 	return (0);
 }
