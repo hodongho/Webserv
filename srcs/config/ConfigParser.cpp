@@ -164,31 +164,6 @@ std::string readFile(std::string file_name)
     return (s);
 }
 
-
-
-/*
-	- #주석이후로는 제외
-	- key value 짝이 맞아야함
-		- value가 list로 나올 수도 있다.
-		- 들어온 key가 유효한지, 중복이 된것은 없는지 확인해야한다.
-			- 소문자만 허용!!
-			- host, port index, server_name, root, client_max_body_size
-		- value역시 해당 key에 허용하는 형식인지 확인해야한다
-	- 
-	
-*/
-bool	checkEachLine(const std::string& file_content)
-{
-	// prepareValidateKeyList()
-	// check key, value
-	if (true)
-	{
-
-		return (false);
-	}
-	return (true);
-}
-
 static bool	in_str(const std::string& str, const char& ch)
 {
 	// for(std::string::iterator iter = str.begin(); iter != str.end(); iter++)
@@ -282,12 +257,58 @@ bool	checkCurlyBrackeyPair(const std::string& file_content)
 	return (curly_stack.empty());
 }
 
+// prepareValidateKeyList()
+
+/*
+	- #주석이후로는 제외
+	- key value 짝이 맞아야함
+		- value가 list로 나올 수도 있다.
+		- 들어온 key가 유효한지, 중복이 된것은 없는지 확인해야한다.
+			- 소문자만 허용!!
+			- host, port index, server_name, root, client_max_body_size
+		- value역시 해당 key에 허용하는 형식인지 확인해야한다
+	- vector 요소의 가장 처음 것은 key이거나 {, 주석이다
+	- 혹은 비어있거나
+	- {, } 이후에 무언가 있다면 바로 다음 것이 주석 이어야한다.
+	- 주석이나 {,} 기호가 없다면 ";"으로 끝나야한다
+	
+*/
+bool	checkEachLine(const std::string& file_content)
+{
+	// check key, value
+	std::stringstream		file_content_stream(file_content);
+	std::string				str;
+
+	// prepareValidateKeyList()
+	while (std::getline(file_content_stream, str))
+	{
+		std::string					clean_str;
+		std::vector<std::string>	word_list;
+		const std::string&			whitespace = " \n\t\v\r";
+
+		printContent(str, "str");
+		clean_str = ft_strtrim(str, whitespace);
+		printContent(clean_str, "clean_str");
+		word_list = ft_split(clean_str, whitespace);
+		for (std::vector<std::string>::iterator iter = word_list.begin(); iter != word_list.end(); iter++)
+		{
+			printContent(*iter, "\titer");
+		}
+	}
+	// if (true)
+	// {
+
+	// 	return (false);
+	// }
+	return (true);
+}
+
 bool	validateConfigFile(const std::string& file_content)
 {
 	if (checkCurlyBrackeyPair(file_content) == false)
 		return (false);
-	// if (checkEachLine() == false)
-	// 	return (false);
+	if (checkEachLine(file_content) == false)
+		return (false);
 	return (true);
 }
 
