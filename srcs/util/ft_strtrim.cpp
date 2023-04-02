@@ -12,6 +12,8 @@ std::string ft_strtrim(const std::string& str, const std::string& set)
     size_t      start_of_str;
     size_t      end_of_str;
 
+    if (str == "" || set == "")
+		return (str);
     start_of_str = str.find_first_not_of(set);
     end_of_str = str.find_last_not_of(set);
     clean_str = str.substr(start_of_str, end_of_str - start_of_str + 1);
