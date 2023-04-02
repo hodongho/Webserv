@@ -6,7 +6,7 @@ HTTPRequest::HTTPRequest()
 HTTPRequest::~HTTPRequest()
 {};
 
-void	HTTPRequest::validateStartLine()
+void	HTTPRequest::validateStartLine(void)
 {
 	//일단은 METHOD가 GET이 아닐경우 에러처리, 프로토콜이 HTTP가 아닌 경우 Error
 	if (this->method != "GET" || this->version.find("HTTP") == std::string::npos)
@@ -33,7 +33,7 @@ void	HTTPRequest::parseStartLine(std::stringstream& request_stream)
 	if (end != "\r")
 		std::cerr << RED << "400 Bad Request!" << WHI << std::endl;
 
-	this->validateStartLine();
+	this->validateStartLine(void);
 
 	//Test
 	std::cout	<< BLU << "\n[Check Parsing]\n\n"
@@ -100,7 +100,12 @@ void	HTTPRequest::parseRequestMessage(std::string& msg)
 	std::cout << WHI << std::endl;
 }
 
-void	HTTPRequest::saveBody(std::string& _body)
-{
-	this->body = _body;
-}
+void	HTTPRequest::saveBody(std::string& _body) { this->body += _body; }
+
+//Getter
+const std::string&							HTTPRequest::getVersion() const { return (this->version); }
+const std::string&							HTTPRequest::getMethod() const { return (this->method); }
+const std::string&							HTTPRequest::getURI() const { return (this->URI); }
+const std::string&							HTTPRequest::getBody() const { return (this->body); }
+const std::map<std::string, std::string>&	HTTPRequest::getHeader() const { return (this->header); }
+ssize_t getContentLength(void)
