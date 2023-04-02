@@ -257,7 +257,12 @@ bool	checkCurlyBrackeyPair(const std::string& file_content)
 	return (curly_stack.empty());
 }
 
-// prepareValidateKeyList()
+// std::map<std::string, >	prepareValidateServerKeyList(void)
+// {
+
+// }
+
+// prepareValidateLocationKeyList();
 
 /*
 	- #주석이후로는 제외
@@ -271,6 +276,7 @@ bool	checkCurlyBrackeyPair(const std::string& file_content)
 	- 혹은 비어있거나
 	- {, } 이후에 무언가 있다면 바로 다음 것이 주석 이어야한다.
 	- 주석이나 {,} 기호가 없다면 ";"으로 끝나야한다
+	- server, location block 에서 확인하는 validation이 다르다.
 	
 */
 bool	checkEachLine(const std::string& file_content)

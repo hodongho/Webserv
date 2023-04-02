@@ -15,7 +15,7 @@ struct LocationConfig
 	std::string					root;
 	std::string					index;
 	bool						autoindex;
-	std::map<int, std::string>	redirection_path;
+	// std::map<int, std::string>	redirection_path; // 더 많은 값이 list도 들어오는지 확인 및 고민필요
 	/* to be added cgi infomation */
 };
 
