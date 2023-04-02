@@ -3,6 +3,9 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <sstream>
+#include <vector>
+#include <stack>
 
 // #include "config.hpp"
 
@@ -18,7 +21,7 @@
 			- 없어도 되는지 있게된다면 어떻게 있어야하는지 확인
 			- 각 항목마다 rule이 다름 
 				- server와 "{" 가 존재가능
-				// - server밑에 {}블럭으로 되어있을수도 있따.
+				// - server밑에 {}블럭으로 되어있을수도 있다.
 				- host는 옆에 IP가 있어야함
 					- IPv4형식에 맞아야함 
 				- port
@@ -58,6 +61,12 @@
 						}
 }
 */
+
+void	printContent(const std::string& str, const std::string& str_name)
+{
+	std::cout << str_name << " : $" << str << "$" << std::endl;
+}
+
 void ConfigParser::parseConfig(const char *file)
 {
     //prev
@@ -180,37 +189,107 @@ bool	checkEachLine(const std::string& file_content)
 	return (true);
 }
 
-
-
-bool	checkCurlyBrackeyPair(const std::ifstream& config_file_ifs, const std::string& file_content)
+static bool	in_str(const std::string& str, const char& ch)
 {
-	std::string	str;
-
-	std::getline(std::cin, str);
-	// std::getline(config_file_ifs, str);
-	// while ()
-	if (true)
+	// for(std::string::iterator iter = str.begin(); iter != str.end(); iter++)
+	for(size_t idx = 0; idx < str.size(); idx++)
 	{
-
-		return (false);
+		if (ch == str[idx])
+			return (true);
 	}
-	return (true);
+	return (false);
 }
 
-bool	validateConfigFile(const std::ifstream& config_file_ifs, const std::string& file_content)
+// char delimiter -> std::string delimiter
+std::vector<std::string>    ft_split(const std::string& str, const std::string& delimiter)
 {
-	// checkCurlyBrackeyPair();
-	// checkEachLine();
-	// 
-	if (true)
-	{
+	std::vector<std::string>	word_list;
+	size_t						idx;
 
-		return (false);
+	idx = 0;
+	while (idx < str.size())
+	{
+		if (in_str(delimiter, str[idx]))
+			idx++;
+		else
+		{
+			size_t  begin_of_word;
+			size_t  len;
+
+			begin_of_word = idx;
+			while (str[idx] && (in_str(delimiter, str[idx]) == false))
+				idx++;
+			len = idx - begin_of_word;
+			word_list.push_back(str.substr(begin_of_word, len));
+		}
 	}
-	return (true);
+	return (word_list);
 }
 
-// bool	openFile();
+std::string ft_strtrim(const std::string& str, const std::string& set)
+{
+    std::string clean_str;
+    size_t      start_of_str;
+    size_t      end_of_str;
+
+	// std::cout << "### in ft_strtrim ###" << std::endl;
+	// printContent(str, "str");
+	// printContent(set, "set");
+	if (str == "" || set == "")
+		return (str);
+    start_of_str = str.find_first_not_of(set);
+    end_of_str = str.find_last_not_of(set);
+    clean_str = str.substr(start_of_str, end_of_str - start_of_str + 1);
+    return (clean_str);
+}
+
+/*
+	여러번 파일을 읽을것이라서 const불가, 
+	reference하면 파일 pos가 맨 밑으로 갈것으로 예상되어서 deep copy되게 놔둠
+	- {{
+	- {{}} case 해결안됨
+		- 별도의 방법 필요
+	- split된 인자의 시작이 
+*/
+bool	checkCurlyBrackeyPair(const std::string& file_content)
+{
+	std::stringstream		file_content_stream(file_content);
+	std::string				str;
+	std::stack<std::string>	curly_stack;
+
+	while (std::getline(file_content_stream, str))
+	{
+		std::string					clean_str;
+		std::vector<std::string>	word_list;
+		const std::string&			whitespace = " \n\t\v\r";
+
+		clean_str = ft_strtrim(str, whitespace);
+		// printContent(clean_str, "clean_str");
+		word_list = ft_split(clean_str, whitespace);
+		for (std::vector<std::string>::iterator iter = word_list.begin(); iter != word_list.end(); iter++)
+		{
+			// printContent(*iter, "\titer");
+			if (*iter == "{" || *iter == "}")
+			{
+				// printContent(*iter, "\t###iter ");
+				if (*iter == "{")
+					curly_stack.push(*iter);
+				else if (!curly_stack.empty())
+					curly_stack.pop();
+			}
+		}
+	}
+	return (curly_stack.empty());
+}
+
+bool	validateConfigFile(const std::string& file_content)
+{
+	if (checkCurlyBrackeyPair(file_content) == false)
+		return (false);
+	// if (checkEachLine() == false)
+	// 	return (false);
+	return (true);
+}
 
 int main(int argc, char *argv[])
 {
@@ -230,34 +309,17 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	// open and read file
-	std::ifstream   config_file_ifs(argv[1]);
 	std::string		file_content;
+	file_content = readFile(argv[1]);
 
-	if (config_file_ifs.is_open())
-    {
-        config_file_ifs.seekg(0, std::ios::end);
-        int size = config_file_ifs.tellg();
-        file_content.resize(size);
-        config_file_ifs.seekg(0, std::ios::beg);
-        config_file_ifs.read(&file_content[0], size);
-    }
-    else
-    {
-        // error_handling("Fail to open file", 1);
-        exit(1);
-    }
-	// read file
-	// file_content = readFile(argv[1]);
-
-	std::cout << "file_content : $" << file_content << "$" << std::endl;
 	// validation
-	if (validateConfigFile(config_file_ifs, file_content))
+	if (validateConfigFile(file_content))
 		std::cout << "Config file content is validate" << std::endl;
 	else
 		std::cout << "Config file content is N.O.T validate" << std::endl;
 
 	// ConfigParser configParser;
-	// parsing
+	// parse
 	// ParseConfig(); // 결국 이 안으로 들어가야함
 	// configParser.parseConfig(argv[1]);
 	//std::cout << configParser.config << std::endl;
