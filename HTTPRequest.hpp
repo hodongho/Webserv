@@ -27,6 +27,11 @@ class HTTPRequest : public HTTPMessage
 		std::string	method;
 		std::string	URI;
 
+		void	parseStartLine(std::stringstream& request_stream);
+		void	validateStartLine(void);
+		void	parseHeaderField(std::stringstream& request_stream);
+		void	validateHeaderField(void);
+
 	public:
 		HTTPRequest();
 		~HTTPRequest();
@@ -39,18 +44,16 @@ class HTTPRequest : public HTTPMessage
 		 * @param msg HTTP Request
 		 */
 		void										parseRequestMessage(std::string& msg);
-		void										parseStartLine(std::stringstream& request_stream);
-		void										validateStartLine();
-		void										parseHeaderField(std::stringstream& request_stream);
-		void										validateHeaderField();
 
 		void										saveBody(std::string& _body);
 
+		//getter
 		const std::string&							getVersion(void) const;
 		const std::string&							getMethod(void) const;
 		const std::string&							getURI(void) const;
 		const std::map<std::string, std::string>&	getHeader(void) const;
 		const std::string&							getBody(void) const;
+		ssize_t 									getContentLength(void);
 };
 
 #endif

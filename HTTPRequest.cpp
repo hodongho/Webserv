@@ -108,4 +108,3 @@ const std::string&							HTTPRequest::getMethod() const { return (this->method);
 const std::string&							HTTPRequest::getURI() const { return (this->URI); }
 const std::string&							HTTPRequest::getBody() const { return (this->body); }
 const std::map<std::string, std::string>&	HTTPRequest::getHeader() const { return (this->header); }
-ssize_t getContentLength(void)
