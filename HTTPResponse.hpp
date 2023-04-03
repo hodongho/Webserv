@@ -15,14 +15,15 @@ class HTTPResponse : public HTTPMessage
 		std::string	status_code;
 		std::string	status_message;
 
+		void		makeStatusLine(void);
+		void		makeHeaderField(void);
+		void		makeBody(void);
+
 	public:
-		HTTPResponse();
-		~HTTPResponse();
+		HTTPResponse(void);
+		virtual ~HTTPResponse(void);
 
 		std::string	makeResponseMessage(void);
-		void		makeStatusLine();
-		void		makeHeaderField();
-		void		makeBody();
 
 		void		setVersion(std::string _version);
 		void		setStatusCode(std::string _status_code);

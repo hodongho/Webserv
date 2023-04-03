@@ -4,6 +4,13 @@
 # include <map>
 # include <string>
 
+enum Method
+{
+	GET,
+	POST,
+	DELETE,
+	NONE,
+};
 class HTTPMessage
 {
 	protected:
@@ -11,6 +18,5 @@ class HTTPMessage
 		std::map<std::string, std::string>	header;
 		std::string							body;
 };
-
 
 #endif

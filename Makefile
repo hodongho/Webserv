@@ -15,10 +15,9 @@ CC = c++
 CXXFLAGS = -Wall -Wextra -Werror
 CPPFLAGS = -MMD
 
-SRCS = Server.cpp \
-	Socket.cpp \
+SRCS = ServerHandler.cpp \
 	utils.cpp \
-	main.cpp \
+	Webserv.cpp \
 	HTTPRequest.cpp \
 	HTTPResponse.cpp
 

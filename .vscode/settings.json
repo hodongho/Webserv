@@ -66,6 +66,8 @@
 		"variant": "cpp",
 		"vector": "cpp",
 		"algorithm": "cpp",
-		"filesystem": "cpp"
+		"filesystem": "cpp",
+		"__verbose_abort": "cpp",
+		"bit": "cpp"
 	}
 }

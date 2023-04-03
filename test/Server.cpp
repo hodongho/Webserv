@@ -81,24 +81,33 @@ std::string	Server::makeResponse(void)
 {
 	std::string	res_msg;
 
-	res_msg = "HTTP/1.1 200 OK\r\n";
-	res_msg += "Content-Type: text/html\r\n";
-	res_msg += "Content-Length: 163\r\n";
-	res_msg += "Connection: keep-alive\r\n\r\n";
+	// res_msg = "HTTP/1.1 200 OK\r\n";
+	// res_msg += "Content-Type: text/html\r\n";
+	// res_msg += "Content-Length: 163\r\n";
+	// res_msg += "Connection: keep-alive\r\n\r\n";
 
-	std::ifstream	html("./html/Hello.html");
+	// std::ifstream	html("./html/Hello.html");
 
-	if (html.is_open())
-	{
-		std::string	buf;
+	// if (html.is_open())
+	// {
+	// 	std::string	buf;
 
-		while (!html.eof())
-		{
-			std::getline(html, buf);
-			res_msg += buf;
-			res_msg += "\n";
-		}
-	}
+	// 	while (!html.eof())
+	// 	{
+	// 		std::getline(html, buf);
+	// 		res_msg += buf;
+	// 		res_msg += "\n";
+	// 	}
+	// }
+	res_msg = "HTTP/1.1 307 AAA\n\
+Vary: Origin\n\
+Access-Control-Allow-Credentials: true\n\
+Location: https://www.google.com\n\
+Date: Sun, 02 Apr 2023 11:31:20 GMT\n\
+Connection: keep-alive\n\
+Keep-Alive: timeout=5\n\
+Content-Length: 21\r\n\r\n\
+123456789012345678901\r\n\r\n";
 	return (res_msg);
 }
 
