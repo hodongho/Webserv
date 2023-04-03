@@ -238,11 +238,10 @@ bool	ConfigParser::checkCurlyBrackeyPair(const std::string& file_content)
 	{
 		std::string					clean_str;
 		std::vector<std::string>	word_list;
-		const std::string&			whitespace = " \n\t\v\r";
 
-		clean_str = ft_strtrim(str, whitespace);
+		clean_str = ft_strtrim(str, this->whitespace);
 		// printContent(clean_str, "clean_str");
-		word_list = ft_split(clean_str, whitespace);
+		word_list = ft_split(clean_str, this->whitespace);
 		for (std::vector<std::string>::iterator iter = word_list.begin(); iter != word_list.end(); iter++)
 		{
 			printContent(*iter, "\titer");
@@ -314,7 +313,6 @@ bool	findOpenCurlyBracket(const std::vector<std::string>::iterator& begin_iter,
 */
 bool	ConfigParser::checkWhole(const std::string& file_content)
 {
-	const std::string&					whitespace = " \n\t\v\r";
 	std::string							str;
 	std::vector<std::string>			file_content_vector;
 	std::vector<std::string>::iterator 	iter;
@@ -333,11 +331,11 @@ bool	ConfigParser::checkWhole(const std::string& file_content)
 		std::vector<std::string>	word_list;
 		std::string					clean_str;
 
-		clean_str = ft_strtrim(*iter, whitespace);
+		clean_str = ft_strtrim(*iter, this->whitespace);
 		// 만약 block 짝이 안맞을때 에러케이스 거르기 위함
 		if (clean_str == "" || clean_str[0] == '#')
 			continue ;
-		word_list = ft_split(clean_str, whitespace);
+		word_list = ft_split(clean_str, this->whitespace);
 		if (*(word_list.begin()) == "server")
 			server_flag = true;
 		if (*(word_list.begin()) == "location")
