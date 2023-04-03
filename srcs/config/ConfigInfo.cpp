@@ -1,4 +1,4 @@
-#include "../../include/ConfigParser.hpp"
+#include "../../include/ConfigInfo.hpp"
 #include "../../include/configStructure.hpp"
 #include <iostream>
 #include <string>
@@ -65,12 +65,12 @@
 static std::vector<std::string>	ft_split(const std::string& str, const std::string& delimiter);
 static std::string 				ft_strtrim(const std::string& str, const std::string& set);
 
-void	ConfigParser::printContent(const std::string& str, const std::string& str_name)
+void	ConfigInfo::printContent(const std::string& str, const std::string& str_name)
 {
 	std::cout << str_name << " : $" << str << "$" << std::endl;
 }
 
-void ConfigParser::parseConfig(const char *file_name)
+void ConfigInfo::parseConfig(const char *file_name)
 {
 	std::string		file_content;
 
@@ -91,15 +91,15 @@ void ConfigParser::parseConfig(const char *file_name)
 	else
 		std::cout << "Config file content is N.O.T validate" << std::endl;
 	
-	// ConfigParser configParser;
+	// ConfigInfo ConfigInfo;
 	// parse
 	// ParseConfig(); // 결국 이 안으로 들어가야함
-	// configParser.parseConfig(argv[1]);
-	//std::cout << configParser.config << std::endl;
-	// configParser.parseServer();
+	// ConfigInfo.parseConfig(argv[1]);
+	//std::cout << ConfigInfo.config << std::endl;
+	// ConfigInfo.parseServer();
 }
 
-void ConfigParser::parseServer() {
+void ConfigInfo::parseServer() {
 	size_t start = 0;
 	size_t end = 0;
 	std::string tmp;
@@ -116,7 +116,7 @@ void ConfigParser::parseServer() {
 	
 }
 
-// ServerInfo ConfigParser::parseServerBlock(size_t it) {
+// ServerInfo ConfigInfo::parseServerBlock(size_t it) {
 // 	ServerInfo res;
 // 	std::string key;
 // 	std::string value;
@@ -133,7 +133,7 @@ void ConfigParser::parseServer() {
 	throw 이후 exit()
 */
 
-bool	ConfigParser::checkFileNameExtension(const char *file_name_parms)
+bool	ConfigInfo::checkFileNameExtension(const char *file_name_parms)
 {
 	std::string	file_name(file_name_parms);
 	size_t		pos;
@@ -145,7 +145,7 @@ bool	ConfigParser::checkFileNameExtension(const char *file_name_parms)
 	return (false);
 }
 
-std::string ConfigParser::readFile(std::string file_name)
+std::string ConfigInfo::readFile(std::string file_name)
 {
 	std::string     s;
 	std::ifstream   ifs(file_name);
@@ -228,7 +228,7 @@ static std::string ft_strtrim(const std::string& str, const std::string& set)
 		- 별도의 방법 필요
 	- split된 인자의 시작이 
 */
-bool	ConfigParser::checkCurlyBrackeyPair(const std::string& file_content)
+bool	ConfigInfo::checkCurlyBrackeyPair(const std::string& file_content)
 {
 	std::stringstream		file_content_stream(file_content);
 	std::string				str;
@@ -311,7 +311,7 @@ bool	findOpenCurlyBracket(const std::vector<std::string>::iterator& begin_iter,
 
 	
 */
-bool	ConfigParser::checkWhole(const std::string& file_content)
+bool	ConfigInfo::checkWhole(const std::string& file_content)
 {
 	std::string							str;
 	std::vector<std::string>			file_content_vector;
@@ -389,7 +389,7 @@ bool	ConfigParser::checkWhole(const std::string& file_content)
 	return (false);
 }
 
-bool	ConfigParser::validateConfigFile(const std::string& file_content)
+bool	ConfigInfo::validateConfigFile(const std::string& file_content)
 {
 	if (checkCurlyBrackeyPair(file_content) == false)
 		return (false);
@@ -401,7 +401,7 @@ bool	ConfigParser::validateConfigFile(const std::string& file_content)
 int main(int argc, char *argv[])
 {
 	// std::string line;
-	ConfigParser	configPaser;
+	ConfigInfo	configPaser;
 
 	if (argc != 2) {
 		std::cout << "Usage : string" << std::endl;

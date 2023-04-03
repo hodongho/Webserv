@@ -1,5 +1,5 @@
-#ifndef CONFIGPARSER_HPP
-# define CONFIGPARSER_HPP
+#ifndef ConfigInfo_HPP
+# define ConfigInfo_HPP
 # include "configStructure.hpp"
 
 
@@ -15,7 +15,7 @@ enum configValidationInfo
     OPTIONAL_UNIQUE_FIELD,
 };
 
-class ConfigParser
+class ConfigInfo
 {
     private:
         std::vector<ServerConfig>	webserv_config;
