@@ -120,7 +120,7 @@ void	HTTPRequest::saveBody(std::string& _body)
 
 //Getter
 const std::string&							HTTPRequest::getVersion() const { return (this->version); }
-const Method&								HTTPRequest::getMethod() const { return (this->method); }
+const MethodType&							HTTPRequest::getMethod() const { return (this->method); }
 const std::string&							HTTPRequest::getURI() const { return (this->URI); }
 const std::string&							HTTPRequest::getBody() const { return (this->body); }
 const std::map<std::string, std::string>&	HTTPRequest::getHeader() const { return (this->header); }

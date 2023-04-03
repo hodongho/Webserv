@@ -18,7 +18,7 @@
 class HTTPRequest : public HTTPMessage
 {
 	private:
-		Method		method;
+		MethodType	method;
 		std::string	URI;
 
 		int	parseStartLine(std::stringstream& request_stream);
@@ -43,7 +43,7 @@ class HTTPRequest : public HTTPMessage
 
 		//getter
 		const std::string&							getVersion(void) const;
-		const Method&								getMethod(void) const;
+		const MethodType&							getMethod(void) const;
 		const std::string&							getURI(void) const;
 		const std::map<std::string, std::string>&	getHeader(void) const;
 		const std::string&							getBody(void) const;

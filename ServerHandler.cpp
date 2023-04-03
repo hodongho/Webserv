@@ -120,7 +120,7 @@ void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 		client_socket->body_str.append(client_socket->header_str.substr(header_end_pos + HEADER_END_SIZE));
 		client_socket->header_str.erase(header_end_pos + HEADER_END_SIZE);
 		client_socket->http_request.parseRequestMessage(client_socket->header_str);
-		Method method = client_socket->http_request.getMethod();
+		MethodType method = client_socket->http_request.getMethod();
 		if (method == POST)
 		{
 			// client_socket->body_size = client_socket->http_request.getContentLength();

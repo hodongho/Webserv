@@ -4,12 +4,12 @@
 # include <map>
 # include <string>
 
-enum Method
+enum MethodType
 {
 	GET,
 	POST,
 	DELETE,
-	NONE,
+	NONE
 };
 class HTTPMessage
 {
