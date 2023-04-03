@@ -62,43 +62,41 @@
 }
 */
 
-void	printContent(const std::string& str, const std::string& str_name)
+static std::vector<std::string>	ft_split(const std::string& str, const std::string& delimiter);
+static std::string 				ft_strtrim(const std::string& str, const std::string& set);
+
+void	ConfigParser::printContent(const std::string& str, const std::string& str_name)
 {
 	std::cout << str_name << " : $" << str << "$" << std::endl;
 }
 
-void ConfigParser::parseConfig(const char *file)
+void ConfigParser::parseConfig(const char *file_name)
 {
-    //prev
-	// std::ifstream ifs(file);
-	// if (ifs.fail())
-	// {
-	// 	exit(1);
-	// }
-	// std::string str;
-	// int count = 0;
-	// webserv_config.clear();
+	std::string		file_content;
 
-	// while (!ifs.eof())
-	// {
-	// 	if (ifs.bad()) exit(1);
-	// 	std::getline(ifs, str);
-	// 	str = trim(str);
-	// 	if (str[0] == '#' || str.length() <= 0)
-	// 		continue;
-	// 	 size_t pos = str.find_first_of(";{}");
-	// 	 if (pos == std::string::npos)
-	// 	 	exit(1);
-	// 	 str = str.substr(0, pos + 1);
-	// 	webserv_config.append(str + '\n');
-	// }
-	// for (int i = 0; i < webserv_config.size(); i++) {
-	// 	if (config[i] == '{')
-	// 		count++;
-	// 	if (config[i] == '}')
-	// 		count--;
-	// }
-	// if (count) exit(1);
+	// check file name rule
+	if (this->checkFileName(file_name))
+		std::cout << "file name is correct to the config file name rule" << std::endl;
+	else
+	{
+		std::cout << "file name is not correct to the config file name rule!!!" << std::endl;
+		exit(1);
+	}
+	// open and read file
+	file_content = this->readFile(file_name);
+
+	// validation
+	if (this->validateConfigFile(file_content))
+		std::cout << "Config file content is validate" << std::endl;
+	else
+		std::cout << "Config file content is N.O.T validate" << std::endl;
+	
+	// ConfigParser configParser;
+	// parse
+	// ParseConfig(); // 결국 이 안으로 들어가야함
+	// configParser.parseConfig(argv[1]);
+	//std::cout << configParser.config << std::endl;
+	// configParser.parseServer();
 }
 
 void ConfigParser::parseServer() {
@@ -106,7 +104,7 @@ void ConfigParser::parseServer() {
 	size_t end = 0;
 	std::string tmp;
 
-    // prev
+	// prev
 	// while (end != std::string::npos) {
 	// 	start = config.find_first_not_of(whitespace, end);
 	// 	end = config.find_first_of(" \t\n\r\f\v{", start);
@@ -131,7 +129,7 @@ void ConfigParser::parseServer() {
 // }
 
 
-static bool	checkFileName(const char *file_name_parms)
+bool	ConfigParser::checkFileName(const char *file_name_parms)
 {
 	std::string	file_name(file_name_parms);
 	size_t		pos;
@@ -143,25 +141,25 @@ static bool	checkFileName(const char *file_name_parms)
 	return (false);
 }
 
-std::string readFile(std::string file_name)
+std::string ConfigParser::readFile(std::string file_name)
 {
-    std::string     s;
-    std::ifstream   ifs(file_name);
+	std::string     s;
+	std::ifstream   ifs(file_name);
 
-    if (ifs.is_open())
-    {
-        ifs.seekg(0, std::ios::end);
-        int size = ifs.tellg();
-        s.resize(size);
-        ifs.seekg(0, std::ios::beg);
-        ifs.read(&s[0], size);
-    }
-    else
-    {
-        // error_handling("Fail to open file", 1);
-        exit(1);
-    }
-    return (s);
+	if (ifs.is_open())
+	{
+		ifs.seekg(0, std::ios::end);
+		int size = ifs.tellg();
+		s.resize(size);
+		ifs.seekg(0, std::ios::beg);
+		ifs.read(&s[0], size);
+	}
+	else
+	{
+		// error_handling("Fail to open file", 1);
+		exit(1);
+	}
+	return (s);
 }
 
 static bool	in_str(const std::string& str, const char& ch)
@@ -176,7 +174,7 @@ static bool	in_str(const std::string& str, const char& ch)
 }
 
 // char delimiter -> std::string delimiter
-std::vector<std::string>    ft_split(const std::string& str, const std::string& delimiter)
+static std::vector<std::string>    ft_split(const std::string& str, const std::string& delimiter)
 {
 	std::vector<std::string>	word_list;
 	size_t						idx;
@@ -201,21 +199,21 @@ std::vector<std::string>    ft_split(const std::string& str, const std::string& 
 	return (word_list);
 }
 
-std::string ft_strtrim(const std::string& str, const std::string& set)
+static std::string ft_strtrim(const std::string& str, const std::string& set)
 {
-    std::string clean_str;
-    size_t      start_of_str;
-    size_t      end_of_str;
+	std::string clean_str;
+	size_t      start_of_str;
+	size_t      end_of_str;
 
 	// std::cout << "### in ft_strtrim ###" << std::endl;
 	// printContent(str, "str");
 	// printContent(set, "set");
 	if (str == "" || set == "")
 		return (str);
-    start_of_str = str.find_first_not_of(set);
-    end_of_str = str.find_last_not_of(set);
-    clean_str = str.substr(start_of_str, end_of_str - start_of_str + 1);
-    return (clean_str);
+	start_of_str = str.find_first_not_of(set);
+	end_of_str = str.find_last_not_of(set);
+	clean_str = str.substr(start_of_str, end_of_str - start_of_str + 1);
+	return (clean_str);
 }
 
 /*
@@ -226,7 +224,7 @@ std::string ft_strtrim(const std::string& str, const std::string& set)
 		- 별도의 방법 필요
 	- split된 인자의 시작이 
 */
-bool	checkCurlyBrackeyPair(const std::string& file_content)
+bool	ConfigParser::checkCurlyBrackeyPair(const std::string& file_content)
 {
 	std::stringstream		file_content_stream(file_content);
 	std::string				str;
@@ -310,7 +308,7 @@ bool	findOpenCurlyBracket(const std::vector<std::string>::iterator& begin_iter,
 
 	
 */
-bool	checkWhole(const std::string& file_content)
+bool	ConfigParser::checkWhole(const std::string& file_content)
 {
 	const std::string&					whitespace = " \n\t\v\r";
 	std::string							str;
@@ -389,7 +387,7 @@ bool	checkWhole(const std::string& file_content)
 	return (false);
 }
 
-bool	validateConfigFile(const std::string& file_content)
+bool	ConfigParser::validateConfigFile(const std::string& file_content)
 {
 	if (checkCurlyBrackeyPair(file_content) == false)
 		return (false);
@@ -401,35 +399,13 @@ bool	validateConfigFile(const std::string& file_content)
 int main(int argc, char *argv[])
 {
 	// std::string line;
+	ConfigParser	configPaser;
 
 	if (argc != 2) {
 		std::cout << "Usage : string" << std::endl;
 		return (1);
 	}
 
-	// check file name rule
-	if (checkFileName(argv[1]))
-		std::cout << "file name is correct to the config file name rule" << std::endl;
-	else
-	{
-		std::cout << "file name is not correct to the config file name rule!!!" << std::endl;
-		exit(1);
-	}
-	// open and read file
-	std::string		file_content;
-	file_content = readFile(argv[1]);
-
-	// validation
-	if (validateConfigFile(file_content))
-		std::cout << "Config file content is validate" << std::endl;
-	else
-		std::cout << "Config file content is N.O.T validate" << std::endl;
-
-	// ConfigParser configParser;
-	// parse
-	// ParseConfig(); // 결국 이 안으로 들어가야함
-	// configParser.parseConfig(argv[1]);
-	//std::cout << configParser.config << std::endl;
-	// configParser.parseServer();
+	configPaser.parseConfig(argv[1]);
 	return (0);
 }

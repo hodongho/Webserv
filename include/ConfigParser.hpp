@@ -20,15 +20,21 @@ class ConfigParser
     private:
         std::vector<ServerConfig>	webserv_config;
         const std::string           whitespace = " \t\n\v\f\r";
-    public:
-        bool    checkValidation();
-        bool    checkPairOfCurlyBracket();
-        // bool    checkEachLine();// parsing하면서 할지 고려
-        
-        void    parseConfig(const char *file);
+
+        bool	    checkFileName(const char *file_name_parms);
+        std::string readFile(std::string file_name);
+        bool	    validateConfigFile(const std::string& file_content);
+        bool	    checkCurlyBrackeyPair(const std::string& file_content);
+        bool	    checkWhole(const std::string& file_content);
+        void	    printContent(const std::string& str, const std::string& str_name);
+
         void    parseServer();
         void    parseServerBlock();
         void    parseLocationBlock();
+
+    public:
+        void    parseConfig(const char *file);
+
 };
 
 #endif
