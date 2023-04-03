@@ -96,6 +96,8 @@ add
 					- redirection
 						return으로 시작되는 형식
 						형식
+						3xx여야만한다.!!!
+						300번대만 가능
 						location ~ / {
 							return 301 https://primarydomain/en$request_uri;
 						}
