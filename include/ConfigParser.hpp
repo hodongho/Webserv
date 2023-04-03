@@ -21,7 +21,7 @@ class ConfigParser
         std::vector<ServerConfig>	webserv_config;
         const std::string           whitespace = " \t\n\v\f\r";
 
-        bool	    checkFileName(const char *file_name_parms);
+        bool	    checkFileNameExtension(const char *file_name_parms);
         std::string readFile(std::string file_name);
         bool	    validateConfigFile(const std::string& file_content);
         bool	    checkCurlyBrackeyPair(const std::string& file_content);

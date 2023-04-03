@@ -75,7 +75,7 @@ void ConfigParser::parseConfig(const char *file_name)
 	std::string		file_content;
 
 	// check file name rule
-	if (this->checkFileName(file_name))
+	if (this->checkFileNameExtension(file_name))
 		std::cout << "file name is correct to the config file name rule" << std::endl;
 	else
 	{
@@ -128,8 +128,12 @@ void ConfigParser::parseServer() {
 // 	return (res);
 // }
 
+/*
+	throw하는 식으로 변경 필요
+	throw 이후 exit()
+*/
 
-bool	ConfigParser::checkFileName(const char *file_name_parms)
+bool	ConfigParser::checkFileNameExtension(const char *file_name_parms)
 {
 	std::string	file_name(file_name_parms);
 	size_t		pos;
