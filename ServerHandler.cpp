@@ -196,6 +196,8 @@ void	ServerHandler::sendResponse(struct kevent * const & curr_event, SocketData*
 	}
 	else
 	{
+		client_socket->http_response.clear();
+		changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
 		// end of response.
 	}
 }

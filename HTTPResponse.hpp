@@ -5,8 +5,9 @@
 
 # define DATE "Date"
 # define SERVER "Server"
-# define CONTACT_LENGTH "Contact-length"
-# define CONTENT_TYPE "Contact-type"
+# define CONTENT_LENGTH "Content-length"
+# define CONTENT_TYPE "Content-type"
+# define CONNECTION "Connection"
 
 class HTTPResponse : public HTTPMessage
 {
@@ -26,11 +27,13 @@ class HTTPResponse : public HTTPMessage
 		std::string	makeResponseMessage(void);
 
 		void		setVersion(std::string _version);
-		void		setStatusCode(std::string _status_code);
+		void		setStatusCode(StatusCode _status_code);
 		void		setStatusMessage(std::string _status_message);
 		void		setBody(std::string _body);
 
 		void		addHeader(std::string _header_name, std::string _header_value);
+
+		void		clear();
 };
 
 #endif

@@ -3,6 +3,8 @@
 
 # include <map>
 # include <string>
+# include <iostream>
+# include "manageStdout.hpp"
 
 enum MethodType
 {

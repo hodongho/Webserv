@@ -1,4 +1,4 @@
-#include "HTTPRequest.hpp"
+#include "HTTPMessage.hpp"
 
 HTTPMessage::HTTPMessage()
 :version(""), body("")

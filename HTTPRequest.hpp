@@ -3,10 +3,8 @@
 
 # include <string>
 # include <sstream>
-# include <iostream>
 # include <unistd.h> //path validation
 # include "HTTPMessage.hpp"
-# include "manageStdout.hpp"
 
 # include <iomanip>
 
