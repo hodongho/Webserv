@@ -209,9 +209,6 @@ static std::string ft_strtrim(const std::string& str, const std::string& set)
 	size_t      start_of_str;
 	size_t      end_of_str;
 
-	// std::cout << "### in ft_strtrim ###" << std::endl;
-	// printContent(str, "str");
-	// printContent(set, "set");
 	if (str == "" || set == "")
 		return (str);
 	start_of_str = str.find_first_not_of(set);
@@ -223,10 +220,8 @@ static std::string ft_strtrim(const std::string& str, const std::string& set)
 /*
 	여러번 파일을 읽을것이라서 const불가, 
 	reference하면 파일 pos가 맨 밑으로 갈것으로 예상되어서 deep copy되게 놔둠
-	- {{
-	- {{}} case 해결안됨
-		- 별도의 방법 필요
-	- split된 인자의 시작이 
+	- 짝은 맞지만 불필요한 곳에 {}가 있는 경우에 대한 처리 필요.
+	- split된 인자의시작이 
 */
 bool	ConfigInfo::checkCurlyBrackeyPair(const std::string& file_content)
 {
@@ -289,43 +284,16 @@ bool	findOpenCurlyBracket(const std::vector<std::string>::iterator& begin_iter,
 	return (false);
 }
 
-/*
-	- #주석이후로는 제외
-	- key value 짝이 맞아야함
-		- value가 list로 나올 수도 있다.
-		- 들어온 key가 유효한지, 중복이 된것은 없는지 확인해야한다.
-			- 소문자만 허용!!
-			- host, port index, server_name, root, client_max_body_size
-		- value역시 해당 key에 허용하는 형식인지 확인해야한다
-	- vector 요소의 가장 처음 것은 key이거나 {, 주석이다
-	- 혹은 비어있거나
-	- {, } 이후에 무언가 있다면 바로 다음 것이 주석 이어야한다.
-	- 주석이나 {,} 기호가 없다면 ";"으로 끝나야한다
-	- server, location block 에서 확인하는 validation이 다르다.
-
-	block을 찾는다.
-	server,location이 나오면 그 다음에 나오는 word_list에서 값은 '{' 이어야한다.
-	그렇지 않다면 error
-	begin_iter는 server, location 이후에 나오는 '{'부터이다.
-	end_iter는 '}'
-
-	
-*/
-bool	ConfigInfo::checkWhole(const std::string& file_content)
+std::vector<std::string>::iterator	ConfigInfo::findServerBlock(const std::vector<std::string> file_content_vector, \
+													std::vector<std::string>::iterator& begin_iter, \
+													std::vector<std::string>::iterator& end_iter)
 {
-	std::string							str;
-	std::vector<std::string>			file_content_vector;
 	std::vector<std::string>::iterator 	iter;
-	std::vector<std::string>::iterator 	begin_iter;
 	std::stack<std::string> 			server_stack;
 	std::stack<std::string> 			location_stack;
 	bool								server_flag = false; // for stack.push() 해도되는지 확인용
 	bool								location_flag = false;
-	
-	// prepareValidateKeyList()
-	file_content_vector = ft_split(file_content, "\n");
-	iter = file_content_vector.begin();
-	// while (iter != file_content_vector.end())
+
 	for (;iter != file_content_vector.end(); iter++)
 	{
 		std::vector<std::string>	word_list;
@@ -352,6 +320,7 @@ bool	ConfigInfo::checkWhole(const std::string& file_content)
 				end_iter = iter;
 				printContent(*begin_iter, "begin_iter");
 				printContent(*end_iter, "end_iter");
+				return (end_iter);
 				// validateServerBlock(begin_iter, end_iter); // block위치를 알게됨
 			}
 			if (location_stack.empty() == false)
@@ -384,17 +353,139 @@ bool	ConfigInfo::checkWhole(const std::string& file_content)
 		// printContent(*begin_iter, "begin_iter");
 		// iter++;
 	}
-	if (server_stack.empty() && location_stack.empty())
-		return (true);
-	return (false);
+	// if (server_stack.empty() && location_stack.empty())
+	// 	return (true);
+	return (iter);
 }
 
+/*
+	- #주석이후로는 제외
+	- key value 짝이 맞아야함
+		- value가 list로 나올 수도 있다.
+		- 들어온 key가 유효한지, 중복이 된것은 없는지 확인해야한다.
+			- 소문자만 허용!!
+			- host, port index, server_name, root, client_max_body_size
+		- value역시 해당 key에 허용하는 형식인지 확인해야한다
+	- vector 요소의 가장 처음 것은 key이거나 {, 주석이다
+	- 혹은 비어있거나
+	- {, } 이후에 무언가 있다면 바로 다음 것이 주석 이어야한다.
+	- 주석이나 {,} 기호가 없다면 ";"으로 끝나야한다
+	- server, location block 에서 확인하는 validation이 다르다.
+
+	block을 찾는다.
+	server,location이 나오면 그 다음에 나오는 word_list에서 값은 '{' 이어야한다.
+	그렇지 않다면 error
+	begin_iter는 server, location 이후에 나오는 '{'부터이다.
+	end_iter는 '}'
+*/
+bool	ConfigInfo::checkWhole(const std::string& file_content)
+{
+	std::string							str;
+	std::vector<std::string>			file_content_vector;
+	std::vector<std::string>::iterator 	cur_iter;
+	std::vector<std::string>::iterator 	begin_iter;
+	std::vector<std::string>::iterator 	end_iter;
+	// std::stack<std::string> 			server_stack;
+	// std::stack<std::string> 			location_stack;
+	// bool								server_flag = false; // for stack.push() 해도되는지 확인용
+	// bool								location_flag = false;
+	
+	// prepareValidateKeyList()
+	file_content_vector = ft_split(file_content, "\n");
+	cur_iter = file_content_vector.begin();
+	
+	while (cur_iter != file_content_vector.end())
+	{
+		cur_iter = findServerBlock(file_content_vector, begin_iter, end_iter);
+		if (cur_iter == file_content_vector.end())
+			return (false);
+		cur_iter++;
+	}
+	// for (;iter != file_content_vector.end(); iter++)
+	// {
+	// 	std::vector<std::string>	word_list;
+	// 	std::string					clean_str;
+
+	// 	clean_str = ft_strtrim(*iter, this->whitespace);
+	// 	// 만약 block 짝이 안맞을때 에러케이스 거르기 위함
+	// 	if (clean_str == "" || clean_str[0] == '#')
+	// 		continue ;
+	// 	word_list = ft_split(clean_str, this->whitespace);
+	// 	if (*(word_list.begin()) == "server")
+	// 		server_flag = true;
+	// 	if (*(word_list.begin()) == "location")
+	// 		location_flag = true;
+	// 	// '}' 뒤에는 없거나 있어도 주석이어야함
+	// 	if (*(word_list.begin()) == "}" && \
+	// 		((word_list.begin() + 1) == word_list.end() || *(word_list.begin() + 1) == "#"))
+	// 	{
+	// 		if (location_stack.empty() && server_stack.empty() == false)
+	// 		{
+	// 			std::vector<std::string>::iterator 	end_iter;
+
+	// 			server_stack.pop();
+	// 			end_iter = iter;
+	// 			printContent(*begin_iter, "begin_iter");
+	// 			printContent(*end_iter, "end_iter");
+	// 			// validateServerBlock(begin_iter, end_iter); // block위치를 알게됨
+	// 		}
+	// 		if (location_stack.empty() == false)
+	// 			location_stack.pop();
+	// 	}
+	// 	for (std::vector<std::string>::iterator word = word_list.begin(); \
+	// 			word != word_list.end(); \
+	// 			word++)
+	// 	{
+	// 		if (server_flag == true)
+	// 		{
+	// 			if (findOpenCurlyBracket(word_list.begin(), word_list.end()))
+	// 			{
+	// 				server_flag = false;
+	// 				server_stack.push("{");
+	// 				begin_iter = iter;
+	// 			}
+	// 		}
+	// 		if (location_flag == true)
+	// 		{
+	// 			if (findOpenCurlyBracket(word_list.begin(), word_list.end()))
+	// 			{
+	// 				location_flag = false;
+	// 				location_stack.push("{");
+	// 			}
+	// 		}
+	// 		// printContent(*word, "word");
+	// 	}
+	// 	// printContent(*iter, "iter");
+	// 	// printContent(*begin_iter, "begin_iter");
+	// 	// iter++;
+	// }
+	// if (server_stack.empty() && location_stack.empty())
+	// 	return (true);
+	return (true);
+}
+
+/*
+	curly bracket pair
+	block이 제대로 되었는지 확인을 추가시킬지 포함 
+		- server, locatoin 이후에 {}이 왔는지
+		- {}이 아예 안오는 경우
+			다른 key에 {가 붙는 경우
+		- {}만 들어오는 케이스에 대한 처리
+			- "{" "}" 다음에는 아무것도 없거나 주석만 가능
+		뜬금없는 위치이지만 {}만 있는 케이스는 놔둔다.
+		이 부분까지 checkBracket에서 처리할려면 "{trtlkfldaf}", "234234{trtlkfldaf}23424" 같은 케이스도 확인해야함
+		- 한 줄씩 확인할때 유효키인지 정도만 확인하며 value값이 경우는 문자열을 받는 value는 확인하지 않.는다.
+			e.g) index "{}"
+				- root "{sdf}"
+				- location_path "{}"
+				이런 경우들은 확인하지 않음.
+*/
 bool	ConfigInfo::validateConfigFile(const std::string& file_content)
 {
 	if (checkCurlyBrackeyPair(file_content) == false)
 		return (false);
-	// if (checkWhole(file_content) == false)
-	// 	return (false);
+	if (checkWhole(file_content) == false)
+		return (false);
 	return (true);
 }
 
@@ -408,6 +499,15 @@ int main(int argc, char *argv[])
 		return (1);
 	}
 
-	configPaser.parseConfig(argv[1]);
+	try
+	{
+		configPaser.parseConfig(argv[1]);
+		/* code */
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		return (1);
+	}
 	return (0);
 }

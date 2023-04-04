@@ -28,6 +28,11 @@ class ConfigInfo
         bool	    checkWhole(const std::string& file_content);
         void	    printContent(const std::string& str, const std::string& str_name);
 
+
+        // find block
+        std::vector<std::string>::iterator	findServerBlock(const std::vector<std::string> file_content_vector, \
+													std::vector<std::string>::iterator& begin_iter, \
+													std::vector<std::string>::iterator& end_iter);
         void    parseServer();
         void    parseServerBlock();
         void    parseLocationBlock();

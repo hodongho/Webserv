@@ -52,7 +52,7 @@ index의 경우 nginx에서는 여러개 들어와도 처리해주지만
         {}로 되어 있는가?
             - pair는 확인했으니까
             - 각 라인을 확인할때 룰에 맞지 않을때 걸르는 것으로 확인 될것이라 생각든다.
-    - 각 line별로 확인
+    - server block, locatoin block으로 구분하고서 각 line별로 확인
         - validation_list 필요
             - server,location 필수항목이 다르므로 그리고 현재 확인하는 영역이 server인지 location인지 모르므로 
                 !!!영역별로 확인이 필요하다.!!!
@@ -91,6 +91,7 @@ index의 경우 nginx에서는 여러개 들어와도 처리해주지만
         - "server {" -> "server", "{"
             서버블록 시작
             혹은 "server"가 나온 순간부터 server block
+            server가 나왔을때 왼쪽에 무언가 있어서는 안되고, 오른쪽에는 "{" 혹은 "#*"만 가능하다
             <!-- - validate 확인을 server block이 나온 이후로 미루고 싶지만
             server block이라는 것이 안나올수도 있다.
             그렇게 된다면 각 라인이 유효한지 확인하면서 block의 시작과 끝을 파악해야한다.

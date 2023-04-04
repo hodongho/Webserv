@@ -54,6 +54,7 @@ add
 		- file name rule *.conf
 	- vaildate file content
 		- culry bracket pair
+		- block으로 구분
 		- each line
 			- key *{value} 
 			- key가 유효한지 확인
