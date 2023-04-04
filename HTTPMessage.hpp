@@ -29,17 +29,10 @@ class HTTPMessage
 		std::string							version;
 		std::map<std::string, std::string>	header;
 		std::string							body;
-<<<<<<< HEAD
-	
-	public:
-		HTTPMessage();
-		~HTTPMessage();
-=======
 
 	public:
 		HTTPMessage();
 		virtual ~HTTPMessage();
->>>>>>> main
 };
 
 #endif

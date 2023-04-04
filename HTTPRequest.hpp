@@ -19,18 +19,10 @@ class HTTPRequest : public HTTPMessage
 		MethodType	method;
 		std::string	URI;
 
-<<<<<<< HEAD
-	public:
-		HTTPRequest();
-		~HTTPRequest();
-
-		void										parseRequestMessage(std::string msg);
-=======
 		int	parseStartLine(std::stringstream& request_stream);
 		int	validateStartLine(void);
 		int	parseHeaderField(std::stringstream& request_stream);
 		int	validateHeaderField(void);
->>>>>>> main
 
 	public:
 		HTTPRequest(void);

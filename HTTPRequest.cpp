@@ -1,21 +1,6 @@
 #include "HTTPRequest.hpp"
 
 HTTPRequest::HTTPRequest()
-<<<<<<< HEAD
-{
-
-}
-
-HTTPRequest::~HTTPRequest()
-{
-
-}
-
-void HTTPRequest::parseRequestMessage(std::string msg)
-{
-	
-}
-=======
 :HTTPMessage(), method(NONE), URI("")
 {};
 
@@ -159,4 +144,3 @@ ssize_t		HTTPRequest::getContentLength()
 
 
 // std::cerr << RED << "400 Bad Request!" << WHI << std::endl;
->>>>>>> main
