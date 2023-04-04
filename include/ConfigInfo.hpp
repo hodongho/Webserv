@@ -1,7 +1,7 @@
 #ifndef ConfigInfo_HPP
 # define ConfigInfo_HPP
 # include "configStructure.hpp"
-
+# include "manageStdout.hpp"
 
 /*
     - 가져다 쓸떄는 config 정보가 담겨있어서 쓸텐데 config parser라는 이름이 맞을 것인가?
@@ -15,22 +15,23 @@ enum configValidationInfo
     OPTIONAL_UNIQUE_FIELD,
 };
 
+
 class ConfigInfo
 {
     private:
+        const std::string           whitespace;
         std::vector<ServerConfig>	webserv_config;
-        const std::string           whitespace = " \t\n\v\f\r";
 
         bool	    checkFileNameExtension(const char *file_name_parms);
         std::string readFile(std::string file_name);
         bool	    validateConfigFile(const std::string& file_content);
         bool	    checkCurlyBrackeyPair(const std::string& file_content);
         bool	    checkWhole(const std::string& file_content);
-        void	    printContent(const std::string& str, const std::string& str_name);
-
+        void	    printContent(const std::string& str, const std::string& str_name, const std::string& color);
 
         // find block
-        std::vector<std::string>::iterator	findServerBlock(const std::vector<std::string> file_content_vector, \
+        bool	findServerBlock(std::vector<std::string>::iterator& src_begin_iter, \
+                                                    const std::vector<std::string>::iterator& src_end_iter, \
 													std::vector<std::string>::iterator& begin_iter, \
 													std::vector<std::string>::iterator& end_iter);
         void    parseServer();
@@ -38,6 +39,7 @@ class ConfigInfo
         void    parseLocationBlock();
 
     public:
+        ConfigInfo(void);
         void    parseConfig(const char *file);
 
 };

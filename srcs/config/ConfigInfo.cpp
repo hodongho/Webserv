@@ -65,10 +65,15 @@
 static std::vector<std::string>	ft_split(const std::string& str, const std::string& delimiter);
 static std::string 				ft_strtrim(const std::string& str, const std::string& set);
 
-void	ConfigInfo::printContent(const std::string& str, const std::string& str_name)
+void	ConfigInfo::printContent(const std::string& str, const std::string& str_name, const std::string& color)
 {
-	std::cout << str_name << " : $" << str << "$" << std::endl;
+	std::cout << color << str_name << " : $" << str << "$" << WHI << std::endl;
 }
+
+ConfigInfo::ConfigInfo(void)
+	: whitespace(" \t\n\v\f\r")
+{}
+
 
 void ConfigInfo::parseConfig(const char *file_name)
 {
@@ -132,7 +137,6 @@ void ConfigInfo::parseServer() {
 	throw하는 식으로 변경 필요
 	throw 이후 exit()
 */
-
 bool	ConfigInfo::checkFileNameExtension(const char *file_name_parms)
 {
 	std::string	file_name(file_name_parms);
@@ -213,6 +217,8 @@ static std::string ft_strtrim(const std::string& str, const std::string& set)
 		return (str);
 	start_of_str = str.find_first_not_of(set);
 	end_of_str = str.find_last_not_of(set);
+	if (start_of_str == std::string::npos || end_of_str == std::string::npos)
+		return ("");
 	clean_str = str.substr(start_of_str, end_of_str - start_of_str + 1);
 	return (clean_str);
 }
@@ -235,14 +241,18 @@ bool	ConfigInfo::checkCurlyBrackeyPair(const std::string& file_content)
 		std::vector<std::string>	word_list;
 
 		clean_str = ft_strtrim(str, this->whitespace);
-		// printContent(clean_str, "clean_str");
+		// printContent(clean_str, "clean_str", BLU);
+		if (clean_str == "" || clean_str[0] == '#')
+			continue ;
 		word_list = ft_split(clean_str, this->whitespace);
 		for (std::vector<std::string>::iterator iter = word_list.begin(); iter != word_list.end(); iter++)
 		{
-			printContent(*iter, "\titer");
+			if ((*iter)[0] == '#')
+				break ;
+			// printContent(*iter, "\titer");
 			if ((*iter == "{" || *iter == "}"))
 			{
-				printContent(*iter, "\t###iter ");
+				// printContent(*iter, "\t###iter ", GRN);
 				if (*iter == "{")
 					curly_stack.push(*iter);
 				else if (!curly_stack.empty())
@@ -275,87 +285,125 @@ case
 - serverr test {
 */
 bool	findOpenCurlyBracket(const std::vector<std::string>::iterator& begin_iter,
-								const std::vector<std::string>::iterator& end_iter)
+								const std::vector<std::string>::iterator& end_iter,
+								bool& server_flag,
+								bool& location_flag,
+								bool& error_flag)
 {
 	// printContent(*(begin_iter + 1) , "*(begin_iter + 1) ");
-	if ((*begin_iter == "server" && ((begin_iter + 1) != end_iter &&*(begin_iter + 1) == "{") && ((begin_iter + 2) == end_iter || (*(begin_iter + 2))[0] == '#')) || \
-		(*begin_iter == "{" && (begin_iter + 1 == end_iter || (*(begin_iter + 1))[0] == '#')))
+	if (*begin_iter == "server")
+	{
+		if ((((begin_iter + 1) != end_iter &&*(begin_iter + 1) == "{") && ((begin_iter + 2) == end_iter || (*(begin_iter + 2))[0] == '#')) || \
+			(*begin_iter == "{" && (begin_iter + 1 == end_iter || (*(begin_iter + 1))[0] == '#')))
+			server_flag = true;
+		else if ((begin_iter + 1) == end_iter)
+			;
+		else
+		{
+			error_flag = false;
+			return (false);
+		}
 		return (true);
+	}
+	else if (*begin_iter == "location")
+	{
+		if (((end_iter - begin_iter) > 2 && ((begin_iter + 2) != end_iter &&*(begin_iter + 2) == "{") && ((begin_iter + 3) == end_iter || (*(begin_iter + 3))[0] == '#')) || \
+		(*begin_iter == "{" && (begin_iter + 1 == end_iter || (*(begin_iter + 1))[0] == '#')))
+			location_flag = true;
+		else
+		{
+			error_flag = false;
+			return (false);
+		}
+		return (true);
+	}
 	return (false);
 }
 
-std::vector<std::string>::iterator	ConfigInfo::findServerBlock(const std::vector<std::string> file_content_vector, \
+bool	findCloseCurlyBracket(const std::vector<std::string>::iterator& begin_iter,
+								const std::vector<std::string>::iterator& end_iter,
+								bool& error_flag)
+{
+	if (*begin_iter == "}")
+	{
+		if (((begin_iter + 1) == end_iter || (*(begin_iter + 1))[0] == '#'))
+			return (true);
+		error_flag = false;
+	}
+	return (false);
+}
+
+bool	ConfigInfo::findServerBlock(std::vector<std::string>::iterator& iter, \
+													const std::vector<std::string>::iterator& src_end_iter, \
 													std::vector<std::string>::iterator& begin_iter, \
 													std::vector<std::string>::iterator& end_iter)
 {
-	std::vector<std::string>::iterator 	iter;
 	std::stack<std::string> 			server_stack;
 	std::stack<std::string> 			location_stack;
 	bool								server_flag = false; // for stack.push() 해도되는지 확인용
 	bool								location_flag = false;
+	bool								error_flag = true;
 
-	for (;iter != file_content_vector.end(); iter++)
+	// findServerBlock
+	for (;iter != src_end_iter; iter++)
 	{
 		std::vector<std::string>	word_list;
 		std::string					clean_str;
 
 		clean_str = ft_strtrim(*iter, this->whitespace);
+		// printContent(clean_str, "clean_str", CYN);
 		// 만약 block 짝이 안맞을때 에러케이스 거르기 위함
 		if (clean_str == "" || clean_str[0] == '#')
 			continue ;
 		word_list = ft_split(clean_str, this->whitespace);
-		if (*(word_list.begin()) == "server")
-			server_flag = true;
-		if (*(word_list.begin()) == "location")
-			location_flag = true;
-		// '}' 뒤에는 없거나 있어도 주석이어야함
-		if (*(word_list.begin()) == "}" && \
-			((word_list.begin() + 1) == word_list.end() || *(word_list.begin() + 1) == "#"))
+		// for (std::vector<std::string>::iterator tmp_iter = word_list.begin(); tmp_iter != word_list.end(); tmp_iter++)
+		// 	printContent(*tmp_iter, "#*tmp_iter in findServerBlock", CYN);
+	 	if (findOpenCurlyBracket(word_list.begin(), word_list.end(), server_flag, location_flag, error_flag))
 		{
-			if (location_stack.empty() && server_stack.empty() == false)
-			{
-				std::vector<std::string>::iterator 	end_iter;
-
-				server_stack.pop();
-				end_iter = iter;
-				printContent(*begin_iter, "begin_iter");
-				printContent(*end_iter, "end_iter");
-				return (end_iter);
-				// validateServerBlock(begin_iter, end_iter); // block위치를 알게됨
-			}
-			if (location_stack.empty() == false)
-				location_stack.pop();
-		}
-		for (std::vector<std::string>::iterator word = word_list.begin(); \
-				word != word_list.end(); \
-				word++)
-		{
+			// std::cout << WHI << std::boolalpha << "server_flag : " << server_flag << WHI << std::endl;
+			// std::cout << WHI << std::boolalpha << "location_flag : " << location_flag << WHI << std::endl;
 			if (server_flag == true)
 			{
-				if (findOpenCurlyBracket(word_list.begin(), word_list.end()))
-				{
-					server_flag = false;
-					server_stack.push("{");
-					begin_iter = iter;
-				}
+				server_flag = false;
+				server_stack.push("{");
+				begin_iter = iter;
 			}
-			if (location_flag == true)
+			else if (location_flag == true)
 			{
-				if (findOpenCurlyBracket(word_list.begin(), word_list.end()))
-				{
-					location_flag = false;
-					location_stack.push("{");
-				}
+				location_flag = false;
+				location_stack.push("{");
 			}
-			// printContent(*word, "word");
+			// std::cout << BLU << std::boolalpha << "server_flag : " << server_flag << WHI << std::endl;
+			// std::cout << BLU << std::boolalpha << "location_flag : " << location_flag << WHI << std::endl;
 		}
-		// printContent(*iter, "iter");
-		// printContent(*begin_iter, "begin_iter");
-		// iter++;
+		else if (findCloseCurlyBracket(word_list.begin(), word_list.end(), error_flag))
+		{
+			if (location_stack.empty() == false)
+			{
+				location_stack.pop();
+				location_flag = false;
+			}
+			// else if (location_stack.empty() && server_stack.empty() == false)
+			else if (server_stack.empty() == false)
+			{
+				server_stack.pop();
+				// begin_iter++; // block내부만 가리키게 만듦
+				end_iter = iter;
+				// for (std::vector<std::string>::iterator iter = begin_iter; iter != end_iter; iter++)
+				// 	printContent(*iter, "#*iter about findServerBlock :", CYN);
+				// printContent(*begin_iter, "begin_iter");
+				// printContent(*end_iter, "end_iter");
+				return (true);
+				// validateServerBlock(begin_iter, end_iter); // block위치를 알게됨
+			}
+		}
+
+		if (error_flag == false)
+			return (false);
 	}
 	// if (server_stack.empty() && location_stack.empty())
 	// 	return (true);
-	return (iter);
+	return (false);
 }
 
 /*
@@ -393,74 +441,37 @@ bool	ConfigInfo::checkWhole(const std::string& file_content)
 	// prepareValidateKeyList()
 	file_content_vector = ft_split(file_content, "\n");
 	cur_iter = file_content_vector.begin();
-	
 	while (cur_iter != file_content_vector.end())
 	{
-		cur_iter = findServerBlock(file_content_vector, begin_iter, end_iter);
-		if (cur_iter == file_content_vector.end())
+		std::string	clean_str;
+
+		clean_str = ft_strtrim(*cur_iter, this->whitespace);
+		// printContent(clean_str, "#clean_str in checkWhole()", RED);
+		if (clean_str.size() == 0 || clean_str[0] == '#')
+		{
+			cur_iter++;
+			continue ;
+		}
+		{// 영역 벗어나면 vector 소멸자 호출되게 만들기 위함
+			std::vector<std::string>	word_list = ft_split(*cur_iter, this->whitespace);
+			if (word_list[0] != "server")
+			{
+				printContent(*cur_iter, "*cur_iter", GRN);
+				return (false);
+			}
+		}
+		// cur_iter = findServerBlock(cur_iter, file_content_vector.end(), begin_iter, end_iter);
+		if (findServerBlock(cur_iter, file_content_vector.end(), begin_iter, end_iter) == false)
 			return (false);
+		for (std::vector<std::string>::iterator iter = begin_iter; iter != end_iter; iter++)
+			printContent(*iter, "#*iter about findServerBlock :", BRW);
+		// begin_iter, end_iter
+		printContent(*begin_iter, "*begin_iter :", RED);
+		printContent(*end_iter, "*end_iter :", BLU);
 		cur_iter++;
+		// printContent(*cur_iter, "##after increament *cur_iter", GRN);
+		// std::cout << std::endl;
 	}
-	// for (;iter != file_content_vector.end(); iter++)
-	// {
-	// 	std::vector<std::string>	word_list;
-	// 	std::string					clean_str;
-
-	// 	clean_str = ft_strtrim(*iter, this->whitespace);
-	// 	// 만약 block 짝이 안맞을때 에러케이스 거르기 위함
-	// 	if (clean_str == "" || clean_str[0] == '#')
-	// 		continue ;
-	// 	word_list = ft_split(clean_str, this->whitespace);
-	// 	if (*(word_list.begin()) == "server")
-	// 		server_flag = true;
-	// 	if (*(word_list.begin()) == "location")
-	// 		location_flag = true;
-	// 	// '}' 뒤에는 없거나 있어도 주석이어야함
-	// 	if (*(word_list.begin()) == "}" && \
-	// 		((word_list.begin() + 1) == word_list.end() || *(word_list.begin() + 1) == "#"))
-	// 	{
-	// 		if (location_stack.empty() && server_stack.empty() == false)
-	// 		{
-	// 			std::vector<std::string>::iterator 	end_iter;
-
-	// 			server_stack.pop();
-	// 			end_iter = iter;
-	// 			printContent(*begin_iter, "begin_iter");
-	// 			printContent(*end_iter, "end_iter");
-	// 			// validateServerBlock(begin_iter, end_iter); // block위치를 알게됨
-	// 		}
-	// 		if (location_stack.empty() == false)
-	// 			location_stack.pop();
-	// 	}
-	// 	for (std::vector<std::string>::iterator word = word_list.begin(); \
-	// 			word != word_list.end(); \
-	// 			word++)
-	// 	{
-	// 		if (server_flag == true)
-	// 		{
-	// 			if (findOpenCurlyBracket(word_list.begin(), word_list.end()))
-	// 			{
-	// 				server_flag = false;
-	// 				server_stack.push("{");
-	// 				begin_iter = iter;
-	// 			}
-	// 		}
-	// 		if (location_flag == true)
-	// 		{
-	// 			if (findOpenCurlyBracket(word_list.begin(), word_list.end()))
-	// 			{
-	// 				location_flag = false;
-	// 				location_stack.push("{");
-	// 			}
-	// 		}
-	// 		// printContent(*word, "word");
-	// 	}
-	// 	// printContent(*iter, "iter");
-	// 	// printContent(*begin_iter, "begin_iter");
-	// 	// iter++;
-	// }
-	// if (server_stack.empty() && location_stack.empty())
-	// 	return (true);
 	return (true);
 }
 
