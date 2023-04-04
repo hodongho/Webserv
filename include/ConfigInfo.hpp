@@ -19,6 +19,40 @@ enum configValidationInfo
 class ConfigInfo
 {
     private:
+        // Key를 기준으로 함
+        // Key가 필수인가 or 없어도 되는가, Key가 유일한가 or 여러개 있어도 되는가
+        // value가 여러개 있는지 여부를 의미하지는 않음.
+        // e.g) error_page 403 404 400 500 /50x.html
+        enum	VaildateFiledType
+		{
+			NESSARY_UNIQUE,
+			NESSARY_MULTI,
+			OPTION_UNIQUE,
+			OPTION_MULTI,
+		};
+
+        /*
+
+        */
+        class  ValidateFieldInfo
+        {
+            private:
+                size_t              count;
+                VaildateFiledType   validate_filed_type;
+
+            public:
+                ValidateFieldInfo(void);
+                // ValidateFieldInfo(VaildateFiledType _validate_filed_type);
+
+                ValidateFieldInfo&          operator++(int);
+
+                void                        setValidateFiledType(const VaildateFiledType& _validate_filed_type);
+                void                        setCount(const size_t& _count);
+                const VaildateFiledType&    getValidateFiledType(void) const;
+                const size_t&               getCount(void) const;
+        };
+
+    private:
         const std::string           whitespace;
         std::vector<ServerConfig>	webserv_config;
 
@@ -27,17 +61,27 @@ class ConfigInfo
         bool	    validateConfigFile(const std::string& file_content);
         bool	    checkCurlyBrackeyPair(const std::string& file_content);
         bool	    checkWhole(const std::string& file_content);
-        void	    printContent(const std::string& str, const std::string& str_name, const std::string& color);
+        bool        validateServerBlock(std::vector<std::string>::iterator& begin_iter,
+                                        const std::vector<std::string>::iterator& end_iter);
 
         // find block
         bool	findServerBlock(std::vector<std::string>::iterator& src_begin_iter, \
                                                     const std::vector<std::string>::iterator& src_end_iter, \
 													std::vector<std::string>::iterator& begin_iter, \
 													std::vector<std::string>::iterator& end_iter);
+
+        // get validate info                                            
+        std::map<std::string, ValidateFieldInfo>	getValidateServerFiledMap(void);
+        std::map<std::string, ValidateFieldInfo>	getValidateLocationFiledMap(void);
+                                        
         void    parseServer();
         void    parseServerBlock();
         void    parseLocationBlock();
 
+        //util
+        void	    printContent(const std::string& str, const std::string& str_name, const std::string& color);
+        void	    printVector(std::vector<std::string>& word_list, const std::string& str_name, const std::string& color);
+        
     public:
         ConfigInfo(void);
         void    parseConfig(const char *file);
