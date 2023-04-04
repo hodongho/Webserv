@@ -1,6 +1,7 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 # define HEADER_END_SIZE 4
+# define RECV_BUF_SIZE 50
 
 # include <iostream>
 # include <string>
@@ -12,9 +13,11 @@
 # include <sys/event.h>
 # include <sys/types.h>
 # include <sys/socket.h>
+# include <arpa/inet.h>
+# include "Webserv.hpp"
+# include "HTTPMessage.hpp"
 # include "HTTPRequest.hpp"
 # include "HTTPResponse.hpp"
-# include "webserv.hpp"
 
 class ServerHandler {
 	private:

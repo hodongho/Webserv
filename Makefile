@@ -6,19 +6,32 @@
 #    By: yolee <yolee@student.42seoul.kr>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/03/31 01:14:02 by yolee             #+#    #+#              #
+<<<<<<< HEAD
 #    Updated: 2023/04/02 03:41:46 by yolee            ###   ########.fr        #
+=======
+#    Updated: 2023/04/04 16:34:58 by yolee            ###   ########.fr        #
+>>>>>>> main
 #                                                                              #
 # **************************************************************************** #
 
 NAME = webserv
-CC = c++
-CXXFLAGS = -Wall -Wextra -Werror
+
+CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 CPPFLAGS = -MMD
 
 SRCS = ServerHandler.cpp \
+<<<<<<< HEAD
 	SocketData.cpp \
 	utils.cpp \
 	webserv.cpp \
+=======
+	utils.cpp \
+	Webserv.cpp \
+	HTTPMessage.cpp \
+	HTTPRequest.cpp \
+	HTTPResponse.cpp
+>>>>>>> main
 
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
@@ -26,10 +39,10 @@ DEPS = $(SRCS:.cpp=.d)
 all : $(NAME)
 
 $(NAME) : $(OBJS)
-	$(CC) $(CXXFLAGS) $(CPPFLAGS) $(OBJS) -o $(NAME)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OBJS) -o $(NAME)
 
 .cpp.o :
-	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 clean :
 	$(RM) $(OBJS)
@@ -42,10 +55,7 @@ fclean :
 re :
 	$(MAKE) fclean
 	$(MAKE) all
-	
+
 .PHONY : all clean fclean re
 
 -include $(DEPS)
-
-
-	
