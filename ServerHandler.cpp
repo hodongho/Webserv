@@ -56,6 +56,8 @@ void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 	switch (client_data->status)
 	{
 		case CLIENT_RECV_ERROR:
+			// if (curr_event->filter == EVFILT_WRITE)
+			// 	this->makeErrorResponse(curr_event, client_data);
 			break;
 		case CLIENT_RECV_HEADER:
 			if (curr_event->filter == EVFILT_READ)
@@ -65,6 +67,18 @@ void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 			if (curr_event->filter == EVFILT_READ)
 				this->recvBody(curr_event, client_data);
 			break;
+		case CLIENT_GET:
+			if (curr_event->filter == EVFILT_WRITE)
+				this->getMethod(curr_event, client_data);
+			break;
+		case CLIENT_POST:
+			if (curr_event->filter == EVFILT_WRITE)
+				this->postMethod(curr_event, client_data);
+			break;
+		case CLIENT_DELETE:
+			if (curr_event->filter == EVFILT_WRITE)
+				this->deleteMethod(curr_event, client_data);
+			break;
 		case CLIENT_SEND_RESPONSE:
 			if (curr_event->filter == EVFILT_WRITE)
 				this->sendResponse(curr_event, client_data);
@@ -73,6 +87,29 @@ void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 			break;
 	}
 }
+
+/*
+ void ServerHandler::makeErrorResponse(struct kevent* const & curr_event, SocketData* const & client_socket)
+{
+	switch (client_socket->http_response.getStatusCode())
+	{
+	case REDIR:
+		this->makeRedirResponse(curr_event, client_socket);
+		break;
+	case BADREQ:
+		this->makeBadReqResponse(curr_event, client_socket);
+		break;
+	case NOTFOUND:
+		this->makeNotFoundResponse(curr_event, client_socket);
+		break;
+	case SERVERR:
+		this->makeServErrResponse(curr_event, client_socket);
+		break;
+	default:
+		break;
+	}
+}
+ */
 
 /*
 static void	printRecvData(const int& fd, const std::string& data, const ssize_t& recv_size)
@@ -120,28 +157,34 @@ void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 		client_socket->header_str.erase(header_end_pos + HEADER_END_SIZE);
 		client_socket->http_request.parseRequestMessage(client_socket->header_str);
 		MethodType method = client_socket->http_request.getMethod();
-		if (method == POST)
+		switch (method)
 		{
-			// client_socket->body_size = client_socket->http_request.getContentLength();
-			// if (client_socket->body_size < 0)
-			// {
-			// 	client_socket->status = CLIENT_RECV_ERROR;
-			// 	changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-			// 	changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
-			// }
-			client_socket->status = CLIENT_RECV_BODY;
-		}
-		else if (method == GET || method == DELETE)
-		{
-			client_socket->status = CLIENT_SEND_RESPONSE;
-			changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-			changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
-		}
-		else
-		{
-			client_socket->status = CLIENT_RECV_ERROR;
-			changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-			changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+			case GET :
+				client_socket->status = CLIENT_GET;
+				changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+				changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+				break;
+			case POST :
+				// client_socket->body_size = client_socket->http_request.getContentLength();
+				// if (client_socket->body_size < 0)
+				// {
+				// 	client_socket->status = CLIENT_RECV_ERROR;
+				// 	changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+				// 	changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+				// }
+				client_socket->status = CLIENT_RECV_BODY;
+				break;
+			case DELETE :
+				client_socket->status = CLIENT_DELETE;
+				changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+				changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+				break;
+			case NONE :
+				client_socket->http_response.setStatusCode("400");
+				client_socket->status = CLIENT_RECV_ERROR;
+				changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+				changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+				break;
 		}
 	}
 }
@@ -175,11 +218,51 @@ void	ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* cons
 
 	if (static_cast<size_t>(client_socket->body_size) <= client_socket->body_str.size())
 	{
-		client_socket->status = CLIENT_SEND_RESPONSE;
+		client_socket->status = CLIENT_POST;
 		changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
 		changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 	}
 }
+
+void		getMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
+{
+	client_socket->http_response.setVersion("HTTP/1.1");
+	client_socket->http_response.setStatusCode("200");
+	client_socket->http_response.setStatusMessage("OK");
+
+	client_socket->http_response.addHeader(CONTENT_TYPE, "text/html; charset=utf-8");
+	client_socket->http_response.addHeader(CONTENT_LENGTH, "163");
+	client_socket->http_response.addHeader(CONNECTION, "keep-alive");
+
+	std::string		file_path =
+	std::ifstream	html("./html/Hello.html");
+	std::string		body;
+
+	if (html.is_open())
+	{
+		std::string buf;
+
+		while (!html.eof())
+		{
+			std::getline(html, buf);
+			body += buf;
+			body += "\n";
+		}
+	}
+
+	this->setBody(body);
+}
+
+void		postMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
+{
+
+}
+
+void		deleteMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
+{
+
+}
+
 
 void	ServerHandler::sendResponse(struct kevent * const & curr_event, SocketData* const & client_socket)
 {
