@@ -3,6 +3,25 @@
 
 # include <map>
 # include <string>
+# include <iostream>
+# include "manageStdout.hpp"
+
+enum MethodType
+{
+	GET,
+	POST,
+	DELETE,
+	NONE
+};
+
+enum StatusCode
+{
+	OK,
+	REDIR,
+	BADREQ,
+	NOTFOUND,
+	SERVERR,
+};
 
 class HTTPMessage
 {
@@ -10,7 +29,10 @@ class HTTPMessage
 		std::string							version;
 		std::map<std::string, std::string>	header;
 		std::string							body;
-};
 
+	public:
+		HTTPMessage();
+		virtual ~HTTPMessage();
+};
 
 #endif
