@@ -27,7 +27,7 @@ class ServerHandler {
 		std::vector<struct kevent>	change_list;
 		struct kevent				event_list[8];
 		std::map<int, EventData*>	fd_list;
-		// Conf						conf;
+		// ConfigInfo				conf;
 
 		void	changeEvent(const uintptr_t& ident,
 							const int16_t& filter,

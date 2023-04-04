@@ -234,17 +234,17 @@ void		getMethod(struct kevent* const & curr_event, SocketData* const & client_so
 	client_socket->http_response.addHeader(CONTENT_LENGTH, "163");
 	client_socket->http_response.addHeader(CONNECTION, "keep-alive");
 
-	std::string		file_path =
-	std::ifstream	html("./html/Hello.html");
+	std::string		file_path = 
+	std::ifstream	file();
 	std::string		body;
 
-	if (html.is_open())
+	if (file.is_open())
 	{
 		std::string buf;
 
-		while (!html.eof())
+		while (!file.eof())
 		{
-			std::getline(html, buf);
+			std::getline(file, buf);
 			body += buf;
 			body += "\n";
 		}
