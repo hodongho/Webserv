@@ -11,13 +11,15 @@
 # **************************************************************************** #
 
 NAME = webserv
-CC = c++
-CXXFLAGS = -Wall -Wextra -Werror
+
+CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 CPPFLAGS = -MMD
 
 SRCS = ServerHandler.cpp \
 	utils.cpp \
 	Webserv.cpp \
+	HTTPMessage.cpp \
 	HTTPRequest.cpp \
 	HTTPResponse.cpp
 
@@ -27,10 +29,10 @@ DEPS = $(SRCS:.cpp=.d)
 all : $(NAME)
 
 $(NAME) : $(OBJS)
-	$(CC) $(CXXFLAGS) $(CPPFLAGS) $(OBJS) -o $(NAME)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OBJS) -o $(NAME)
 
 .cpp.o :
-	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 clean :
 	$(RM) $(OBJS)

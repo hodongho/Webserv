@@ -1,11 +1,8 @@
 #include "HTTPRequest.hpp"
 
 HTTPRequest::HTTPRequest()
-:method(NONE), URI("")
-{
-	version = "";
-	body = "";
-};
+:HTTPMessage(), method(NONE), URI("")
+{};
 
 HTTPRequest::~HTTPRequest()
 {};
@@ -40,6 +37,7 @@ int	HTTPRequest::parseStartLine(std::stringstream& request_stream)
 	std::getline(request_stream, end, '\n');
 	if (end != "\r")
 		return (-1);
+
 	if (this->validateStartLine() == -1)
 		return (-1);
 
@@ -115,15 +113,15 @@ int	HTTPRequest::parseRequestMessage(std::string& msg)
 
 void	HTTPRequest::saveBody(std::string& _body)
 {
-	this->body.append(_body, _body.size());
+	this->body.append(_body.c_str(), _body.size());
 }
 
 //Getter
-const std::string&							HTTPRequest::getVersion() const { return (this->version); }
-const MethodType&							HTTPRequest::getMethod() const { return (this->method); }
-const std::string&							HTTPRequest::getURI() const { return (this->URI); }
-const std::string&							HTTPRequest::getBody() const { return (this->body); }
-const std::map<std::string, std::string>&	HTTPRequest::getHeader() const { return (this->header); }
+const std::string&							HTTPRequest::getVersion() const	{ return (this->version); }
+const MethodType&							HTTPRequest::getMethod() const	{ return (this->method); }
+const std::string&							HTTPRequest::getURI() const		{ return (this->URI); }
+const std::string&							HTTPRequest::getBody() const	{ return (this->body); }
+const std::map<std::string, std::string>&	HTTPRequest::getHeader() const	{ return (this->header); }
 
 ssize_t		HTTPRequest::getContentLength()
 {

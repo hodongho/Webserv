@@ -1,23 +1,18 @@
 #include "HTTPResponse.hpp"
+#include <fstream>
 
 HTTPResponse::HTTPResponse()
-:response(""), status_code(""), status_message("")
-{
-	version = "";
-	body = "";
-};
+:HTTPMessage(), response(""), status_code(""), status_message("")
+{};
 
 HTTPResponse::~HTTPResponse()
 {};
 
 void	HTTPResponse::makeStatusLine()
 {
-	this->response.append(this->version.c_str(), this->version.size());
-	this->response.append(" ", 1);
-	this->response.append(this->status_code.c_str(), this->status_code.size());
-	this->response.append(" ", 1);
-	this->response.append(this->status_message.c_str(), this->status_message.size());
-	this->response.append("\r\n\r\n", 4);
+	this->response +=	this->version + " " +
+						this->status_code + " " +
+						this->status_message + "\r\n\r\n";
 }
 
 void	HTTPResponse::makeHeaderField()
@@ -29,18 +24,14 @@ void	HTTPResponse::makeHeaderField()
 
 	for(; it != end; it++)
 	{
-		this->response.append(it->first.c_str(), it->first.size());
-		this->response.append(": ", 2);
-		this->response.append(it->second.c_str(), it->second.size());
-		this->response.append("\r\n", 2);
+		this->response += it->first + ": " + it->second + "\r\n";
 	}
-	this->response.append("\r\n\r\n", 4);
+	this->response += "\r\n\r\n";
 }
 
 void	HTTPResponse::makeBody()
 {
-	this->response.append(this->body.c_str(), this->body.size());
-	this->response.append("\r\n\r\n", 4);
+	this->response += this->body + "\r\n\r\n";
 }
 
 std::string	HTTPResponse::makeResponseMessage()
@@ -49,5 +40,30 @@ std::string	HTTPResponse::makeResponseMessage()
 	this->makeHeaderField();
 	this->makeBody();
 
+	// response = "HTTP/1.1 200 OK\r\n";
+	// response += "Content-Type: text/html\r\n";
+	// response += "Content-Length: 163\r\n";
+	// response += "Connection: keep-alive\r\n\r\n";
+
+	// std::ifstream	html("./html/Hello.html");
+
+	// if (html.is_open())
+	// {
+	// 	std::string	buf;
+
+	// 	while (!html.eof())
+	// 	{
+	// 		std::getline(html, buf);
+	// 		response += buf;
+	// 		response += "\n";
+	// 	}
+	// }
+
 	return (response);
 }
+
+void	HTTPResponse::setVersion(std::string _version)				{ this->version = _version; }
+void	HTTPResponse::setStatusCode(std::string _status_code)		{ this->status_code = _status_code; }
+void	HTTPResponse::setStatusMessage(std::string _status_message)	{ this->status_message = _status_message; }
+void	HTTPResponse::setBody(std::string _body) 					{ this->body = _body; }
+void	HTTPResponse::addHeader(std::string _header_name, std::string _header_value) { header[_header_name] = _header_value; }
