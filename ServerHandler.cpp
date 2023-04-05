@@ -286,6 +286,12 @@ static void	setTestResponse(HTTPResponse& res) // test response make
 
 void		ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
+	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, GET) == 0)
+	{
+		client_socket->status = CLIENT_RECV_ERROR;
+		client_socket->http_response.setStatusCode("405");
+		return ;
+	}
 	std::string file_path = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
 	struct stat file_stat;
 	if (stat(file_path.c_str(), &file_stat) == -1)
@@ -327,6 +333,12 @@ void		ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* co
 
 void		ServerHandler::postMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
+	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, POST) == 0)
+	{
+		client_socket->status = CLIENT_RECV_ERROR;
+		client_socket->http_response.setStatusCode("405");
+		return ;
+	}
 	std::string file_path = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
 	struct stat file_stat;
 	if (stat(file_path.c_str(), &file_stat) == -1)
@@ -365,8 +377,14 @@ void		ServerHandler::postMethod(struct kevent* const & curr_event, SocketData* c
 	client_socket->status = CLIENT_READ_LOCAL;
 }
 
-void		ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
+void ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
+	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, DELETE) == 0)
+	{
+		client_socket->status = CLIENT_RECV_ERROR;
+		client_socket->http_response.setStatusCode("405");
+		return ;
+	}
 	std::string file_path = this->conf.convUriToPath(client_socket->http_request.getURI());
 	struct stat file_stat;
 	if (stat(file_path.c_str(), &file_stat) == -1)
@@ -375,6 +393,12 @@ void		ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData*
 		client_socket->http_response.setStatusCode("404");
 		return ;
 	}
+	if (unlink(file_path.c_str()))
+		throwError("file unlink: ");
+	/**
+	 * @brief write httpResponse header for delete header
+	 * 
+	 */
 	client_socket->status = CLIENT_SEND_RESPONSE;
 }
 
