@@ -8,6 +8,8 @@
 // # include "ServerHandler.hpp"
 
 # define PORT 4242
+# define PIPE_RD 0
+# define PIPE_WR 1
 
 class HTTPRequest;
 class HTTPResponse;
@@ -30,8 +32,7 @@ enum SocketStatus
 	CLIENT_GET,
 	CLIENT_POST,
 	CLIENT_DELETE,
-	CLIENT_WAIT_CGI,
-	CLIENT_READY_CGI
+	CLIENT_READ_LOCAL
 };
 
 struct EventData
