@@ -59,9 +59,12 @@ class ConfigInfo
         bool	    checkFileNameExtension(const char *file_name_parms);
         std::string readFile(std::string file_name);
         bool	    validateConfigFile(const std::string& file_content);
-        bool	    checkCurlyBrackeyPair(const std::string& file_content);
+        bool	    checkCurlyBracketPair(const std::string& file_content);
         bool	    checkWhole(const std::string& file_content);
-        bool        validateServerBlock(std::vector<std::string>::iterator& begin_iter,
+        bool        validateServerBlock(std::vector<std::string> server_block_vec);
+        // bool        validateServerBlock(std::vector<std::string>::iterator& begin_iter,
+        //                                 const std::vector<std::string>::iterator& end_iter);
+        bool        validateLocationBlock(std::vector<std::string>::iterator& begin_iter,
                                         const std::vector<std::string>::iterator& end_iter);
 
         // find block
@@ -69,6 +72,13 @@ class ConfigInfo
                                                     const std::vector<std::string>::iterator& src_end_iter, \
 													std::vector<std::string>::iterator& begin_iter, \
 													std::vector<std::string>::iterator& end_iter);
+        bool	findLocationBlock(std::vector<std::string>::iterator& src_begin_iter, \
+                                                    const std::vector<std::string>::iterator& src_end_iter, \
+													std::vector<std::string>::iterator& begin_iter, \
+													std::vector<std::string>::iterator& end_iter);    
+
+        // check function for validate
+        bool    checkCommonConfigLineForm(std::vector<std::string> word_list);
 
         // get validate info                                            
         std::map<std::string, ValidateFieldInfo>	getValidateServerFiledMap(void);
