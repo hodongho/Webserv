@@ -23,9 +23,6 @@ class ConfigInfo
 			OPTION_MULTI,
 		};
 
-        /*
-
-        */
         class  ValidateFieldInfo
         {
             private:
@@ -34,7 +31,6 @@ class ConfigInfo
 
             public:
                 ValidateFieldInfo(void);
-                // ValidateFieldInfo(VaildateFiledType _validate_filed_type);
 
                 ValidateFieldInfo&          operator++(int);
 
@@ -54,12 +50,10 @@ class ConfigInfo
         bool	    checkCurlyBracketPair(const std::string& file_content);
         bool	    checkWhole(const std::string& file_content);
         bool        validateServerBlock(std::vector<std::string> server_block_vec);
-        // bool        validateServerBlock(std::vector<std::string>::iterator& begin_iter,
-        //                                 const std::vector<std::string>::iterator& end_iter);
         bool        validateLocationBlock(std::vector<std::string>::iterator& begin_iter,
                                         const std::vector<std::string>::iterator& end_iter);
 
-        // find block
+        // find {} block
         bool	findServerBlock(std::vector<std::string>::iterator& src_begin_iter, \
                                                     const std::vector<std::string>::iterator& src_end_iter, \
 													std::vector<std::string>::iterator& begin_iter, \
@@ -76,11 +70,13 @@ class ConfigInfo
         bool    checkIpClass(const std::string& ip_class);
         bool    checkPortConfigField(std::string port);
         bool    checkClientMaxBodySizeConfigField(std::string port);
+        bool    checkErrorPageConfigField(std::string error_page);
 
         // get validate info                                            
         std::map<std::string, ValidateFieldInfo>	getValidateServerFiledMap(void);
         std::map<std::string, ValidateFieldInfo>	getValidateLocationFiledMap(void);
-                                        
+
+        // parse            
         void    parseServer();
         void    parseServerBlock();
         void    parseLocationBlock();

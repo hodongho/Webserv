@@ -299,50 +299,6 @@ bool	findOpenCurlyBracket(const std::vector<std::string>::iterator& begin_iter,
 	return (false);
 }
 
-/*
-case
-- location /test {
-- location /test  { #4242 sdf 
-- location /test 
-  { # comment dsf erw tdfg
-- location /test {
-*/
-// bool	findLocationOpenCurlyBracket(const std::vector<std::string>::iterator& begin_iter,
-// 								const std::vector<std::string>::iterator& end_iter,
-// 								bool& server_flag,
-// 								bool& location_flag,
-// 								bool& error_flag)
-// {
-// 	// printContent(*(begin_iter + 1) , "*(begin_iter + 1) ");
-// 	if (*begin_iter == "server")
-// 	{
-// 		if ((((begin_iter + 1) != end_iter &&*(begin_iter + 1) == "{") && ((begin_iter + 2) == end_iter || (*(begin_iter + 2))[0] == '#')) || \
-// 			(*begin_iter == "{" && (begin_iter + 1 == end_iter || (*(begin_iter + 1))[0] == '#')))
-// 			server_flag = true;
-// 		else if ((begin_iter + 1) == end_iter)
-// 			;
-// 		else
-// 		{
-// 			error_flag = false;
-// 			return (false);
-// 		}
-// 		return (true);
-// 	}
-// 	else if (*begin_iter == "location")
-// 	{
-// 		if (((end_iter - begin_iter) > 2 && ((begin_iter + 2) != end_iter &&*(begin_iter + 2) == "{") && ((begin_iter + 3) == end_iter || (*(begin_iter + 3))[0] == '#')) || \
-// 		(*begin_iter == "{" && (begin_iter + 1 == end_iter || (*(begin_iter + 1))[0] == '#')))
-// 			location_flag = true;
-// 		else
-// 		{
-// 			error_flag = false;
-// 			return (false);
-// 		}
-// 		return (true);
-// 	}
-// 	return (false);
-// }
-
 bool	findCloseCurlyBracket(const std::vector<std::string>::iterator& begin_iter,
 								const std::vector<std::string>::iterator& end_iter,
 								bool& error_flag)
@@ -445,68 +401,6 @@ std::string	removeAfterSemicolon(const std::string& origin_value)
 	return (clean_value);
 }
 
-bool ConfigInfo::checkIpClass(const std::string& ip_class)
-{
-	std::stringstream	ip_class_strstream;
-	int					ip_class_numeric;
-
-	printContent(ip_class, "ip_class", RED);
-	ip_class_strstream << std::atoi(ip_class.c_str());
-	ip_class_strstream >> ip_class_numeric;
-	std::cout << RED << "ip_class_numeric : " << ip_class_numeric << WHI <<std::endl;
-	printContent(ip_class_strstream.str(), "ip_class_strstream.str()", BLU);
-	if (ip_class_strstream.str() != ip_class)
-		return (false);
-	else if (ip_class_numeric > 255 || ip_class_numeric < 0)
-		return (false);
-    return (true);
-}
-
-/*
-port 
-0 ~ 65526
-*/
-bool ConfigInfo::checkPortConfigField(std::string port)
-{
-	std::stringstream	port_strstream;
-	int					port_numeric;
-
-	port = removeAfterSemicolon(port);
-	// printContent(port, "port", GRN);
-
-	port_strstream << std::atoi(port.c_str());
-	port_strstream >> port_numeric;
-	// std::cout << RED << "port_numeric : " << port_numeric << WHI <<std::endl;
-	// printContent(port_strstream.str(), "port_strstream.str()", BLU);
-	// std::cout << RED << "std::numeric_limits<uint16_t>::max() : " << std::numeric_limits<uint16_t>::max() << WHI << std::endl;
-	if (port_strstream.str() != port)
-		return (false);
-	else if (port_numeric > std::numeric_limits<uint16_t>::max() || port_numeric < 0)
-		return (false);
-    return (true);
-}
-
-bool ConfigInfo::checkClientMaxBodySizeConfigField(std::string client_body_size)
-{
-	std::stringstream	client_body_size_strstream;
-	int					client_body_size_numeric;
-
-	client_body_size = removeAfterSemicolon(client_body_size);
-	printContent(client_body_size, "client_body_size", GRN);
-
-	client_body_size_strstream << std::atoi(client_body_size.c_str());
-	client_body_size_strstream >> client_body_size_numeric;
-	// std::cout << RED << "client_body_size_numeric : " << client_body_size_numeric << WHI <<std::endl;
-	// printContent(client_body_size_strstream.str(), "client_body_size_strstream.str()", BLU);
-	std::cout << RED << "std::numeric_limits<int>::max() : " << std::numeric_limits<int>::max() << WHI << std::endl;
-	if (client_body_size_strstream.str() != client_body_size)
-		return (false);
-	else if (client_body_size_numeric > std::numeric_limits<int>::max() || client_body_size_numeric < 0)
-		return (false);
-    return (true);
-}
-
-
 /*
 IPv4
 [123].[123].[123].[123];
@@ -521,7 +415,6 @@ bool ConfigInfo::checkHostConfigField(std::string field_value)
 	size_t		dot_count;
 
 	field_value = removeAfterSemicolon(field_value);
-	printContent(field_value, "field_value", GRN);
 	dot_count = 0;
 	for (size_t	idx = 0; idx < field_value.length(); idx++)
 	{
@@ -539,6 +432,178 @@ bool ConfigInfo::checkHostConfigField(std::string field_value)
 		return (false);
 	if (dot_count != 3)
 		return (false);
+    return (true);
+}
+
+bool ConfigInfo::checkIpClass(const std::string& ip_class)
+{
+	std::stringstream	ip_class_strstream;
+	int					ip_class_numeric;
+
+	ip_class_strstream << std::atoi(ip_class.c_str());
+	ip_class_strstream >> ip_class_numeric;
+	if (ip_class_strstream.str() != ip_class)
+		return (false);
+	else if (ip_class_numeric > 255 || ip_class_numeric < 0)
+		return (false);
+    return (true);
+}
+
+/*
+port 
+0 ~ 65526
+*/
+bool ConfigInfo::checkPortConfigField(std::string port)
+{
+	std::stringstream	port_strstream;
+	int					port_numeric;
+
+	port = removeAfterSemicolon(port);
+	port_strstream << std::atoi(port.c_str());
+	port_strstream >> port_numeric;
+	if (port_strstream.str() != port)
+		return (false);
+	else if (port_numeric > std::numeric_limits<uint16_t>::max() || port_numeric < 0)
+		return (false);
+    return (true);
+}
+
+bool ConfigInfo::checkClientMaxBodySizeConfigField(std::string client_body_size)
+{
+	std::stringstream	client_body_size_strstream;
+	int					client_body_size_numeric;
+
+	client_body_size = removeAfterSemicolon(client_body_size);
+	client_body_size_strstream << std::atoi(client_body_size.c_str());
+	client_body_size_strstream >> client_body_size_numeric;
+	if (client_body_size_strstream.str() != client_body_size)
+		return (false);
+	else if (client_body_size_numeric > std::numeric_limits<int>::max() || client_body_size_numeric < 0)
+		return (false);
+    return (true);
+}
+
+/*
+	error_page 403 404 400 500 /50x.html
+	형식이 제대로 맞는지도 확인필요
+*/
+bool ConfigInfo::checkErrorPageConfigField(std::string error_page)
+{
+	std::vector<std::string>::iterator	value_iter;
+	std::vector<std::string>::iterator	semicolon_iter;
+	std::string							value;
+	size_t 								semicolon_pos;
+	size_t								comment_pos;
+
+	std::vector<std::string>			error_page_vector;
+	std::vector<std::string>::iterator	error_page_iter;
+	std::stringstream					error_page_strstream;
+	int									error_page_numeric;
+
+
+
+	
+	// error_page = removeAfterSemicolon(error_page);
+	error_page_vector = ft_split(error_page, this->whitespace);
+	error_page_iter = error_page_vector.begin() + 1; 
+	// error_page_strstream << std::atoi(error_page.c_str());
+	// error_page_strstream >> error_page_numeric;
+	if (error_page_strstream.str() != error_page)
+		return (false);
+	else if (error_page_numeric > std::numeric_limits<int>::max() || error_page_numeric < 0)
+		return (false);
+
+
+	/*
+		error page룰에 맞게 수정필요
+		key error_page_key error_page_key error_page_key error_page_key error_page_key value; 
+		중간에 '#' 나오면 skip
+		오전 10시까지 처리
+		안되면 간단하게 처리
+			- 간단하게의 의미
+				-입력 중간에 주석 처리 
+				# error_page에 대해서는 주석 없이 처리
+				중간값들은 int 400~599사이
+	*/
+
+
+
+
+	// ==========
+		// for (std::vector<std::string>::iterator iter = error_page_vector.begin(); iter != error_page_vector.end(); iter++)
+	// 	printContent(*iter, "*iter", BRW);
+	value_iter = error_page_vector.begin() + 1;
+	printContent(*value_iter, "*value_iter", BRW);
+	if (value_iter == error_page_vector.end())
+		return (false);
+
+	value = *value_iter;
+	printContent(value, "value", BRW);
+	if (value.size() == 0 || value[0] == '#')
+		return (false);
+	// value; ,value ;#
+	// value;#sdfjklasdjklfj 이런 케이스는 음
+	// ';'찾은 경우
+	// ';'가 마지막에 있거나 ';'바로 다음이 '#'이어야 한다.
+	semicolon_pos = value.find(';');
+	std::cout << "semicolon_pos : " << semicolon_pos << std::endl;
+	comment_pos = value.find('#');
+	std::cout << BRW << "comment_pos : " << comment_pos << WHI << std::endl;
+	// value안에 ';'이 있는 경우 "value;"
+	// value안에 주석이 있었다면 ;이 주석 왼쪽에 있어야한다.
+		// 없다면 value 다음 문자를 확인해야한다.
+	// 주석이 없다면 ;이 "value;" 마지막에 있거나 "value" ";"처럼 value 바로 다음 단어에 첫 글자로 와야한다.
+
+	// "value#;" ";"
+	// "value#;" "#;"
+	if (comment_pos != std::string::npos)
+	{
+		// 이미 주석처리 된것이므로 뒤에 단어에 ';'있든 없든 상관없어짐
+		if (semicolon_pos > comment_pos)
+			return (false);
+		else if (semicolon_pos + 1 != comment_pos)
+			return (false);
+	}
+	else
+	{
+		// "value"에 주석이 없으면서 "value"에 ';'로 없는 경우
+		if (semicolon_pos == std::string::npos) // 다음 단어에 ';'이 처음에 있는지 확인
+		{
+			std::vector<std::string>::iterator	next_iter;
+			size_t								next_word_comment_pos;
+			size_t								next_word_semicolon_pos;
+
+			next_iter = value_iter + 1;
+			next_word_comment_pos = next_iter->find('#');
+			next_word_semicolon_pos = next_iter->find(';');
+
+			// ';'이 다음단어 처음에 나타나는 경우
+			// ';'다음은 없거나 '#'이 ';' 바로 뒤에 나와야함
+			// ";#"허용
+			if (next_word_semicolon_pos == 0)
+			{
+				if (next_iter->size() > 1 && next_iter->at(1) != '#')
+					return (false);
+			}
+			else // 다음단어 처음에 ';'가 나타나지 않으면 error
+				return (false);
+		}
+		else //주석이 없다면 ';'이 value 마지막에 나와야함
+		{
+			if (semicolon_pos != (value.size() - 1))
+				return (false);
+			else if (value_iter + 1 != error_page_vector.end())
+			{
+				if ((value_iter + 1)->at(0) != '#')
+					return (false);
+			}
+		}
+	}
+	///==========
+
+	// value = removeAfterSemicolon(value);
+	// if (value.size() == 0)
+	// 	return (false);
     return (true);
 }
 
@@ -919,8 +984,8 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 				}
 				else if (first_word == "error_page")
 				{
-					// if (checkErrorPage(word_list) == false)
-					// 	return (false);
+					if (checkErrorPageConfigField(filed_value) == false)
+						return (false);
 					// validate_server_filed_map[filed_name]++; // count increament!!!
 				}
 				else
@@ -1126,12 +1191,7 @@ bool	ConfigInfo::checkWhole(const std::string& file_content)
 	std::vector<std::string>::iterator 	cur_iter;
 	std::vector<std::string>::iterator 	begin_iter;
 	std::vector<std::string>::iterator 	end_iter;
-	// std::stack<std::string> 			server_stack;
-	// std::stack<std::string> 			location_stack;
-	// bool								server_flag = false; // for stack.push() 해도되는지 확인용
-	// bool								location_flag = false;
 	
-	// prepareValidateKeyList()
 	file_content_vector = ft_split(file_content, "\n");
 	cur_iter = file_content_vector.begin();
 	while (cur_iter != file_content_vector.end())
@@ -1145,14 +1205,14 @@ bool	ConfigInfo::checkWhole(const std::string& file_content)
 			cur_iter++;
 			continue ;
 		}
-		{// 영역 벗어나면 vector 소멸자 호출되게 만들기 위함
-			std::vector<std::string>	word_list = ft_split(*cur_iter, this->whitespace);
-			// server block만 확인하므로 server block 이외에 라인에서는 "server"로 시작하지 않으면 error이다.
-			if (word_list[0] != "server")
-			{
-				printContent(*cur_iter, "*cur_iter", GRN);
-				return (false);
-			}
+		std::vector<std::string>	word_list;
+		
+		word_list = ft_split(*cur_iter, this->whitespace);
+		// server block만 확인하므로 server block 이외에 라인에서는 "server"로 시작하지 않으면 error이다.
+		if (word_list[0] != "server")
+		{
+			printContent(*cur_iter, "*cur_iter", GRN);
+			return (false);
 		}
 		if (findServerBlock(cur_iter, file_content_vector.end(), begin_iter, end_iter) == false)
 			return (false);
@@ -1218,7 +1278,5 @@ int main(int argc, char *argv[])
 		std::cerr << e.what() << '\n';
 		return (1);
 	}
-
-
 	return (0);
 }
