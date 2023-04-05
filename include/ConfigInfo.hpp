@@ -8,14 +8,6 @@
     - 그렇다고 ConfigInfo라고 하기에는 주요 동작이 parse이다.
 */
 
-enum configValidationInfo
-{
-    NESSARY_UNIQUE_FIELD,
-    NESSARY_MULTIPLE_FIELD,
-    OPTIONAL_UNIQUE_FIELD,
-};
-
-
 class ConfigInfo
 {
     private:
@@ -79,6 +71,11 @@ class ConfigInfo
 
         // check function for validate
         bool    checkCommonConfigLineForm(std::vector<std::string> word_list);
+        bool	checkDuplicateConfigField(const ValidateFieldInfo& validate_field_info);
+        bool    checkHostConfigField(std::string field_value);
+        bool    checkIpClass(const std::string& ip_class);
+        bool    checkPortConfigField(std::string port);
+        bool    checkClientMaxBodySizeConfigField(std::string port);
 
         // get validate info                                            
         std::map<std::string, ValidateFieldInfo>	getValidateServerFiledMap(void);

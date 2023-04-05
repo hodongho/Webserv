@@ -88,9 +88,9 @@ void ConfigInfo::parseConfig(const char *file_name)
 }
 
 void ConfigInfo::parseServer() {
-	size_t start = 0;
-	size_t end = 0;
-	std::string tmp;
+	// size_t start = 0;
+	// size_t end = 0;
+	// std::string tmp;
 
 	// prev
 	// while (end != std::string::npos) {
@@ -415,6 +415,134 @@ bool	ConfigInfo::findLocationBlock(std::vector<std::string>::iterator& iter, \
 }
 
 /*
+	ValidateFieldInfo 내부에count가 1인지 확인
+	count를 증가시키기 전에 확인할것이므로 중복 필드가 아니면 
+	count가 0이어야 정상이다.
+*/
+bool	ConfigInfo::checkDuplicateConfigField(const ValidateFieldInfo& validate_field_info)
+{
+	if (validate_field_info.getValidateFiledType() == NESSARY_UNIQUE || \
+		validate_field_info.getValidateFiledType() == OPTION_UNIQUE)
+	{
+		if (validate_field_info.getCount() > 0)
+			return (false);
+	}
+	return (true);
+}
+
+/*
+	# 주석은 상관없다
+	이미 이전에 확인한 상태이므로 무조건 ;이 #
+*/
+std::string	removeAfterSemicolon(const std::string& origin_value)
+{
+	std::string	clean_value(origin_value);
+	size_t		end_of_str;
+
+	end_of_str = origin_value.find(';');
+	if (end_of_str != std::string::npos)
+		clean_value = origin_value.substr(0, end_of_str);
+	return (clean_value);
+}
+
+bool ConfigInfo::checkIpClass(const std::string& ip_class)
+{
+	std::stringstream	ip_class_strstream;
+	int					ip_class_numeric;
+
+	printContent(ip_class, "ip_class", RED);
+	ip_class_strstream << std::atoi(ip_class.c_str());
+	ip_class_strstream >> ip_class_numeric;
+	std::cout << RED << "ip_class_numeric : " << ip_class_numeric << WHI <<std::endl;
+	printContent(ip_class_strstream.str(), "ip_class_strstream.str()", BLU);
+	if (ip_class_strstream.str() != ip_class)
+		return (false);
+	else if (ip_class_numeric > 255 || ip_class_numeric < 0)
+		return (false);
+    return (true);
+}
+
+/*
+port 
+0 ~ 65526
+*/
+bool ConfigInfo::checkPortConfigField(std::string port)
+{
+	std::stringstream	port_strstream;
+	int					port_numeric;
+
+	port = removeAfterSemicolon(port);
+	// printContent(port, "port", GRN);
+
+	port_strstream << std::atoi(port.c_str());
+	port_strstream >> port_numeric;
+	// std::cout << RED << "port_numeric : " << port_numeric << WHI <<std::endl;
+	// printContent(port_strstream.str(), "port_strstream.str()", BLU);
+	// std::cout << RED << "std::numeric_limits<uint16_t>::max() : " << std::numeric_limits<uint16_t>::max() << WHI << std::endl;
+	if (port_strstream.str() != port)
+		return (false);
+	else if (port_numeric > std::numeric_limits<uint16_t>::max() || port_numeric < 0)
+		return (false);
+    return (true);
+}
+
+bool ConfigInfo::checkClientMaxBodySizeConfigField(std::string client_body_size)
+{
+	std::stringstream	client_body_size_strstream;
+	int					client_body_size_numeric;
+
+	client_body_size = removeAfterSemicolon(client_body_size);
+	printContent(client_body_size, "client_body_size", GRN);
+
+	client_body_size_strstream << std::atoi(client_body_size.c_str());
+	client_body_size_strstream >> client_body_size_numeric;
+	// std::cout << RED << "client_body_size_numeric : " << client_body_size_numeric << WHI <<std::endl;
+	// printContent(client_body_size_strstream.str(), "client_body_size_strstream.str()", BLU);
+	std::cout << RED << "std::numeric_limits<int>::max() : " << std::numeric_limits<int>::max() << WHI << std::endl;
+	if (client_body_size_strstream.str() != client_body_size)
+		return (false);
+	else if (client_body_size_numeric > std::numeric_limits<int>::max() || client_body_size_numeric < 0)
+		return (false);
+    return (true);
+}
+
+
+/*
+IPv4
+[123].[123].[123].[123];
+- ;이 있다면 제거
+	; or # 이전까지만 value에 담아둠
+- 각 '.'과 '.'사이는 최대 3자리 숫자
+- '.'의 개수는 3개
+*/
+bool ConfigInfo::checkHostConfigField(std::string field_value)
+{
+	std::string	ip_class;
+	size_t		dot_count;
+
+	field_value = removeAfterSemicolon(field_value);
+	printContent(field_value, "field_value", GRN);
+	dot_count = 0;
+	for (size_t	idx = 0; idx < field_value.length(); idx++)
+	{
+		if (field_value[idx] == '.')
+		{
+			if (checkIpClass(ip_class) == false)
+				return (false);
+			ip_class = "";
+			dot_count++;
+			continue ;
+		}	
+		ip_class += field_value[idx];
+	}
+	if (checkIpClass(ip_class) == false)
+		return (false);
+	if (dot_count != 3)
+		return (false);
+    return (true);
+}
+
+/*
 - key value;
 - key value;#;#;#;; #ㅇㄹㅁㄴㅇ라ㅣㅓㅁㅇ니러
 - key value ;
@@ -427,21 +555,17 @@ bool	ConfigInfo::checkCommonConfigLineForm(std::vector<std::string> word_list)
 {
 	std::vector<std::string>::iterator	value_iter;
 	std::vector<std::string>::iterator	semicolon_iter;
+	std::string							value;
+	size_t 								semicolon_pos;
+	size_t								comment_pos;
 
-	for (std::vector<std::string>::iterator iter = word_list.begin(); iter != word_list.end(); iter++)
-		printContent(*iter, "*iter", BRW);
-	/*
-	value; 
-	value ;
-	value; # 
-	value ; # 
-	*/
-	// key는 이미 확인했으므로 스킵
+	// for (std::vector<std::string>::iterator iter = word_list.begin(); iter != word_list.end(); iter++)
+	// 	printContent(*iter, "*iter", BRW);
 	value_iter = word_list.begin() + 1;
 	printContent(*value_iter, "*value_iter", BRW);
 	if (value_iter == word_list.end())
 		return (false);
-	std::string	value;
+
 	value = *value_iter;
 	printContent(value, "value", BRW);
 	if (value.size() == 0 || value[0] == '#')
@@ -450,9 +574,6 @@ bool	ConfigInfo::checkCommonConfigLineForm(std::vector<std::string> word_list)
 	// value;#sdfjklasdjklfj 이런 케이스는 음
 	// ';'찾은 경우
 	// ';'가 마지막에 있거나 ';'바로 다음이 '#'이어야 한다.
-	size_t 	semicolon_pos;
-	size_t	comment_pos;
-
 	semicolon_pos = value.find(';');
 	std::cout << "semicolon_pos : " << semicolon_pos << std::endl;
 	comment_pos = value.find('#');
@@ -507,38 +628,9 @@ bool	ConfigInfo::checkCommonConfigLineForm(std::vector<std::string> word_list)
 			}
 		}
 	}
-
-	/*
-		if (semicolon_pos != std::string::npos)
-		{
-			// value; 처럼 value마지막에 ';'이 있거나 ';' 다음이  '#'인 경우만 허용
-			if ((semicolon_pos + 1 != value.size() && \
-				value[semicolon_pos + 1] != '#' ) || \
-				(comment_pos != std::string::npos && semicolon_pos > comment_pos))
-				return (false);
-		}
-		else // value;가 아닌경우 -> value ;#같은 경우
-		{
-			std::vector<std::string>::iterator	semicolon_iter;
-			std::string							semicolon_str;
-			size_t								semicolon_str_comment_pos;
-
-			semicolon_iter = value_iter + 1;
-			semicolon_str = *semicolon_iter;
-			semicolon_pos = semicolon_str.find(';');
-			semicolon_str_comment_pos = semicolon_str.find('#');
-			std::cout << RED << "semicolon_str_comment_pos : " << semicolon_str_comment_pos << WHI << std::endl;
-			if (semicolon_pos != std::string::npos)
-			{
-				if ((semicolon_pos + 1 != value.size() && \
-					value[semicolon_pos + 1] != '#' ) || \
-					(semicolon_str_comment_pos != std::string::npos && semicolon_pos > semicolon_str_comment_pos))
-				return (false);
-			}
-			else
-				return (false);
-		}
-	*/
+	value = removeAfterSemicolon(value);
+	if (value.size() == 0)
+		return (false);
 	return (true);
 }
 
@@ -746,17 +838,21 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 			if (validate_server_filed_map_iter == validate_server_filed_map.end())
 			{
 				std::cerr << RED <<  "Could not found field " << first_word << WHI<<std::endl;
-				// return (false);
+				return (false);
 			}
 			else
 			{
 				std::vector<std::string>::iterator	vec_iter;
+				ValidateFieldInfo					validate_field_info;
 				std::string							filed_name;
+				std::string							filed_value;
 
 				filed_name = validate_server_filed_map_iter->first;
+				validate_field_info = validate_server_filed_map_iter->second;
 				printContent(filed_name, "filed_name", GRN);
-				for(vec_iter = word_list.begin(); vec_iter != word_list.end(); vec_iter++)
-					printContent(*vec_iter, "*vec_iter", PUP);
+				// printVector(word_list, "word_list", PUP);
+				// for(vec_iter = word_list.begin(); vec_iter != word_list.end(); vec_iter++)
+				// 	printContent(*vec_iter, "*vec_iter", PUP);
 				printContent(first_word, "first_word", BLU);
 				
 				/*
@@ -766,60 +862,60 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 					location은 별도 block 에서 확인하며
 					parse 할때 혹은 default_error_page는 생성자에서 값을 넣어준다.
 				*/
+				filed_value = *(word_list.begin() + 1);
 				if (first_word == "host")
 				{
-					printVector(word_list, "word_list", RED);
+					if (checkDuplicateConfigField(validate_field_info) == false)
+						return (false);
 					if (checkCommonConfigLineForm(word_list) == false)
 						return (false);
-					// if (checkIPv4(word_list) == false)
-					// 	return (false);
-					
-					// std::cout << GRN << "validate_server_filed_map[filed_name].getCount() : " << validate_server_filed_map[filed_name].getCount() << WHI << std::endl;
-
-					// validate_server_filed_map[filed_name]++; // count increament!!!
-
-					// std::cout << RED << "validate_server_filed_map[filed_name].getCount() : " << validate_server_filed_map[filed_name].getCount() << WHI << std::endl;
-					// validate_server_filed_map[filed_name].getCount();
+					if (checkHostConfigField(filed_value) == false)
+						return (false);
+					validate_server_filed_map[filed_name]++; // count increament!!!
 				}
 				else if (first_word == "port")
 				{
-					// if (checkCommonConfigLineForm(word_list) == false)
-					// 	return (false);
-					// if (checkPort(word_list) == false)
-					// 	return (false);
-					
-					// std::cout << GRN << "validate_server_filed_map[filed_name].getCount() : " << validate_server_filed_map[filed_name].getCount() << WHI << std::endl;
-					
-					// validate_server_filed_map[filed_name]++; // count increament!!!
-					
-					// std::cout << RED << "validate_server_filed_map[filed_name].getCount() : " << validate_server_filed_map[filed_name].getCount() << WHI << std::endl;
-					// validate_server_filed_map[filed_name].getCount();
+					if (checkDuplicateConfigField(validate_field_info) == false)
+						return (false);
+					if (checkCommonConfigLineForm(word_list) == false)
+						return (false);
+					if (checkPortConfigField(filed_value) == false)
+						return (false);
+					validate_server_filed_map[filed_name]++; // count increament!!!
 				}
 				else if (first_word == "root")
 				{
-					// if (checkCommonConfigLineForm(word_list) == false)
-					// 	return (false);
-					// validate_server_filed_map[filed_name]++; // count increament!!!
+					if (checkDuplicateConfigField(validate_field_info) == false)
+						return (false);
+					if (checkCommonConfigLineForm(word_list) == false)
+						return (false);
+					validate_server_filed_map[filed_name]++; // count increament!!!
 				}
 				else if (first_word == "index")
 				{
-					// if (checkCommonConfigLineForm(word_list) == false)
-					// 	return (false);
-					// validate_server_filed_map[filed_name]++; // count increament!!!
+					if (checkDuplicateConfigField(validate_field_info) == false)
+						return (false);
+					if (checkCommonConfigLineForm(word_list) == false)
+						return (false);
+					validate_server_filed_map[filed_name]++; // count increament!!!
 				}
 				else if (first_word == "client_max_body_size")
 				{
-					// if (checkCommonConfigLineForm(word_list) == false)
-					// 	return (false);
-					// if (checkClientMaxBodySize(word_list) == false)
-					// 	return (false);
-					// validate_server_filed_map[filed_name]++; // count increament!!!
+					if (checkDuplicateConfigField(validate_field_info) == false)
+						return (false);
+					if (checkCommonConfigLineForm(word_list) == false)
+						return (false);
+					if (checkClientMaxBodySizeConfigField(filed_value) == false)
+						return (false);
+					validate_server_filed_map[filed_name]++; // count increament!!!
 				}
 				else if (first_word == "server_name")
 				{
-					// if (checkCommonConfigLineForm(word_list) == false)
-					// 	return (false);
-					// validate_server_filed_map[filed_name]++; // count increament!!!
+					if (checkDuplicateConfigField(validate_field_info) == false)
+						return (false);
+					if (checkCommonConfigLineForm(word_list) == false)
+						return (false);
+					validate_server_filed_map[filed_name]++; // count increament!!!
 				}
 				else if (first_word == "error_page")
 				{
@@ -842,8 +938,10 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 	}
 	// printContent(*begin_iter, "begin_iter", PUP);
 	// printContent(*end_iter, "end_iter", PUP);
-	// if (true)
-	// 	(false);
+	
+	
+	// 필수항목에서 빠진것은 없는지 확ㅇ니
+
 	return (true);
 }
 
@@ -916,18 +1014,17 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 		if (validate_location_filed_map_iter == validate_location_filed_map.end())
 		{
 			printContent(first_word, "first_word in validateLocationBlock()", RED);
-			// return (false);
+			return (false);
 		}
 		else
 		{
 			std::vector<std::string>::iterator	vec_iter;
+			ValidateFieldInfo					validate_field_info;
 			std::string							filed_name;
 
 			filed_name = validate_location_filed_map_iter->first;
-			// printContent(filed_name, "filed_name", BLU);
-			// for(vec_iter = word_list.begin(); vec_iter != word_list.end(); vec_iter++)
-			// 	printContent(*vec_iter, "*vec_iter", PUP);
-			
+			validate_field_info = validate_location_filed_map_iter->second;
+
 			/*
 				key value; #
 				key value ; #
@@ -937,52 +1034,58 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 			*/
 			if (first_word == "allow_method")
 			{
+				if (checkDuplicateConfigField(validate_field_info) == false)
+						return (false);
+					// allow method에 맞는 validate 함수 필요
+					// 여러개의 값이 들어올 수 있으며 마지막 값이 경로로 들어간다.
+					// 중간에 오는 값들은 GET, POST, DELTE가 될 수 있으며 
+					// GET, POST, DELET가 중복되어서는 안된다.
+						//-> 중복을 허용해줄지는 추가 고려 필요
 				// if (checkCommonConfigLineForm(word_list) == false)
 				// 	return (false);
-				// if (checkIPv4(word_list) == false)
-				// 	return (false);
-				
-				// std::cout << GRN << "validate_location_filed_map[filed_name].getCount() : " << validate_location_filed_map[filed_name].getCount() << WHI << std::endl;
-				
-				// validate_location_filed_map[filed_name]++; // count increament!!!
-				
-				// std::cout << RED << "validate_location_filed_map[filed_name].getCount() : " << validate_location_filed_map[filed_name].getCount() << WHI << std::endl;
-				// validate_location_filed_map[filed_name].getCount();
-				
+				validate_location_filed_map[filed_name]++; // count increament!!!
 			}
 			else if (first_word == "autoindex")
 			{
-				// if (checkCommonConfigLineForm(word_list) == false)
-				// 	return (false);
-				// if (checkPort(word_list) == false)
-				// 	return (false);
+				if (checkDuplicateConfigField(validate_field_info) == false)
+						return (false);
+				if (checkCommonConfigLineForm(word_list) == false)
+					return (false);
+				std::string 	value_with_semicolon_comment;
+				std::string 	value;
 				
-				// std::cout << GRN << "validate_location_filed_map[filed_name].getCount() : " << validate_location_filed_map[filed_name].getCount() << WHI << std::endl;
-				
-				// validate_location_filed_map[filed_name]++; // count increament!!!
-				
-				// std::cout << RED << "validate_location_filed_map[filed_name].getCount() : " << validate_location_filed_map[filed_name].getCount() << WHI << std::endl;
-				// validate_location_filed_map[filed_name].getCount();
+				// checkCommonConfigLineForm() 이후라서 ';'이 무조건 있다. 어디에 있느냐에 차이, "value;" or "value" ";#"
+				// ';', '#' 이후를 잘라내서 value만 남도록 하는 것이 목적.
+				// 이미 각 줄마다 checkCommonConfigLineForm() 통해 유효성 검사를 한 이후이므로 #은 ;이후에 있긴하다
+				value_with_semicolon_comment = *(word_list.begin() + 1);
+				value = removeAfterSemicolon(value_with_semicolon_comment);
+				if (value != "on" && value == "off") // 입력값에 대해서는 대소문자 구분없이도 되게할지는 추후 고민 후 수정하거나 그대로 놔둠.
+					return (false);
+				validate_location_filed_map[filed_name]++; // count increament!!!
 			}
 			else if (first_word == "root")
 			{
-				// if (checkCommonConfigLineForm(word_list) == false)
-				// 	return (false);
-				// validate_location_filed_map[filed_name]++; // count increament!!!
+				if (checkDuplicateConfigField(validate_field_info) == false)
+						return (false);
+				if (checkCommonConfigLineForm(word_list) == false)
+					return (false);
+				validate_location_filed_map[filed_name]++; // count increament!!!
 			}
 			else if (first_word == "index")
 			{
-				// if (checkCommonConfigLineForm(word_list) == false)
-				// 	return (false);
-				// validate_location_filed_map[filed_name]++; // count increament!!!
+				if (checkDuplicateConfigField(validate_field_info) == false)
+						return (false);
+				if (checkCommonConfigLineForm(word_list) == false)
+					return (false);
+				validate_location_filed_map[filed_name]++; // count increament!!!
 			}
 			else if (first_word == "redirect")
 			{
-				// if (checkCommonConfigLineForm(word_list) == false)
-				// 	return (false);
-				// if (checkClientMaxBodySize(word_list) == false)
-				// 	return (false);
-				// validate_location_filed_map[filed_name]++; // count increament!!!
+				if (checkDuplicateConfigField(validate_field_info) == false)
+						return (false);
+				if (checkCommonConfigLineForm(word_list) == false)
+					return (false);
+				validate_location_filed_map[filed_name]++; // count increament!!!
 			}
 			else
 			{
@@ -992,10 +1095,6 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 			}
 		}
 	}
-	// printContent(*begin_iter, "begin_iter", PUP);
-	// printContent(*end_iter, "end_iter", PUP);
-	// if (true)
-	// 	(false);
 	return (true);
 }
 
