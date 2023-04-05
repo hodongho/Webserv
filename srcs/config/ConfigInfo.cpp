@@ -502,24 +502,52 @@ bool ConfigInfo::checkErrorPageStatusCodde(const std::string& status_code)
 }
 
 /*
-	error_page 403 404 400 500 /50x.html
-	형식이 제대로 맞는지도 확인필요
-	;이 있는가?
-	마지막 단어에 있어야한다.
+	필수항목에서 빠진 것은 없는지 확인
+	필수항목 포함하여 중복된 것은 없는지 확인 이미 확인하기에 필요없을 듯
+	NESSARY_UNIQUE,
+	NESSARY_MULTI,
+	OPTION_UNIQUE,
+*/
+bool ConfigInfo::checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::ValidateFieldInfo> validate_server_filed_map)
+{
+	std::map<std::string, ValidateFieldInfo>::iterator	map_iter;
+
+	for (map_iter = validate_server_filed_map.begin(); map_iter != validate_server_filed_map.end(); map_iter++)
+	{
+		if (map_iter->second.getValidateFiledType() == NESSARY_UNIQUE)
+		{
+			if (map_iter->second.getCount() != 1) // 중복 및 누락여부 확인 가능 
+				return (false);
+		}
+		if (map_iter->second.getValidateFiledType() == NESSARY_MULTI)
+		{
+			if (map_iter->second.getCount() == 0) // 누락여부 확인 가능 
+				return (false);
+		}
+		if (map_iter->second.getValidateFiledType() == OPTION_UNIQUE)
+		{
+			if (map_iter->second.getCount() != 1) // 누락여부 확인 가능 
+				return (false);
+		}
+	}
+    return (true);
+}
+/*
+    error_page 403 404 400 500 /50x.html
+    형식이 제대로 맞는지도 확인필요
+    ;이 있는가?
+    마지막 단어에 있어야한다.
 */
 bool ConfigInfo::checkErrorPageConfigField(std::string error_page)
 {
 	std::string							value;
 	size_t 								semicolon_pos;
 	size_t								comment_pos;
-
 	std::vector<std::string>			error_page_vector;
 	std::vector<std::string>::iterator	error_page_end_value_iter;
 	std::vector<std::string>::iterator	error_page_value_iter;
 	std::stringstream					error_page_strstream;
-	int									error_page_numeric;
 
-	printContent(error_page, "error_page", RED);
 	semicolon_pos = error_page.find(';');
 	if (semicolon_pos == std::string::npos)
 		return (false);
@@ -535,33 +563,18 @@ bool ConfigInfo::checkErrorPageConfigField(std::string error_page)
 	error_page = removeAfterSemicolon(error_page);
 	error_page = ft_strtrim(error_page, this->whitespace);
 	error_page_vector = ft_split(error_page, this->whitespace);
-	printVector(error_page_vector, "error_page_vector", BRW);
 	error_page_value_iter = error_page_vector.begin() + 1;
 	error_page_end_value_iter = error_page_vector.end() - 1;
 	if (error_page_value_iter == error_page_vector.end() ||  // error_page;
 		error_page_end_value_iter == error_page_vector.begin() || // error_page test;
 		error_page_value_iter == error_page_end_value_iter) // error_page test ;
 		return (false);
-	printContent(*error_page_value_iter, "error_page_value_iter", PUP);
 
 	for (std::vector<std::string>::iterator iter = error_page_value_iter; iter != error_page_end_value_iter; iter++)
 	{
-		printContent(*iter, "*iter", GRN);
 		if (checkErrorPageStatusCodde(*iter) == false)
 			return (false);
 	}
-
-	/*
-	error page룰에 맞게 수정필요
-	key error_page_key error_page_key error_page_key error_page_key error_page_key value; 
-	중간에 '#' 나오면 skip
-	오전 10시까지 처리
-	안되면 간단하게 처리
-		- 간단하게의 의미
-			-입력 중간에 주석 처리 
-			# error_page에 대해서는 주석 없이 처리
-			중간값들은 int 400~599사이
-	*/
     return (true);
 }
 
@@ -744,9 +757,10 @@ std::map<std::string, ConfigInfo::ValidateFieldInfo>	ConfigInfo::getValidateServ
 	validate_server_filed_map["root"] = validate_filed_info;
 	validate_server_filed_map["index"] = validate_filed_info;
 	validate_server_filed_map["client_max_body_size"] = validate_filed_info;
+	validate_filed_info.setValidateFiledType(OPTION_UNIQUE);
+	validate_server_filed_map["server_name"] = validate_filed_info;
 	validate_filed_info.setValidateFiledType(OPTION_MULTI);
 	validate_server_filed_map["error_page"] = validate_filed_info;
-	validate_server_filed_map["server_name"] = validate_filed_info;
 	validate_server_filed_map["location"] = validate_filed_info;
 	return (validate_server_filed_map);
 }
@@ -805,17 +819,6 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 	src_begin_iter = server_block_vec.begin();
 	src_end_iter = server_block_vec.end();
 	validate_server_filed_map = getValidateServerFiledMap();
-	for (map_iter = validate_server_filed_map.begin(); map_iter != validate_server_filed_map.end(); map_iter++)
-	{
-		// std::cout << GRN << "map_iter->first : " << map_iter->first \
-		// 				<< "\tmap_iter->second getCount(): " << map_iter->second.getCount() \
-		// 				<< "\tmap_iter->second getValidateFiledType(): " << map_iter->second.getValidateFiledType() \
-		// 			<< WHI << std::endl;
-		// std::cout << GRN << "map_iter->first : " << map_iter->first \
-		// 						<< "\validate_server_filed_map[map_iter->first].getCount() : " << validate_server_filed_map[map_iter->first].getCount() \
-		// 						<< "\tvalidate_server_filed_map[map_iter->first].getValidateFiledType(): " << validate_server_filed_map[map_iter->first].getValidateFiledType() \
-		// 					<< WHI << std::endl;
-	}
 	// std::cout << "validate_filed_map.size() : " << validate_server_filed_map.size() << std::endl;
 	cur_iter = src_begin_iter;
 	// for (; cur_iter != src_end_iter; cur_iter++)
@@ -854,6 +857,7 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 			// 	printContent(*tmp_iter, "Locatoin Block", BRW);
 			// if (validateLocationBlock(begin_iter, end_iter) == false)
 			// 	return (false);
+			validate_server_filed_map[first_word]++;
 			std::cout << std::endl << std::endl << std::endl;
 		}
 		else
@@ -945,7 +949,6 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 				{
 					if (checkErrorPageConfigField(clean_str) == false)
 						return (false);
-					// validate_server_filed_map[filed_name]++; // count increament!!!
 				}
 				else
 				{
@@ -960,12 +963,10 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 		// first_word.at(first_word);
 		cur_iter++;
 	}
-	// printContent(*begin_iter, "begin_iter", PUP);
-	// printContent(*end_iter, "end_iter", PUP);
 	
-	
-	// 필수항목에서 빠진것은 없는지 확ㅇ니
 
+	if (checkNessaryOrUniqueField(validate_server_filed_map) == false)
+		return (false);
 	return (true);
 }
 
