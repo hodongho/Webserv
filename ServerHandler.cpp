@@ -4,12 +4,12 @@ ServerHandler::ServerHandler() {};
 
 ServerHandler::~ServerHandler()
 {
-	for (std::map<int, SocketData*>::iterator it = this->fd_list.begin(); it != this->fd_list.end(); it++)
+	for (std::map<int, SocketData*>::iterator it = this->sock_list.begin(); it != this->sock_list.end(); it++)
 	{
 		close(it->first);
 		delete (it->second);
 	}
-	this->fd_list.clear();
+	this->sock_list.clear();
 };
 
 
@@ -37,8 +37,8 @@ void	ServerHandler::handleListenEvent(void)
 	}
 	client_socket->id_type = CLIENT_SOCKET;
 	client_socket->status = CLIENT_RECV_HEADER;
-	client_socket->header_str = "";
-	this->fd_list[client_sock_fd] = client_socket;
+	client_socket->buf_str = "";
+	this->sock_list[client_sock_fd] = client_socket;
 
 	std::cout << "accept new client: " << client_sock_fd << std::endl;
 
@@ -142,7 +142,7 @@ void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 			throwError("recv header: ");
 		close(curr_event->ident);
 		std::cout << "socket closed successfully." << std::endl;
-		fd_list.erase(curr_event->ident);
+		sock_list.erase(curr_event->ident);
 	}
 	client_socket->buf_str.append(buf, ret);
 	header_end_pos = client_socket->buf_str.rfind("\r\n\r\n");
@@ -211,7 +211,7 @@ void	ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* cons
 			throwError("recv body: ");
 		close(curr_event->ident);
 		std::cout << "socket closed successfully." << std::endl;
-		fd_list.erase(curr_event->ident);
+		sock_list.erase(curr_event->ident);
 		return ;
 	}
 	client_socket->buf_str.append(buf, ret);
@@ -430,7 +430,7 @@ int ServerHandler::serverListen(void)
 
 	SocketData* serverSocket = new SocketData();
 	this->initListenerData(serverSocket);
-	this->fd_list[this->listen_sock_fd] = serverSocket;
+	this->sock_list[this->listen_sock_fd] = serverSocket;
 
 	if (bind(this->listen_sock_fd, (const sockaddr *)&serverSocket->addr, sizeof(sockaddr_in)) == -1)
 		throwError("bind: ");
@@ -459,7 +459,7 @@ void	ServerHandler::serverRun()
 {
 	int				event_count;
 	struct kevent*	curr_event;
-	IdentType		event_id_type;
+	SocketData*		sock_type;
 	struct stat		stat_buf;
 
 	while (1)
@@ -477,12 +477,12 @@ void	ServerHandler::serverRun()
 		for (int i = 0; i < event_count; i++)
 		{
 			curr_event = &this->event_list[i];
-			event_id_type = static_cast<SocketData *>(curr_event->udata)->id_type;
+			sock_type = static_cast<SocketData *>(curr_event->udata);
 			if (fstat(curr_event->ident, &stat_buf) == -1)
 				continue;
 			if (curr_event->flags & EV_ERROR)
-				keventError(event_id_type);
-			switch (event_id_type)
+				keventError(sock_type->id_type);
+			switch (sock_type->id_type)
 			{
 				case LISTEN_SOCKET :
 					handleListenEvent();
@@ -517,5 +517,5 @@ void	ServerHandler::closeEvent(struct kevent * const & curr_event)
 	close(curr_event->ident);
 	if (event_id_type == CLIENT_SOCKET || event_id_type == LISTEN_SOCKET)
 		delete static_cast<SocketData *>(curr_event->udata);
-	this->fd_list.erase(curr_event->ident);
+	this->sock_list.erase(curr_event->ident);
 }

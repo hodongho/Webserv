@@ -26,7 +26,7 @@ class ServerHandler {
 		int							listen_sock_fd;
 		std::vector<struct kevent>	change_list;
 		struct kevent				event_list[8];
-		std::map<int, SocketData*>	fd_list;
+		std::map<int, SocketData*>	sock_list;
 		// ConfigInfo				conf;
 
 		void	changeEvent(const uintptr_t& ident,
