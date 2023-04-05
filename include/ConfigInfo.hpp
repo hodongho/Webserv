@@ -65,12 +65,15 @@ class ConfigInfo
 
         // check function for validate
         bool    checkCommonConfigLineForm(std::vector<std::string> word_list);
+        // bool    checkCommonConfigLineForm(std::string config_line);
         bool	checkDuplicateConfigField(const ValidateFieldInfo& validate_field_info);
         bool    checkHostConfigField(std::string field_value);
         bool    checkIpClass(const std::string& ip_class);
         bool    checkPortConfigField(std::string port);
         bool    checkClientMaxBodySizeConfigField(std::string port);
         bool    checkErrorPageConfigField(std::string error_page);
+        bool    checkErrorPageStatusCodde(const std::string& status_code);
+        
 
         // get validate info                                            
         std::map<std::string, ValidateFieldInfo>	getValidateServerFiledMap(void);

@@ -484,126 +484,84 @@ bool ConfigInfo::checkClientMaxBodySizeConfigField(std::string client_body_size)
 }
 
 /*
+Error page code
+400~599
+*/
+bool ConfigInfo::checkErrorPageStatusCodde(const std::string& status_code)
+{
+	std::stringstream	status_code_strstream;
+	int					status_code_numeric;
+
+	status_code_strstream << std::atoi(status_code.c_str());
+	status_code_strstream >> status_code_numeric;
+	if (status_code_strstream.str() != status_code)
+		return (false);
+	else if (status_code_numeric > 599 || status_code_numeric < 400)
+		return (false);
+    return (true);
+}
+
+/*
 	error_page 403 404 400 500 /50x.html
 	형식이 제대로 맞는지도 확인필요
+	;이 있는가?
+	마지막 단어에 있어야한다.
 */
 bool ConfigInfo::checkErrorPageConfigField(std::string error_page)
 {
-	std::vector<std::string>::iterator	value_iter;
-	std::vector<std::string>::iterator	semicolon_iter;
 	std::string							value;
 	size_t 								semicolon_pos;
 	size_t								comment_pos;
 
 	std::vector<std::string>			error_page_vector;
-	std::vector<std::string>::iterator	error_page_iter;
+	std::vector<std::string>::iterator	error_page_end_value_iter;
+	std::vector<std::string>::iterator	error_page_value_iter;
 	std::stringstream					error_page_strstream;
 	int									error_page_numeric;
 
-
-
-	
-	// error_page = removeAfterSemicolon(error_page);
-	error_page_vector = ft_split(error_page, this->whitespace);
-	error_page_iter = error_page_vector.begin() + 1; 
-	// error_page_strstream << std::atoi(error_page.c_str());
-	// error_page_strstream >> error_page_numeric;
-	if (error_page_strstream.str() != error_page)
+	printContent(error_page, "error_page", RED);
+	semicolon_pos = error_page.find(';');
+	if (semicolon_pos == std::string::npos)
 		return (false);
-	else if (error_page_numeric > std::numeric_limits<int>::max() || error_page_numeric < 0)
-		return (false);
-
-
-	/*
-		error page룰에 맞게 수정필요
-		key error_page_key error_page_key error_page_key error_page_key error_page_key value; 
-		중간에 '#' 나오면 skip
-		오전 10시까지 처리
-		안되면 간단하게 처리
-			- 간단하게의 의미
-				-입력 중간에 주석 처리 
-				# error_page에 대해서는 주석 없이 처리
-				중간값들은 int 400~599사이
-	*/
-
-
-
-
-	// ==========
-		// for (std::vector<std::string>::iterator iter = error_page_vector.begin(); iter != error_page_vector.end(); iter++)
-	// 	printContent(*iter, "*iter", BRW);
-	value_iter = error_page_vector.begin() + 1;
-	printContent(*value_iter, "*value_iter", BRW);
-	if (value_iter == error_page_vector.end())
-		return (false);
-
-	value = *value_iter;
-	printContent(value, "value", BRW);
-	if (value.size() == 0 || value[0] == '#')
-		return (false);
-	// value; ,value ;#
-	// value;#sdfjklasdjklfj 이런 케이스는 음
-	// ';'찾은 경우
-	// ';'가 마지막에 있거나 ';'바로 다음이 '#'이어야 한다.
-	semicolon_pos = value.find(';');
-	std::cout << "semicolon_pos : " << semicolon_pos << std::endl;
-	comment_pos = value.find('#');
-	std::cout << BRW << "comment_pos : " << comment_pos << WHI << std::endl;
-	// value안에 ';'이 있는 경우 "value;"
-	// value안에 주석이 있었다면 ;이 주석 왼쪽에 있어야한다.
-		// 없다면 value 다음 문자를 확인해야한다.
-	// 주석이 없다면 ;이 "value;" 마지막에 있거나 "value" ";"처럼 value 바로 다음 단어에 첫 글자로 와야한다.
-
-	// "value#;" ";"
-	// "value#;" "#;"
+	comment_pos = error_page.find('#');
 	if (comment_pos != std::string::npos)
 	{
-		// 이미 주석처리 된것이므로 뒤에 단어에 ';'있든 없든 상관없어짐
 		if (semicolon_pos > comment_pos)
 			return (false);
 		else if (semicolon_pos + 1 != comment_pos)
 			return (false);
 	}
-	else
+
+	error_page = removeAfterSemicolon(error_page);
+	error_page = ft_strtrim(error_page, this->whitespace);
+	error_page_vector = ft_split(error_page, this->whitespace);
+	printVector(error_page_vector, "error_page_vector", BRW);
+	error_page_value_iter = error_page_vector.begin() + 1;
+	error_page_end_value_iter = error_page_vector.end() - 1;
+	if (error_page_value_iter == error_page_vector.end() ||  // error_page;
+		error_page_end_value_iter == error_page_vector.begin() || // error_page test;
+		error_page_value_iter == error_page_end_value_iter) // error_page test ;
+		return (false);
+	printContent(*error_page_value_iter, "error_page_value_iter", PUP);
+
+	for (std::vector<std::string>::iterator iter = error_page_value_iter; iter != error_page_end_value_iter; iter++)
 	{
-		// "value"에 주석이 없으면서 "value"에 ';'로 없는 경우
-		if (semicolon_pos == std::string::npos) // 다음 단어에 ';'이 처음에 있는지 확인
-		{
-			std::vector<std::string>::iterator	next_iter;
-			size_t								next_word_comment_pos;
-			size_t								next_word_semicolon_pos;
-
-			next_iter = value_iter + 1;
-			next_word_comment_pos = next_iter->find('#');
-			next_word_semicolon_pos = next_iter->find(';');
-
-			// ';'이 다음단어 처음에 나타나는 경우
-			// ';'다음은 없거나 '#'이 ';' 바로 뒤에 나와야함
-			// ";#"허용
-			if (next_word_semicolon_pos == 0)
-			{
-				if (next_iter->size() > 1 && next_iter->at(1) != '#')
-					return (false);
-			}
-			else // 다음단어 처음에 ';'가 나타나지 않으면 error
-				return (false);
-		}
-		else //주석이 없다면 ';'이 value 마지막에 나와야함
-		{
-			if (semicolon_pos != (value.size() - 1))
-				return (false);
-			else if (value_iter + 1 != error_page_vector.end())
-			{
-				if ((value_iter + 1)->at(0) != '#')
-					return (false);
-			}
-		}
+		printContent(*iter, "*iter", GRN);
+		if (checkErrorPageStatusCodde(*iter) == false)
+			return (false);
 	}
-	///==========
 
-	// value = removeAfterSemicolon(value);
-	// if (value.size() == 0)
-	// 	return (false);
+	/*
+	error page룰에 맞게 수정필요
+	key error_page_key error_page_key error_page_key error_page_key error_page_key value; 
+	중간에 '#' 나오면 skip
+	오전 10시까지 처리
+	안되면 간단하게 처리
+		- 간단하게의 의미
+			-입력 중간에 주석 처리 
+			# error_page에 대해서는 주석 없이 처리
+			중간값들은 int 400~599사이
+	*/
     return (true);
 }
 
@@ -616,6 +574,7 @@ bool ConfigInfo::checkErrorPageConfigField(std::string error_page)
 2개 이상
 key는 이미 validate한지 확인한 이후
 */
+// bool	ConfigInfo::checkCommonConfigLineForm(std::string config_line)
 bool	ConfigInfo::checkCommonConfigLineForm(std::vector<std::string> word_list)
 {
 	std::vector<std::string>::iterator	value_iter;
@@ -624,8 +583,8 @@ bool	ConfigInfo::checkCommonConfigLineForm(std::vector<std::string> word_list)
 	size_t 								semicolon_pos;
 	size_t								comment_pos;
 
-	// for (std::vector<std::string>::iterator iter = word_list.begin(); iter != word_list.end(); iter++)
-	// 	printContent(*iter, "*iter", BRW);
+	for (std::vector<std::string>::iterator iter = word_list.begin(); iter != word_list.end(); iter++)
+		printContent(*iter, "*iter", BRW);
 	value_iter = word_list.begin() + 1;
 	printContent(*value_iter, "*value_iter", BRW);
 	if (value_iter == word_list.end())
@@ -984,7 +943,7 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 				}
 				else if (first_word == "error_page")
 				{
-					if (checkErrorPageConfigField(filed_value) == false)
+					if (checkErrorPageConfigField(clean_str) == false)
 						return (false);
 					// validate_server_filed_map[filed_name]++; // count increament!!!
 				}
