@@ -20,7 +20,8 @@ enum StatusCode
 	REDIR,
 	BADREQ,
 	NOTFOUND,
-	SERVERR,
+	NOTALLOW,
+	SERVERR
 };
 
 class HTTPMessage

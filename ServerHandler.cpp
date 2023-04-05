@@ -111,17 +111,17 @@ void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 }
  */
 
-/*
+
 static void	printRecvData(const int& fd, const std::string& data, const ssize_t& recv_size)
 {
 	std::cout << "received request from "
 			<< fd << ": \n\n"
 			<< "received data size: "
 			<< recv_size << "\n\n"
-			<< GRN << data << BLK
+			<< GRN << data << WHI
 			<< std::endl;
 }
-*/
+
 
 void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
@@ -131,6 +131,7 @@ void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 
 	ret = recv(curr_event->ident, buf, RECV_BUF_SIZE - 1, 0);
 	buf[ret] = 0;
+	printRecvData(curr_event->ident, buf, ret);
 	if (ret <= 0)
 	{
 		if (ret < 0)
@@ -146,6 +147,7 @@ void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 	if (client_socket->header_str.size() > conf->getMaxHeaderSize())
 	{
 		client_socket->status = CLIENT_RECV_ERROR;
+		client_socket->http_response.setStatusCode("400");
 		changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
 		changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 	}
@@ -169,6 +171,7 @@ void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 				// if (client_socket->body_size < 0)
 				// {
 				// 	client_socket->status = CLIENT_RECV_ERROR;
+				//	client_socket->http_response.setStatusCode("400");
 				// 	changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
 				// 	changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 				// }
@@ -211,6 +214,7 @@ void	ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* cons
 	if (client_socket->header_str.size() > conf->getMaxBodySize() )
 	{
 		client_socket->status = CLIENT_RECV_ERROR;
+		client_socket->http_response.setStatusCode("400");
 		changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
 		changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 	}
@@ -224,18 +228,17 @@ void	ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* cons
 	}
 }
 
-void		getMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
+static void	setTestResponse(HTTPResponse& res)
 {
-	client_socket->http_response.setVersion("HTTP/1.1");
-	client_socket->http_response.setStatusCode("200");
-	client_socket->http_response.setStatusMessage("OK");
+	res.setVersion("HTTP/1.1");
+	res.setStatusCode("200");
+	res.setStatusMessage("OK");
 
-	client_socket->http_response.addHeader(CONTENT_TYPE, "text/html; charset=utf-8");
-	client_socket->http_response.addHeader(CONTENT_LENGTH, "163");
-	client_socket->http_response.addHeader(CONNECTION, "keep-alive");
+	res.addHeader(CONTENT_TYPE, "text/html; charset=utf-8");
+	res.addHeader(CONNECTION, "keep-alive");
 
-	std::string		file_path = 
-	std::ifstream	file();
+	std::string		file_path = "./html/example.html";
+	std::ifstream	file(file_path);
 	std::string		body;
 
 	if (file.is_open())
@@ -249,18 +252,32 @@ void		getMethod(struct kevent* const & curr_event, SocketData* const & client_so
 			body += "\n";
 		}
 	}
-
-	this->setBody(body);
+	res.addHeader(CONTENT_LENGTH, std::to_string(body.size()));
+	res.setBody(body);
 }
 
-void		postMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
+void		ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
-
+	(void)curr_event;
+	/* if (this->conf.isAllowedMethod(URL, , enum))
+	std::string		file_path = this->conf.convUrlToPath(client_socket->http_request.getURI());
+	client_socket->http_response.setResponseMessage(file_path); */
+	setTestResponse(client_socket->http_response);
+	client_socket->status = CLIENT_SEND_RESPONSE;
 }
 
-void		deleteMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
+void		ServerHandler::postMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
+	(void)curr_event;
+	setTestResponse(client_socket->http_response);
+	client_socket->status = CLIENT_SEND_RESPONSE;
+}
 
+void		ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
+{
+	(void)curr_event;
+	setTestResponse(client_socket->http_response);
+	client_socket->status = CLIENT_SEND_RESPONSE;
 }
 
 
@@ -279,7 +296,11 @@ void	ServerHandler::sendResponse(struct kevent * const & curr_event, SocketData*
 	else
 	{
 		client_socket->http_response.clear();
+		client_socket->header_str.clear();
+		client_socket->body_str.clear();
+		client_socket->status = CLIENT_RECV_HEADER;
 		changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
+		changeEvent(curr_event->ident, EVFILT_READ, EV_ENABLE, 0, NULL, client_socket);
 		// end of response.
 	}
 }

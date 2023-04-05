@@ -46,7 +46,7 @@ std::string	HTTPResponse::makeResponseMessage()
 }
 
 void	HTTPResponse::setVersion(const std::string& _version)				{ this->version = _version; }
-void	HTTPResponse::setStatusCode(const std::string& _status_code)		{ this->status_code = status_code; }
+void	HTTPResponse::setStatusCode(const std::string& _status_code)		{ this->status_code = _status_code; }
 void	HTTPResponse::setStatusMessage(const std::string& _status_message)	{ this->status_message = _status_message; }
 void	HTTPResponse::setBody(const std::string& _body) 					{ this->body = _body; }
 void	HTTPResponse::addHeader(const std::string& _header_name, const std::string& _header_value) { header[_header_name] = _header_value; }
@@ -61,8 +61,12 @@ StatusCode	HTTPResponse::getStatusCode(void) const
 		return (BADREQ);
 	else if (this->status_code == "404")
 		return (NOTFOUND);
+	else if (this->status_code == "405")
+		return (NOTALLOW);
 	else if (this->status_code == "500")
 		return (SERVERR);
+	else
+		return (static_cast<enum StatusCode>(-1));
 }
 
 void	HTTPResponse::clear()
