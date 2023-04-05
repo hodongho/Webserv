@@ -111,9 +111,9 @@ int	HTTPRequest::parseRequestMessage(std::string& msg)
 	return (0);
 }
 
-void	HTTPRequest::saveBody(std::string& _body)
+void	HTTPRequest::saveBody(const std::string& _body)
 {
-	this->body.append(_body.c_str(), _body.size());
+	this->body.append(_body);
 }
 
 //Getter

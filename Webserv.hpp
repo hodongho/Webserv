@@ -18,8 +18,6 @@ enum IdentType
 {
 	LISTEN_SOCKET,
 	CLIENT_SOCKET,
-	PIPE,
-	PROCESS
 };
 
 enum SocketStatus
@@ -35,20 +33,14 @@ enum SocketStatus
 	CLIENT_READ_LOCAL
 };
 
-struct EventData
-{
-	IdentType	id_type;
-};
-
-struct SocketData : public EventData
+struct SocketData
 {
 	sockaddr_in		addr;
+	IdentType		id_type;
 	SocketStatus	status;
 	HTTPRequest		http_request;
 	HTTPResponse	http_response;
-	std::string		header_str;
-	std::string		body_str;
-	ssize_t			body_size;
+	std::string		buf_str;
 };
 
 #endif

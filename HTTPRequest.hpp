@@ -37,7 +37,7 @@ class HTTPRequest : public HTTPMessage
 		 */
 		int											parseRequestMessage(std::string& msg);
 
-		void										saveBody(std::string& _body);
+		void										saveBody(const std::string& _body);
 
 		//getter
 		const std::string&							getVersion(void) const;

@@ -4,7 +4,7 @@ ServerHandler::ServerHandler() {};
 
 ServerHandler::~ServerHandler()
 {
-	for (std::map<int, EventData*>::iterator it = this->fd_list.begin(); it != this->fd_list.end(); it++)
+	for (std::map<int, SocketData*>::iterator it = this->fd_list.begin(); it != this->fd_list.end(); it++)
 	{
 		close(it->first);
 		delete (it->second);
@@ -144,11 +144,11 @@ void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 		std::cout << "socket closed successfully." << std::endl;
 		fd_list.erase(curr_event->ident);
 	}
-	client_socket->header_str.append(buf, ret);
-	header_end_pos = client_socket->header_str.rfind("\r\n\r\n");
+	client_socket->buf_str.append(buf, ret);
+	header_end_pos = client_socket->buf_str.rfind("\r\n\r\n");
 
 	/*
-	if (client_socket->header_str.size() > conf->getMaxHeaderSize())
+	if (client_socket->buf_str.size() > conf->getMaxHeaderSize())
 	{
 		client_socket->status = CLIENT_RECV_ERROR;
 		client_socket->http_response.setStatusCode("400");
@@ -159,9 +159,11 @@ void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 
 	if (header_end_pos != std::string::npos)
 	{
-		client_socket->body_str.append(client_socket->header_str.substr(header_end_pos + HEADER_END_SIZE));
-		client_socket->header_str.erase(header_end_pos + HEADER_END_SIZE);
-		client_socket->http_request.parseRequestMessage(client_socket->header_str);
+		std::string temp;
+		temp = client_socket->buf_str.substr(header_end_pos + HEADER_END_SIZE);
+		client_socket->buf_str.erase(header_end_pos + HEADER_END_SIZE);
+		client_socket->http_request.parseRequestMessage(client_socket->buf_str);
+		client_socket->buf_str = temp;
 		MethodType method = client_socket->http_request.getMethod();
 		switch (method)
 		{
@@ -212,7 +214,7 @@ void	ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* cons
 		fd_list.erase(curr_event->ident);
 		return ;
 	}
-	client_socket->body_str.append(buf, ret);
+	client_socket->buf_str.append(buf, ret);
 
 	/*
 	if (client_socket->header_str.size() > conf->getMaxBodySize() )
@@ -224,15 +226,34 @@ void	ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* cons
 	}
  	*/
 
-	if (static_cast<size_t>(client_socket->body_size) <= client_socket->body_str.size())
+	if (client_socket->http_request.getContentLength() <= client_socket->buf_str.size())
 	{
 		client_socket->status = CLIENT_POST;
+		client_socket->http_request.saveBody(client_socket->buf_str);
+		client_socket->buf_str.clear();
 		changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
 		changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 	}
 }
 
-void ServerHandler::readLocal(struct kevent* const & curr_event, SocketData* const & client_socket);
+void ServerHandler::readLocal(struct kevent* const & curr_event, SocketData* const & client_socket)
+{
+	char		buf[RECV_BUF_SIZE];
+	ssize_t		ret;
+
+	ret = read(curr_event->ident, buf, RECV_BUF_SIZE - 1);
+	buf[ret] = 0;
+	if (ret <= 0)
+	{
+		if (ret < 0)
+			throwError("read respond body: ");
+		close(curr_event->ident);
+		client_socket->status = CLIENT_SEND_RESPONSE;
+		changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+		return ;
+	}
+	client_socket->buf_str.append(buf, ret);
+}
 
 
 static void	setTestResponse(HTTPResponse& res) // test response make
@@ -456,24 +477,17 @@ void	ServerHandler::serverRun()
 		for (int i = 0; i < event_count; i++)
 		{
 			curr_event = &this->event_list[i];
-			event_id_type = static_cast<EventData *>(curr_event->udata)->id_type;
+			event_id_type = static_cast<SocketData *>(curr_event->udata)->id_type;
 			if (fstat(curr_event->ident, &stat_buf) == -1)
 				continue;
 			if (curr_event->flags & EV_ERROR)
 				keventError(event_id_type);
-
 			switch (event_id_type)
 			{
 				case LISTEN_SOCKET :
 					handleListenEvent();
 					break;
 				case CLIENT_SOCKET :
-					handleClientEvent(curr_event);
-					break;
-				case PIPE :
-					handleClientEvent(curr_event);
-					break;
-				case PROCESS :
 					handleClientEvent(curr_event);
 					break;
 				default:
@@ -498,7 +512,7 @@ void	ServerHandler::changeEvent(const uintptr_t& ident,
 
 void	ServerHandler::closeEvent(struct kevent * const & curr_event)
 {
-	IdentType event_id_type = static_cast<EventData *>(curr_event->udata)->id_type;
+	IdentType event_id_type = static_cast<SocketData *>(curr_event->udata)->id_type;
 
 	close(curr_event->ident);
 	if (event_id_type == CLIENT_SOCKET || event_id_type == LISTEN_SOCKET)
