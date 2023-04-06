@@ -1312,7 +1312,7 @@ void ConfigInfo::parseHostConfigField(ServerConfig& server_config, std::string f
 	printContent(field_value, "field_value before removeAfterSemicolon", GRN);
 	field_value = removeAfterSemicolon(field_value);
 	printContent(field_value, "field_value after removeAfterSemicolon", BRW);
-	
+	server_config.setHost(field_value);
 }
 
 /*
