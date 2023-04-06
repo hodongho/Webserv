@@ -6,7 +6,7 @@
 ServerConfig::ServerConfig(void)
     : server_name(""), host(""), port(0), index(""), client_max_body_size(0)
 {
-    // config에는 없지만 error_page에 없는 status code에 대한 default error page 경로를 담고 있음, 항상 값이 있음
+    // config에는 없지만 setLocationserror_page에 없는 status code에 대한 default error page 경로를 담고 있음, 항상 값이 있음
     std::map<int, std::string>              _default_error_page;
 
     _default_error_page[403] = "/";
@@ -31,7 +31,7 @@ void ServerConfig::setHost(const std::string & _host)
     this->host = _host;
 }
 
-void ServerConfig::setPort(const uint16_t & _port)
+void ServerConfig::setPort(const unsigned short & _port)
 {
     this->port = _port;
 }
@@ -61,7 +61,7 @@ void ServerConfig::setErrorPage(const std::map<int, std::string> & _error_page)
     this->error_page = _error_page;
 }
 
-void ServerConfig::setLocations(const std::map<std::string, LocationConfig> & _locations)
+void ServerConfig::setLocations(const std::map<std::string, LocationConfig>& _locations)
 {
     this->locations = _locations;
 }
@@ -76,7 +76,7 @@ const std::string& ServerConfig::getHost(void) const
     return (this->host);
 }
 
-const uint16_t& ServerConfig::getPort(void) const
+const unsigned short& ServerConfig::getPort(void) const
 {
     return (this->port);
 }

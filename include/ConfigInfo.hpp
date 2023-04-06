@@ -84,15 +84,7 @@ class ConfigInfo
 
         bool    checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::ValidateFieldInfo> validate_server_field_map);
 
-        // void    parseCommonConfigLineForm(std::string config_line);
-        void    parseHostConfigField(ServerConfig& server_config, std::string field_value);
-        void    parsePortConfigField(ServerConfig& server_config, std::string field_value);
         bool    parseErrorPageConfigField(std::string error_page, std::map<int, std::string>& error_page_map);
-        // void    parseClientMaxBodySizeConfigField(std::string port);
-        // void    parseErrorPageConfigField(std::string error_page);
-        // void    parseErrorPageStatusCodde(const std::string& status_code);
-        // void    parseAllowMethodConfigField(std::string allow_method);
-        
 
         // get validate info                                            
         std::map<std::string, ValidateFieldInfo>	getValidateServerFieldMap(void);

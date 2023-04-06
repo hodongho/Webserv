@@ -4,6 +4,7 @@
 # include <map>
 # include <string>
 # include "LocationConfig.hpp"
+# include <unistd.h>
 // class LocationConfig;
 
 class ServerConfig
@@ -11,7 +12,7 @@ class ServerConfig
 	private:
 		std::string								server_name;			// 선택 필드, 유일값, 입력 없으면 ""
 		std::string								host;					// 필수 필드, IPv4 style "0.0.0.0"
-		uint16_t								port;					// 필수 필드, 0~65525 범위 내에 존재해야함
+		unsigned short								port;					// 필수 필드, 0~65525 범위 내에 존재해야함
 		std::string								root;					// 필수 필드, 빈 문자열 입력은 허용하지 않음
 		std::string								index;					// 필수 필드, 빈 문자열 입력은 허용하지 않음
 		size_t									client_max_body_size;	// 필수 필드, 양수만 허용, atoi로 변환하여 처리, 숫자가 아닌 문자열인 경우는?, isdigit()사용
@@ -26,7 +27,7 @@ class ServerConfig
 		// setter()
 		void	setServerName(const std::string& _server_name);
 		void	setHost(const std::string& _host);
-		void	setPort(const uint16_t& _port);
+		void	setPort(const unsigned short& _port);
 		void	setRoot(const std::string& _root);
 		void	setIndex(const std::string& _index);
 		void	setClientMaxBodySize(const size_t& _client_max_body_size);
@@ -37,7 +38,7 @@ class ServerConfig
 		// getter()
 		const std::string&							getServerName(void) const;			// 선택 필드, 유일값, 입력 없으면 ""
 		const std::string&							getHost(void) const ;					// 필수 필드, IPv4 style "0.0.0.0"
-		const uint16_t&								getPort(void) const ;					// 필수 필드, 0~65525 범위 내에 존재해야함
+		const unsigned short&								getPort(void) const ;					// 필수 필드, 0~65525 범위 내에 존재해야함
 		const std::string&							getRoot(void) const ;					// 필수 필드, 빈 문자열 입력은 허용하지 않음
 		const std::string&							getIndex(void) const ;					// 필수 필드, 빈 문자열 입력은 허용하지 않음
 		const size_t&								getClientMaxBodySize(void) const ;	// 필수 필드, 양수만 허용, atoi로 변환하여 처리, 숫자가 아닌 문자열인 경우는?, isdigit()사용
@@ -81,7 +82,7 @@ inline void ServerConfig::printMapContent(const std::map<std::string, LocationCo
 	{
 		std::cout << "(Location) " << iter->first << std::endl;
 		std::cout << WHI;
-		iter->second.printLocationConfingContent();
+		iter->second.printLocationConfingContent(GRN);
 	}	
 }
 

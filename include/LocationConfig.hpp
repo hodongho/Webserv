@@ -39,7 +39,7 @@ class LocationConfig
 		void	printContent(const T &val, std::string name, std::string color) const;
 
 		void	printMapContent(const std::map<MethodType, bool> &pair_map, std::string name, std::string color) const ;
-		void	printLocationConfingContent(void)  const;
+		void	printLocationConfingContent(std::string color)  const;
 };
 
 

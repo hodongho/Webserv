@@ -6,6 +6,8 @@
 #include <sstream>
 #include <vector>
 #include <stack>
+#include <stdlib.h>
+#include <limits>
 
 static std::vector<std::string>	ft_split(const std::string& str, const std::string& delimiter);
 static std::string 				ft_strtrim(const std::string& str, const std::string& set);
@@ -152,7 +154,7 @@ bool	ConfigInfo::checkFileNameExtension(const char *file_name_parms)
 std::string ConfigInfo::readFile(std::string file_name)
 {
 	std::string     s;
-	std::ifstream   ifs(file_name);
+	std::ifstream   ifs(file_name.c_str());
 
 	if (ifs.is_open())
 	{
@@ -481,7 +483,7 @@ bool ConfigInfo::checkPortConfigField(std::string port)
 	port_strstream >> port_numeric;
 	if (port_strstream.str() != port)
 		return (false);
-	else if (port_numeric > std::numeric_limits<uint16_t>::max() || port_numeric < 0)
+	else if (port_numeric > std::numeric_limits<unsigned short>::max() || port_numeric < 0)
 		return (false);
     return (true);
 }
@@ -698,11 +700,9 @@ bool	ConfigInfo::checkCommonConfigLineForm(std::vector<std::string> word_list)
 		if (semicolon_pos == std::string::npos) // 다음 단어에 ';'이 처음에 있는지 확인
 		{
 			std::vector<std::string>::iterator	next_iter;
-			size_t								next_word_comment_pos;
 			size_t								next_word_semicolon_pos;
 
 			next_iter = value_iter + 1;
-			next_word_comment_pos = next_iter->find('#');
 			next_word_semicolon_pos = next_iter->find(';');
 
 			// ';'이 다음단어 처음에 나타나는 경우
@@ -888,7 +888,7 @@ bool	ConfigInfo::parse(const std::string &file_content)
 - struct ServerConfig
 	{
 		std::string								host;					// 필수 필드, IPv4 style "0.0.0.0"
-		uint16_t								port;					// 필수 필드, 0~65525 범위 내에 존재해야함
+		unsigned short								port;					// 필수 필드, 0~65525 범위 내에 존재해야함
 		std::string								root;					// 필수 필드, 빈 문자열 입력은 허용하지 않음
 		std::string								index;					// 필수 필드, 빈 문자열 입력은 허용하지 않음
 		size_t									client_max_body_size;	// 필수 필드, 양수만 허용, atoi로 변환하여 처리, 숫자가 아닌 문자열인 경우는?, isdigit()사용
@@ -932,7 +932,7 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 		std::vector<std::string>	word_list;
 		std::string					first_word;
 
-		printContent(*cur_iter, "cur_iter", PUP);
+		// printContent(*cur_iter, "cur_iter", PUP);
 		clean_str = ft_strtrim(*cur_iter, this->whitespace);
 		// if (clean_str.size() == 0 || clean_str[0] == '#')
 		if (clean_str.size() == 0 || clean_str[0] == '#' || clean_str[0] == '{' || clean_str[0] == '}')
@@ -977,9 +977,9 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 				field_value = *(word_list.begin() + 1);
 				field_value = removeAfterSemicolon(field_value); // important!
 				if (first_word == "host")
-					server_config.setHost(field_value); // parseHostConfigField(server_config, field_value);
+					server_config.setHost(field_value);
 				else if (first_word == "port")
-					server_config.setPort(std::atoi(field_value.c_str())); //parsePortConfigField(server_config, field_value);
+					server_config.setPort(std::atoi(field_value.c_str()));
 				else if (first_word == "root")
 					server_config.setRoot(field_value);
 				else if (first_word == "index")
@@ -1264,9 +1264,10 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 
 			field_name = location_field_map_iter->first;
 
-
+			printContent(first_word, "first_word in parseLocationBlock", RED);
 			field_value = *(word_list.begin() + 1);
 			field_value = removeAfterSemicolon(field_value); // important!
+			printContent(field_value, "field_value in parseLocationBlock", GRN);
 			if (first_word == "location")
 				location_path = field_value;
 			else if (first_word == "allow_method")
@@ -1308,17 +1309,27 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 			{
 				bool	autoindex_flag;
 
+				// printContent(field_value, "field_value in parseLocationBlock", BRW);
 				autoindex_flag = false;
 				if (field_value == "on")
 					autoindex_flag = true;
 				location_config.setAutoindex(autoindex_flag);
 			}
 			else if (first_word == "root")
+			{
+
 				location_config.setRoot(field_value);
+			}
 			else if (first_word == "index")
-				location_config.setRoot(field_value);
+			{
+
+				location_config.setIndex(field_value);
+			}
 			else if (first_word == "redirect")
-				location_config.setRoot(field_value);
+			{
+
+				location_config.setRedirect(field_value);
+			}
 			else
 			{
 				//find()이후라 없을 것이지만 혹시 모르니 체크
@@ -1328,16 +1339,16 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 		}
 	}
 	std::map<std::string, LocationConfig> _locations_map;
-	printContent(location_path, "location_path", RED);
+	// printContent(location_path, "location_path", RED);
 	// location_config.
 	// if (server_config.getLocations().size() > 0 &&
 	// server_config.getLocations
 	
 	// print all locations
 	std::map<std::string, LocationConfig> got_locations_map;
-	got_locations_map = server_config.getLocations();
-	for (std::map<std::string, LocationConfig>::iterator iter = got_locations_map.begin();iter != got_locations_map.end();iter++)
-		printContent(iter->first, "server_config.getLocations()", RED);
+	// got_locations_map = server_config.getLocations();
+	// for (std::map<std::string, LocationConfig>::iterator iter = got_locations_map.begin();iter != got_locations_map.end();iter++)
+	// 	printContent(iter->first, "server_config.getLocations() before", RED);
 	std::map<std::string, LocationConfig>::const_iterator loc_iter = server_config.getLocations().find(location_path);
 	if (loc_iter != server_config.getLocations().end())
 	{
@@ -1345,39 +1356,20 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 	}
 	//  > 0 && 
 	// 	server_config.getLocations().find(location_path) != server_config.getLocations().end()
-	_locations_map[location_path] = location_config;
-	server_config.setLocations(_locations_map);
-	got_locations_map = server_config.getLocations();
-	std::cout << "got_locations_map.size() : " << got_locations_map.size() << std::endl;
+	// _locations_map[location_path] = location_config;
+	got_locations_map[location_path] = location_config; // TODO setLocation말고 다르것으로 처리한다.
+	// got_locations_map
+	server_config.setLocations(got_locations_map);
+	// got_locations_map = server_config.getLocations();
+	std::cout << "########################################################" << std::endl;
+	location_config.printLocationConfingContent(PUP);
+	std::cout << "########################################################" << std::endl;
+	// for (std::map<std::string, LocationConfig>::iterator iter = got_locations_map.begin();iter != got_locations_map.end();iter++)
+	// 	printContent(iter->first, "server_config.getLocations()", RED);
+	// std::cout << "got_locations_map.size() : " << got_locations_map.size() << std::endl;
 	return (true);
 }
 
-/*
-
-*/
-/*
-IPv4
-[123].[123].[123].[123];
-- ;이 있다면 제거
-	; or # 이전까지만 value에 담아둠
-- 각 '.'과 '.'사이는 최대 3자리 숫자
-- '.'의 개수는 3개
-*/
-void ConfigInfo::parseHostConfigField(ServerConfig& server_config, std::string field_value)
-{
-	printContent(field_value, "field_value before removeAfterSemicolon", GRN);
-	field_value = removeAfterSemicolon(field_value);
-	printContent(field_value, "field_value after removeAfterSemicolon", BRW);
-	server_config.setHost(field_value);
-}
-
-void ConfigInfo::parsePortConfigField(ServerConfig &server_config, std::string port)
-{
-	server_config.setPort(std::atoi(port.c_str()));
-	std::stringstream strstream;
-	std::cout << "server_config.getPort() : " << server_config.getPort() << std::endl;
-	// printContent(, "server_config.getPort()", BRW);
-}
 
 /*
     1. 유효필드 검사를 위해 map<std::string, ValidateFieldInfo>를 사용한다.
@@ -1610,10 +1602,10 @@ bool	ConfigInfo::validateConfigFile(const std::string& file_content)
 
 
 //TODO remove
-void	test(void)
-{
-	system("leaks ConfigInfo");
-}
+// void	test(void)
+// {
+// 	system("leaks ConfigInfo");
+// }
 
 int main(int argc, char *argv[])
 {
@@ -1635,13 +1627,13 @@ int main(int argc, char *argv[])
 	{
 		config_info.parseConfig(argv[1]);
 		/* code */
-		_server_config_vector = config_info.getWebservConfig();
-		config_info.printWebservConfig();
+		// _server_config_vector = config_info.getWebservConfig();
+		// config_info.printWebservConfig();
 		// _server_config_vector.begin()->printServerConfingContent();
 		// _server_config_vector
-		std::cout << GRN <<  "_server_config_vector.begin()->getClientMaxBodySize(); : " << _server_config_vector.begin()->getClientMaxBodySize() << WHI<< std::endl;
-		// _server_config_vector.size()
-		std::cout << RED <<  "_server_config_vector.size() : " << _server_config_vector.size() << WHI<< std::endl;
+		// std::cout << GRN <<  "_server_config_vector.begin()->getClientMaxBodySize(); : " << _server_config_vector.begin()->getClientMaxBodySize() << WHI<< std::endl;
+		// // _server_config_vector.size()
+		// std::cout << RED <<  "_server_config_vector.size() : " << _server_config_vector.size() << WHI<< std::endl;
 	}
 	catch(const std::exception& e)
 	{

@@ -73,13 +73,13 @@ std::map<MethodType, bool> LocationConfig::getAllowMethod(void) const
 }
 
 
-void LocationConfig::printLocationConfingContent(void) const
+void LocationConfig::printLocationConfingContent(std::string color) const
 {
-    std::cout << "--------------------(LOCATION CONTENT_DATA)-------------------------" << std::endl;
+    std::cout << color << "--------------------(LOCATION CONTENT_DATA)-------------------------" << std::endl;
     printContent(this->getRoot(), "this->getRoot()", GRN);
     printContent(this->getIndex(), "this->getIndex()", GRN);
     printContent(this->getRedirect(), "this->getRedirect()", GRN);
     printContent(this->getAutoindex(), "this->getAutoindexs()", GRN);
-    std::cout << "--------------------(LOCATION MAP_DATA)-------------------------" << std::endl;
+    std::cout << "--------------------(LOCATION MAP_DATA)-------------------------" << WHI << std::endl;
     printMapContent(this->getAllowMethod(), "this->getAllowMethod()", GRN);
 }

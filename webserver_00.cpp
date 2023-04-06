@@ -18,7 +18,7 @@ int error_handling(std::string msg, int ret)
 }
 
 void    change_events(std::vector<struct kevent>& change_list, uintptr_t ident,
-                        int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void* udata)
+                        int16_t filter, unsigned short flags, uint32_t fflags, intptr_t data, void* udata)
 {
     struct kevent   temp_event;
 
