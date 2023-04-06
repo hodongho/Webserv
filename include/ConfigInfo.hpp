@@ -73,6 +73,7 @@ class ConfigInfo
         bool    checkClientMaxBodySizeConfigField(std::string port);
         bool    checkErrorPageConfigField(std::string error_page);
         bool    checkErrorPageStatusCodde(const std::string& status_code);
+        bool    checkAllowMethodConfigField(std::string allow_method);
 
         bool    checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::ValidateFieldInfo> validate_server_filed_map);
         

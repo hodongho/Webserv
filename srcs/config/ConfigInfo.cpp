@@ -502,10 +502,54 @@ bool ConfigInfo::checkErrorPageStatusCodde(const std::string& status_code)
 }
 
 /*
-	필수항목에서 빠진 것은 없는지 확인
-	필수항목 포함하여 중복된 것은 없는지 확인 이미 확인하기에 필요없을 듯
-	NESSARY_UNIQUE,
-	NESSARY_MULTI,
+allow_method GET;
+allow_method GET ;
+allow_method GET POST;
+allow_method DELETE GET POST;
+*/
+bool ConfigInfo::checkAllowMethodConfigField(std::string allow_method)
+{
+	std::string							value;
+	size_t 								semicolon_pos;
+	size_t								comment_pos;
+	std::vector<std::string>			allow_method_vector;
+	std::vector<std::string>::iterator	allow_method_value_iter;
+
+	semicolon_pos = allow_method.find(';');
+	if (semicolon_pos == std::string::npos)
+		return (false);
+	// printContent(allow_method, "allow_method before removeAfterSemicolon", GRN);
+	allow_method = removeAfterSemicolon(allow_method);
+	// printContent(allow_method, "allow_method after removeAfterSemicolon", RED);
+	comment_pos = allow_method.find('#');
+	if (comment_pos != std::string::npos)
+	{
+		if (semicolon_pos > comment_pos)
+			return (false);
+		else if (semicolon_pos + 1 != comment_pos)
+			return (false);
+	}
+
+	allow_method = ft_strtrim(allow_method, this->whitespace);
+	allow_method_vector = ft_split(allow_method, this->whitespace);
+	allow_method_value_iter = allow_method_vector.begin() + 1;
+	if (allow_method_value_iter == allow_method_vector.end()) // allow_method test ;
+		return (false);
+	for (std::vector<std::string>::iterator iter = allow_method_value_iter; iter != allow_method_vector.end(); iter++)
+	{
+		if (*iter != "GET" && \
+			*iter != "POST" && \
+			*iter != "DELETE")
+			return (false);
+	}
+    return (true);
+}
+
+/*
+    필수항목에서 빠진 것은 없는지 확인
+    필수항목 포함하여 중복된 것은 없는지 확인 이미 확인하기에 필요없을 듯
+    NESSARY_UNIQUE,
+    NESSARY_MULTI,
 	OPTION_UNIQUE,
 */
 bool ConfigInfo::checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::ValidateFieldInfo> validate_server_filed_map)
@@ -532,11 +576,13 @@ bool ConfigInfo::checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::Val
 	}
     return (true);
 }
+
 /*
     error_page 403 404 400 500 /50x.html
     형식이 제대로 맞는지도 확인필요
     ;이 있는가?
     마지막 단어에 있어야한다.
+	;다음에 #이나 문자가 있는 경우 문제됨
 */
 bool ConfigInfo::checkErrorPageConfigField(std::string error_page)
 {
@@ -546,11 +592,11 @@ bool ConfigInfo::checkErrorPageConfigField(std::string error_page)
 	std::vector<std::string>			error_page_vector;
 	std::vector<std::string>::iterator	error_page_end_value_iter;
 	std::vector<std::string>::iterator	error_page_value_iter;
-	std::stringstream					error_page_strstream;
 
 	semicolon_pos = error_page.find(';');
 	if (semicolon_pos == std::string::npos)
 		return (false);
+	error_page = removeAfterSemicolon(error_page);
 	comment_pos = error_page.find('#');
 	if (comment_pos != std::string::npos)
 	{
@@ -559,8 +605,6 @@ bool ConfigInfo::checkErrorPageConfigField(std::string error_page)
 		else if (semicolon_pos + 1 != comment_pos)
 			return (false);
 	}
-
-	error_page = removeAfterSemicolon(error_page);
 	error_page = ft_strtrim(error_page, this->whitespace);
 	error_page_vector = ft_split(error_page, this->whitespace);
 	error_page_value_iter = error_page_vector.begin() + 1;
@@ -770,6 +814,8 @@ std::map<std::string, ConfigInfo::ValidateFieldInfo>	ConfigInfo::getValidateLoca
 	std::map<std::string, ConfigInfo::ValidateFieldInfo>	validate_location_filed_map;
 	ValidateFieldInfo										validate_filed_info;
 
+	validate_filed_info.setValidateFiledType(NESSARY_UNIQUE);
+	validate_location_filed_map["location"] = validate_filed_info;
 	validate_filed_info.setValidateFiledType(OPTION_UNIQUE);
 	validate_location_filed_map["allow_method"] = validate_filed_info;
 	validate_location_filed_map["autoindex"] = validate_filed_info;
@@ -855,8 +901,8 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 			// printContent(*cur_iter, "*cur_iter", PUP);
 			// for (std::vector<std::string>::iterator	tmp_iter = begin_iter; tmp_iter != end_iter; tmp_iter++)
 			// 	printContent(*tmp_iter, "Locatoin Block", BRW);
-			// if (validateLocationBlock(begin_iter, end_iter) == false)
-			// 	return (false);
+			if (validateLocationBlock(begin_iter, end_iter) == false)
+				return (false);
 			validate_server_filed_map[first_word]++;
 			std::cout << std::endl << std::endl << std::endl;
 		}
@@ -1002,19 +1048,6 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 	std::vector<std::string>::iterator 					cur_iter;
 
 	validate_location_filed_map = getValidateLocationFiledMap();
-
-	for (map_iter = validate_location_filed_map.begin(); map_iter != validate_location_filed_map.end(); map_iter++)
-	{
-		// std::cout << GRN << "map_iter->first : " << map_iter->first \
-		// 				<< "\tmap_iter->second getCount(): " << map_iter->second.getCount() \
-		// 				<< "\tmap_iter->second getValidateFiledType(): " << map_iter->second.getValidateFiledType() \
-		// 			<< WHI << std::endl;
-		// std::cout << GRN << "map_iter->first : " << map_iter->first \
-		// 						<< "\validate_location_filed_map[map_iter->first].getCount() : " << validate_location_filed_map[map_iter->first].getCount() \
-		// 						<< "\tvalidate_location_filed_map[map_iter->first].getValidateFiledType(): " << validate_location_filed_map[map_iter->first].getValidateFiledType() \
-		// 					<< WHI << std::endl;
-	}
-	// std::cout << "validate_filed_map.size() : " << validate_location_filed_map.size() << std::endl;
 	cur_iter = src_begin_iter;
 	for (; cur_iter != src_end_iter; cur_iter++)
 	{
@@ -1022,7 +1055,6 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 		std::vector<std::string>	word_list;
 		std::string					first_word;
 
-		// printContent(*iter, "iter", PUP);
 		clean_str = ft_strtrim(*cur_iter, this->whitespace);
 		// if (clean_str.size() == 0 || clean_str[0] == '#')
 		if (clean_str.size() == 0 || clean_str[0] == '#' || clean_str[0] == '{' || clean_str[0] == '}')
@@ -1032,9 +1064,7 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 		// printVector(word_list, "word", GRN);
 		// key value";" comment
 		// #comment
-		// if (word_list.begin() != word_list.end())
 		first_word = *(word_list.begin());
-
 		validate_location_filed_map_iter = validate_location_filed_map.find(first_word);
 		if (validate_location_filed_map_iter == validate_location_filed_map.end())
 		{
@@ -1060,12 +1090,14 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 			if (first_word == "allow_method")
 			{
 				if (checkDuplicateConfigField(validate_field_info) == false)
-						return (false);
-					// allow method에 맞는 validate 함수 필요
-					// 여러개의 값이 들어올 수 있으며 마지막 값이 경로로 들어간다.
-					// 중간에 오는 값들은 GET, POST, DELTE가 될 수 있으며 
-					// GET, POST, DELET가 중복되어서는 안된다.
-						//-> 중복을 허용해줄지는 추가 고려 필요
+					return (false);
+				if (checkAllowMethodConfigField(clean_str) == false)
+					return (false);
+				// allow method에 맞는 validate 함수 필요
+				// 여러개의 값이 들어올 수 있으며 마지막 값이 경로로 들어간다.
+				// 중간에 오는 값들은 GET, POST, DELTE가 될 수 있으며 
+				// GET, POST, DELET가 중복되어서는 안된다.
+					//-> 중복을 허용해줄지는 추가 고려 필요
 				// if (checkCommonConfigLineForm(word_list) == false)
 				// 	return (false);
 				validate_location_filed_map[filed_name]++; // count increament!!!
@@ -1084,7 +1116,7 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 				// 이미 각 줄마다 checkCommonConfigLineForm() 통해 유효성 검사를 한 이후이므로 #은 ;이후에 있긴하다
 				value_with_semicolon_comment = *(word_list.begin() + 1);
 				value = removeAfterSemicolon(value_with_semicolon_comment);
-				if (value != "on" && value == "off") // 입력값에 대해서는 대소문자 구분없이도 되게할지는 추후 고민 후 수정하거나 그대로 놔둠.
+				if (value != "on" && value != "off") // 입력값에 대해서는 대소문자 구분없이도 되게할지는 추후 고민 후 수정하거나 그대로 놔둠.
 					return (false);
 				validate_location_filed_map[filed_name]++; // count increament!!!
 			}
@@ -1111,6 +1143,12 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 				if (checkCommonConfigLineForm(word_list) == false)
 					return (false);
 				validate_location_filed_map[filed_name]++; // count increament!!!
+			}
+			else if (first_word == "location")
+			{
+				if (checkDuplicateConfigField(validate_field_info) == false)
+						return (false);
+					validate_location_filed_map[filed_name]++; // count increament!!!
 			}
 			else
 			{
