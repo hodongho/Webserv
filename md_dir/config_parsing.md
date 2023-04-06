@@ -113,7 +113,7 @@ index의 경우 nginx에서는 여러개 들어와도 처리해주지만
             validateServerBlock()함수에서는 
             한줄씩 읽으면서 파싱을 진행하며 location이 나타나면 findLocationBlock()을 이용하여 영역을 찾아서 validateLocationBlcok(start_iter, end_iter)를 호출하여 확인한다.
             
-            마찬가지로 validateLocationBlcok() 에서는 한줄씩 읽으며 location에 유효한 filed인지 확인한다.
+            마찬가지로 validateLocationBlcok() 에서는 한줄씩 읽으며 location에 유효한 field인지 확인한다.
             - 유효필드
                 미리 map<std::string, int> 타입의 server_validation_info, location_validation_info를 가지고 유효필드인지,중복인지, 비어있는 유효필드는 없는지 확인한다.
                 그외에는 세부룰

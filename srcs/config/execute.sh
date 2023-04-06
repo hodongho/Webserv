@@ -1,0 +1,1 @@
+g++ -o ConfigInfo ConfigInfo.cpp ServerConfig.cpp LocationConfig.cpp

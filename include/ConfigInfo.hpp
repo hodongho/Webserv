@@ -2,7 +2,7 @@
 # define ConfigInfo_HPP
 # include "configStructure.hpp"
 # include "manageStdout.hpp"
-
+# include <vector>
 /*
     - 가져다 쓸떄는 config 정보가 담겨있어서 쓸텐데 config parser라는 이름이 맞을 것인가?
     - 그렇다고 ConfigInfo라고 하기에는 주요 동작이 parse이다.
