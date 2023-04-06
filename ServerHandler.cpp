@@ -53,8 +53,8 @@ void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 	switch (client_data->status)
 	{
 		case CLIENT_RECV_ERROR:
-			// if (curr_event->filter == EVFILT_WRITE)
-			// 	this->makeErrorResponse(curr_event, client_data);
+			if (curr_event->filter == EVFILT_WRITE)
+				this->makeErrorResponse(curr_event, client_data);
 			break;
 		case CLIENT_RECV_HEADER:
 			if (curr_event->filter == EVFILT_READ)
@@ -89,15 +89,13 @@ void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 	}
 }
 
-/*
- void ServerHandler::makeErrorResponse(struct kevent* const & curr_event, SocketData* const & client_socket)
+void ServerHandler::makeErrorResponse(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
+	int fd;
 	switch (client_socket->http_response.getStatusCode())
 	{
-	case REDIR:
-		this->makeRedirResponse(curr_event, client_socket);
-		break;
 	case BADREQ:
+		fd = open(ERR_BADREQ_PAGE_FILE_PATH, O_RDONLY | O_NONBLOCK);
 		this->makeBadReqResponse(curr_event, client_socket);
 		break;
 	case NOTFOUND:
@@ -110,7 +108,7 @@ void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 		break;
 	}
 }
- */
+
 
 
 static void	printRecvData(const int& fd, const std::string& data, const ssize_t& recv_size)
@@ -246,7 +244,7 @@ void ServerHandler::readLocal(struct kevent* const & curr_event, SocketData* con
 			throwError("read respond body: ");
 		close(curr_event->ident);
 		client_socket->status = CLIENT_SEND_RESPONSE;
-		changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+		changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 		return ;
 	}
 	client_socket->buf_str.append(buf, ret);

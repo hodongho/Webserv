@@ -47,7 +47,7 @@ class ServerHandler {
 		void		keventError(const IdentType& event_id_type);
 		void		handleListenEvent();
 		void		handleClientEvent(struct kevent* const & curr_event);
-		// void		makeErrorResponse(struct kevent* const & curr_event, SocketData* const & client_socket);
+		void		makeErrorResponse(struct kevent* const & curr_event, SocketData* const & client_socket);
 		void		recvHeader(struct kevent* const & curr_event, SocketData* const & client_socket);
 		void		recvBody(struct kevent* const & curr_event, SocketData* const & client_socket);
 		void		readLocal(struct kevent* const & curr_event, SocketData* const & client_socket);

@@ -17,7 +17,6 @@ enum MethodType
 enum StatusCode
 {
 	OK,
-	NOCONT,
 	REDIR,
 	BADREQ,
 	NOTFOUND,
