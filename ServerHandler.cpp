@@ -128,8 +128,6 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 	ssize_t		ret;
 
 	ret = recv(curr_event->ident, buf, RECV_BUF_SIZE - 1, 0);
-	buf[ret] = 0;
-	printRecvData(curr_event->ident, buf, ret);
 	if (ret <= 0)
 	{
 		if (ret < 0)
@@ -138,6 +136,8 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 		std::cout << "socket closed successfully." << std::endl;
 		sock_list.erase(curr_event->ident);
 	}
+	buf[ret] = 0;
+	printRecvData(curr_event->ident, buf, ret); // for test
 	client_socket->buf_str.append(buf, ret);
 	header_end_pos = client_socket->buf_str.rfind("\r\n\r\n");
 
