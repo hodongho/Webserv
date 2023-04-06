@@ -1,6 +1,6 @@
 #include "utils.hpp"
 
-void	throwError(std::string msg)
+void throwError(std::string msg)
 {
 	std::cerr << msg << std::flush;
 	throw(funcException());

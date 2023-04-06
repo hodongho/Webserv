@@ -13,7 +13,7 @@ ServerHandler::~ServerHandler()
 };
 
 
-void	ServerHandler::keventError(const IdentType& event_id_type)
+void ServerHandler::keventError(const IdentType& event_id_type)
 {
 	if (event_id_type == LISTEN_SOCKET)
 		throwError("sever socket: ");
@@ -21,7 +21,7 @@ void	ServerHandler::keventError(const IdentType& event_id_type)
 		throwError("client socket: ");
 }
 
-void	ServerHandler::handleListenEvent(void)
+void ServerHandler::handleListenEvent(void)
 {
 	int			client_sock_fd;
 	socklen_t	client_sock_addr_len;
@@ -124,7 +124,7 @@ static void	printRecvData(const int& fd, const std::string& data, const ssize_t&
 }
 
 
-void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* const & client_socket)
+void ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
 	char		buf[RECV_BUF_SIZE];
 	size_t		header_end_pos;
@@ -195,7 +195,7 @@ void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 	}
 }
 
-void	ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* const & client_socket)
+void ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
 	char		buf[RECV_BUF_SIZE];
 	ssize_t		ret;
@@ -281,7 +281,7 @@ static void	setTestResponse(HTTPResponse& res) // test response make
 	res.setBody(body);
 }
 
-void		ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
+void ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
 	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, GET) == 0)
 	{
@@ -328,7 +328,7 @@ void		ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* co
 	// setTestResponse(client_socket->http_response);
 }
 
-void		ServerHandler::postMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
+void ServerHandler::postMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
 	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, POST) == 0)
 	{
@@ -400,7 +400,7 @@ void ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* 
 }
 
 
-void	ServerHandler::sendResponse(struct kevent * const & curr_event, SocketData* const & client_socket)
+void ServerHandler::sendResponse(struct kevent * const & curr_event, SocketData* const & client_socket)
 {
 	ssize_t ret;
 	std::string res;
@@ -473,7 +473,7 @@ void ServerHandler::serverReady(void)
 	this->serverListen();
 }
 
-void	ServerHandler::serverRun()
+void ServerHandler::serverRun()
 {
 	int				event_count;
 	struct kevent*	curr_event;
@@ -515,7 +515,7 @@ void	ServerHandler::serverRun()
 	}
 }
 
-void	ServerHandler::changeEvent(const uintptr_t& ident,
+void ServerHandler::changeEvent(const uintptr_t& ident,
 								const int16_t& filter,
 								const uint16_t& flags,
 								const uint32_t& fflags,
@@ -528,7 +528,7 @@ void	ServerHandler::changeEvent(const uintptr_t& ident,
 	this->change_list.push_back(newEvent);
 }
 
-void	ServerHandler::closeEvent(struct kevent * const & curr_event)
+void ServerHandler::closeEvent(struct kevent * const & curr_event)
 {
 	IdentType event_id_type = static_cast<SocketData *>(curr_event->udata)->id_type;
 
@@ -538,7 +538,7 @@ void	ServerHandler::closeEvent(struct kevent * const & curr_event)
 	this->sock_list.erase(curr_event->ident);
 }
 
-void	ServerHandler::initClientSocketData(struct SocketData* client_socket, const int& _sock_fd)
+void ServerHandler::initClientSocketData(struct SocketData* client_socket, const int& _sock_fd)
 {
 	client_socket->sock_fd = _sock_fd;
 	client_socket->id_type = CLIENT_SOCKET;
@@ -546,7 +546,7 @@ void	ServerHandler::initClientSocketData(struct SocketData* client_socket, const
 	client_socket->buf_str = "";
 }
 
-void	ServerHandler::clearClientSocketData(struct SocketData* client_socket)
+void ServerHandler::clearClientSocketData(struct SocketData* client_socket)
 {
 	client_socket->id_type = CLIENT_SOCKET;
 	client_socket->status = CLIENT_RECV_HEADER;

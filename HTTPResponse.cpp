@@ -8,14 +8,14 @@ HTTPResponse::HTTPResponse()
 HTTPResponse::~HTTPResponse()
 {};
 
-void	HTTPResponse::makeStatusLine()
+void HTTPResponse::makeStatusLine()
 {
 	this->response +=	this->version + " " +
 						this->status_code + " " +
 						this->status_message + "\r\n";
 }
 
-void	HTTPResponse::makeHeaderField()
+void HTTPResponse::makeHeaderField()
 {
 	std::map<std::string, std::string>::iterator it, end;
 
@@ -29,12 +29,12 @@ void	HTTPResponse::makeHeaderField()
 	this->response += "\r\n";
 }
 
-void	HTTPResponse::makeBody()
+void HTTPResponse::makeBody()
 {
 	this->response += this->body;
 }
 
-std::string	HTTPResponse::makeResponseMessage()
+std::string HTTPResponse::makeResponseMessage()
 {
 	this->makeStatusLine();
 	this->makeHeaderField();
@@ -45,13 +45,13 @@ std::string	HTTPResponse::makeResponseMessage()
 	return (this->response);
 }
 
-void	HTTPResponse::setVersion(const std::string& _version)				{ this->version = _version; }
-void	HTTPResponse::setStatusCode(const std::string& _status_code)		{ this->status_code = _status_code; }
-void	HTTPResponse::setStatusMessage(const std::string& _status_message)	{ this->status_message = _status_message; }
-void	HTTPResponse::setBody(const std::string& _body) 					{ this->body = _body; }
-void	HTTPResponse::addHeader(const std::string& _header_name, const std::string& _header_value) { header[_header_name] = _header_value; }
+void HTTPResponse::setVersion(const std::string& _version)				{ this->version = _version; }
+void HTTPResponse::setStatusCode(const std::string& _status_code)		{ this->status_code = _status_code; }
+void HTTPResponse::setStatusMessage(const std::string& _status_message)	{ this->status_message = _status_message; }
+void HTTPResponse::setBody(const std::string& _body) 					{ this->body = _body; }
+void HTTPResponse::addHeader(const std::string& _header_name, const std::string& _header_value) { header[_header_name] = _header_value; }
 
-StatusCode	HTTPResponse::getStatusCode(void) const
+StatusCode HTTPResponse::getStatusCode(void) const
 {
 	if (this->status_code == "200")
 		return (OK);
@@ -69,7 +69,7 @@ StatusCode	HTTPResponse::getStatusCode(void) const
 		return (static_cast<enum StatusCode>(-1));
 }
 
-void	HTTPResponse::clear()
+void HTTPResponse::clear()
 {
 	this->version.clear();
 	this->status_code.clear();

@@ -111,19 +111,19 @@ int	HTTPRequest::parseRequestMessage(std::string& msg)
 	return (0);
 }
 
-void	HTTPRequest::saveBody(const std::string& _body)
+void HTTPRequest::saveBody(const std::string& _body)
 {
 	this->body.append(_body);
 }
 
 //Getter
-const std::string&							HTTPRequest::getVersion() const	{ return (this->version); }
-const MethodType&							HTTPRequest::getMethod() const	{ return (this->method); }
-const std::string&							HTTPRequest::getURI() const		{ return (this->URI); }
-const std::string&							HTTPRequest::getBody() const	{ return (this->body); }
-const std::map<std::string, std::string>&	HTTPRequest::getHeader() const	{ return (this->header); }
+const std::string& HTTPRequest::getVersion() const	{ return (this->version); }
+const MethodType& HTTPRequest::getMethod() const	{ return (this->method); }
+const std::string& HTTPRequest::getURI() const		{ return (this->URI); }
+const std::string& HTTPRequest::getBody() const	{ return (this->body); }
+const std::map<std::string, std::string>& HTTPRequest::getHeader() const	{ return (this->header); }
 
-ssize_t		HTTPRequest::getContentLength()
+ssize_t HTTPRequest::getContentLength()
 {
 	std::map<std::string, std::string>::iterator	content_length_it;
 	ssize_t											content_length;
