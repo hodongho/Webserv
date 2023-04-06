@@ -1,22 +1,12 @@
 #include "../../include/LocationConfig.hpp"
 #include <iostream> // TODO remove
 
-// LocationConfig::LocationConfig(root ,index)
-// TODO
-// 서버 파싱 이후에 location block의 root, index가 ""이면 server block의 root, index로 덮여
-
-
-
 LocationConfig::LocationConfig(void)
     : root(""), index(""), redirect(""), autoindex(false)
 {
-    // std::map<MethodType, bool>		_allow_method;
-
     this->allow_method[GET] = true;
     this->allow_method[POST] = true;
     this->allow_method[DELETE] = true;
-    // this->allow_method = _allow_method;
-    // std::cout << "this->allow_method.size() : " << this->allow_method.size() << std::endl;
 }
 
 LocationConfig::~LocationConfig()
