@@ -95,7 +95,6 @@ void ServerHandler::makeErrorResponse(struct kevent* const & curr_event, SocketD
 	switch (client_socket->http_response.getStatusCode())
 	{
 	case BADREQ:
-		fd = open(ERR_BADREQ_PAGE_FILE_PATH, O_RDONLY | O_NONBLOCK);
 		this->makeBadReqResponse(curr_event, client_socket);
 		break;
 	case NOTFOUND:
@@ -281,13 +280,13 @@ static void	setTestResponse(HTTPResponse& res) // test response make
 
 void ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
-	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, GET) == 0)
+	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, GET) == -1)
 	{
 		client_socket->status = CLIENT_RECV_ERROR;
 		client_socket->http_response.setStatusCode("405");
 		return ;
 	}
-	std::string file_path = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
+	std::string file_path = this->conf.convUriToPath(client_socket->http_request.getURI());
 	struct stat file_stat;
 	if (stat(file_path.c_str(), &file_stat) == -1)
 	{
@@ -490,9 +489,9 @@ void ServerHandler::serverRun()
 
 		this->change_list.clear();
 
-		for (int i = 0; i < event_count; i++)
+		for (int loop = 0; loop < event_count; loop++)
 		{
-			curr_event = &this->event_list[i];
+			curr_event = &this->event_list[loop];
 			sock_type = static_cast<SocketData *>(curr_event->udata);
 			if (fstat(curr_event->ident, &stat_buf) == -1)
 				continue;

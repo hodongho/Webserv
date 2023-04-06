@@ -42,7 +42,6 @@ class HTTPResponse : public HTTPMessage
 		void		clear();
 
 		void makeOkResponse(void);
-		void makeNocontentResponse(void);
 		void makeRedirectResponse(const std::string& location);
 		void makeBadrequestResponse(void);
 		void makeNotFoundResponse(void);
