@@ -4,18 +4,18 @@
 #include <iostream> // TODO remove
 
 ServerConfig::ServerConfig(void)
-    : server_name("")
+    : server_name(""), host(""), port(0), index(""), client_max_body_size(0)
 {
     // config에는 없지만 error_page에 없는 status code에 대한 default error page 경로를 담고 있음, 항상 값이 있음
-    std::map<int, std::string>  _default_error_page;
+    std::map<int, std::string>              _default_error_page;
 
-    _default_error_page[403] = "";
-    _default_error_page[404] = "";
-    _default_error_page[500] = "";
+    _default_error_page[403] = "/";
+    _default_error_page[404] = "/";
+    _default_error_page[500] = "/";
     // _default_error_pag[400] = "";
     this->default_error_page = _default_error_page;
     // std::cout << "this->locations.size() : " << this->locations.size() << std::endl;
-    // std::cout << "this->default_error_page.size() : " << this->default_error_page.size() << std::endl;
+    // std::cout << PUP <<  "this->locations.size() : " << this->locations.size() << WHI << std::endl;
 }
 
 ServerConfig::~ServerConfig(void)
@@ -66,47 +66,61 @@ void ServerConfig::setLocations(const std::map<std::string, LocationConfig> & _l
     this->locations = _locations;
 }
 
-const std::string ServerConfig::getServerName(void) const
+const std::string& ServerConfig::getServerName(void) const
 {
     return (this->server_name);
 }
 
-const std::string ServerConfig::getHost(void) const
+const std::string& ServerConfig::getHost(void) const
 {
     return (this->host);
 }
 
-const uint16_t ServerConfig::getPort(void) const
+const uint16_t& ServerConfig::getPort(void) const
 {
     return (this->port);
 }
 
-const std::string ServerConfig::getRoot(void) const
+const std::string& ServerConfig::getRoot(void) const
 {
     return (this->root);
 }
 
-const std::string ServerConfig::getIndex(void) const
+const std::string& ServerConfig::getIndex(void) const
 {
     return (this->index);
 }
 
-const size_t ServerConfig::getClientMaxBodySize(void) const
+const size_t& ServerConfig::getClientMaxBodySize(void) const
 {
     return (this->client_max_body_size);
 }
 
-const std::map<int, std::string> ServerConfig::getDefaultErrorPage(void) const
+const std::map<int, std::string>& ServerConfig::getDefaultErrorPage(void) const
 {
     return (this->default_error_page);
 }
 
-const std::map<int, std::string> ServerConfig::getErrorPage(void) const
+const std::map<int, std::string>& ServerConfig::getErrorPage(void) const
 {
     return (this->error_page);
 }
 
-const std::map<std::string, LocationConfig> ServerConfig::getLocations(void) const
+const std::map<std::string, LocationConfig>& ServerConfig::getLocations(void) const
 {
     return (this->locations);
+}
+
+void ServerConfig::printServerConfingContent(void) const
+{
+    std::cout << "--------------------(CONTENT_DATA)-------------------------" << std::endl;
+    this->printContent(this->getServerName(), "this->getServerName()",GRN);
+    this->printContent(this->getHost(), "this->getHost()",GRN);
+    this->printContent(this->getPort(), "this->getPort()",GRN);
+    this->printContent(this->getRoot(), "this->getRoot()",GRN);
+    this->printContent(this->getIndex(), "this->getIndex()",GRN);
+    std::cout << "--------------------(MAP_DATA)-------------------------" << std::endl;
+    this->printMapContent(this->default_error_page, "this->getDefaultErrorPage()", GRN);
+    this->printMapContent(this->error_page, "this->getErrorPage()", GRN);
+    this->printMapContent(this->locations, "this->getLocations()", GRN);
 }

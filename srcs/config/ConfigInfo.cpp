@@ -57,15 +57,18 @@ ConfigInfo::ConfigInfo(void)
 	: whitespace(" \t\n\v\f\r")
 {}
 
+ConfigInfo::~ConfigInfo()
+{}
+
 /*
-	config 중복여부 확인필요
-	host:port
+    config 중복여부 확인필요
+    host:port
 */
 void ConfigInfo::parseConfig(const char *file_name)
 {
 	std::string		file_content;
 
-	// check file name rule
+	// check file name rule .conf
 	if (this->checkFileNameExtension(file_name))
 		std::cout << "file name is correct to the config file name rule" << std::endl;
 	else
@@ -89,7 +92,10 @@ void ConfigInfo::parseConfig(const char *file_name)
 	if (this->parse(file_content))
 		std::cout << "Config parse is OK" << std::endl;
 	else
+	{
 		std::cout << "Config parsing something is wrong" << std::endl;
+		exit(1);
+	}
 	// ConfigInfo ConfigInfo;
 	// parse
 	// ParseConfig(); // 결국 이 안으로 들어가야함
@@ -98,6 +104,23 @@ void ConfigInfo::parseConfig(const char *file_name)
 	// ConfigInfo.parseServer();
 }
 
+const std::vector<ServerConfig> ConfigInfo::getWebservConfig(void) const
+{
+    return (this->server_config_vector);
+}
+
+void ConfigInfo::printWebservConfig(void)
+{
+	std::vector<ServerConfig>::iterator	iter = this->server_config_vector.begin();
+	// const_cast<std::vector<ServerConfig>::iterator>(this->server_config_vector.begin());
+	
+	// iter = this->server_config_vector.begin();
+	for (;iter != this->server_config_vector.end(); iter++)
+	{
+		iter->printServerConfingContent();
+		std::cout << std::endl;
+	}
+}
 // ServerInfo ConfigInfo::parseServerBlock(size_t it) {
 // 	ServerInfo res;
 // 	std::string key;
@@ -565,7 +588,7 @@ bool ConfigInfo::checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::Val
 		}
 		if (map_iter->second.getValidateFieldType() == OPTION_UNIQUE)
 		{
-			if (map_iter->second.getCount() != 1) // 누락여부 확인 가능 
+			if (map_iter->second.getCount() > 1) // 없어도 되지만 중복이며 안됨
 				return (false);
 		}
 	}
@@ -861,7 +884,7 @@ bool	ConfigInfo::parse(const std::string &file_content)
 }
 
 /*
-- std::vector<ServerConfig>	webserv_config;
+- std::vector<ServerConfig>	server_conf_vector;
 - struct ServerConfig
 	{
 		std::string								host;					// 필수 필드, IPv4 style "0.0.0.0"
@@ -902,9 +925,7 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 	src_begin_iter = server_block_vec.begin();
 	src_end_iter = server_block_vec.end();
 	server_field_map = getValidateServerFieldMap();
-	// std::cout << "field_map.size() : " << server_field_map.size() << std::endl;
 	cur_iter = src_begin_iter;
-	// for (; cur_iter != src_end_iter; cur_iter++)
 	while (cur_iter != src_end_iter)
 	{
 		std::string					clean_str;
@@ -926,13 +947,14 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 		// printContent(first_word, "first_word", BLU);
 		if (first_word == "location")
 		{
+			
 			if (findLocationBlock(cur_iter, src_end_iter, begin_iter, end_iter) == false)
 				return (false);
 			// for (std::vector<std::string>::iterator tmp_iter = begin_iter; tmp_iter != end_iter; tmp_iter++)
 			// 	printContent(*tmp_iter, "Locatoin", RED);
-			// if (parseLocationBlock(begin_iter, end_iter) == false)
-			// 	return (false);
-			server_field_map[first_word]++;
+			// Location에 추가
+			if (parseLocationBlock(begin_iter, end_iter, server_config) == false)
+				return (false);
 			// std::cout << std::endl << std::endl << std::endl;
 		}
 		else
@@ -945,51 +967,42 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 			}
 			else
 			{
-				std::vector<std::string>::iterator	vec_iter;
-				ValidateFieldInfo					field_info;
 				std::string							field_name;
 				std::string							field_value;
 
 				field_name = server_field_map_iter->first;
-				field_info = server_field_map_iter->second;
 				// printContent(field_name, "field_name", GRN);
-				// printVector(word_list, "word_list", PUP);
-				// for(vec_iter = word_list.begin(); vec_iter != word_list.end(); vec_iter++)
-				// 	printContent(*vec_iter, "*vec_iter", PUP);
 				// printContent(first_word, "first_word", BLU);
-				
-				/*
-					key value; #
-					key value ; #
-					error_page를 제외하고는 getCount == 0 이어야 정상
-					location은 별도 block 에서 확인하며
-					parse 할때 혹은 default_error_page는 생성자에서 값을 넣어준다.
-				*/
+
 				field_value = *(word_list.begin() + 1);
+				field_value = removeAfterSemicolon(field_value); // important!
 				if (first_word == "host")
-					parseHostConfigField(server_config, field_value);
+					server_config.setHost(field_value); // parseHostConfigField(server_config, field_value);
 				else if (first_word == "port")
-				{
-					// parsePortConfigField(field_value);
-				}
+					server_config.setPort(std::atoi(field_value.c_str())); //parsePortConfigField(server_config, field_value);
 				else if (first_word == "root")
-				{
-				}
+					server_config.setRoot(field_value);
 				else if (first_word == "index")
-				{
-				}
+					server_config.setIndex(field_value);
 				else if (first_word == "client_max_body_size")
-				{
-					// if (parseClientMaxBodySizeConfigField(field_value) == false)
-					// 	return (false);
-				}
+					server_config.setClientMaxBodySize(std::atoi(field_value.c_str()));
 				else if (first_word == "server_name")
-				{
-				}
+					server_config.setServerName(field_value);
 				else if (first_word == "error_page")
 				{
-					// if (parseErrorPageConfigField(clean_str) == false)
-					// 	return (false);
+					// TODO
+					std::map<int, std::string>			error_page_map;
+					std::vector<std::string>			error_page_vector;
+					std::vector<std::string>::iterator	field_value_iter;
+
+					parseErrorPageConfigField(clean_str, error_page_map);
+					server_config.setErrorPage(error_page_map);
+					std::map<int, std::string> got_error_page_map;
+					got_error_page_map = server_config.getErrorPage();
+					for (std::map<int, std::string>::iterator iter = got_error_page_map.begin(); iter != got_error_page_map.end(); iter++)
+					{
+						std::cout << BLU << std::boolalpha << "iter->first : " << iter->first << "\titer->second : " << iter->second << std::endl; 
+					}
 				}
 				else
 				{
@@ -997,14 +1010,52 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 					std::cerr << RED <<  "Could not found field " << first_word << WHI<<std::endl;
 					return (false);
 				}
-				// printContent(first_word, "first_word", RED);
 			}
 		}
-		
-		// first_word.at(first_word);
 		cur_iter++;
 	}
+	// _server_config_vector = config_info.getWebservConfig();
+	// // _server_config_vector.size()
+	// std::cout << "_server_config_vector.size() : " << _server_config_vector.size() << std::endl;
+	this->server_config_vector.push_back(server_config);
 	return (true);
+}
+
+
+/*
+    error_page 403 404 400 500 /50x.html
+    형식이 제대로 맞는지도 확인필요
+    ;이 있는가?
+    마지막 단어에 있어야한다.
+	;다음에 #이나 문자가 있는 경우 문제됨
+*/
+bool	ConfigInfo::parseErrorPageConfigField(std::string error_page, std::map<int, std::string>& error_page_map)
+{
+	std::vector<std::string>			error_page_vector;
+	std::string							error_page_end_value;
+	std::vector<std::string>::iterator	error_page_end_value_iter;
+	std::vector<std::string>::iterator	error_page_value_iter;
+
+	error_page = removeAfterSemicolon(error_page); // important!
+	// printContent(error_page, "error_page", RED);
+	error_page = ft_strtrim(error_page, this->whitespace);
+	// printContent(error_page, "error_page", GRN);
+	error_page_vector = ft_split(error_page, this->whitespace);
+	// printVector(error_page_vector, "error_page_vector", GRN);
+	error_page_value_iter = error_page_vector.begin() + 1;
+	error_page_end_value_iter = error_page_vector.end() - 1;
+	error_page_end_value = *error_page_end_value_iter;
+	printContent(error_page_end_value, "error_page_end_value", BLU);
+	for (std::vector<std::string>::iterator iter = error_page_value_iter; iter != error_page_end_value_iter; iter++)
+	{
+		std::string	error_status_code_str;
+		int			error_status_code;
+
+		error_status_code_str = *iter;
+		error_status_code = std::atoi(error_status_code_str.c_str());
+		error_page_map[error_status_code] = error_page_end_value;
+	}
+    return (true);
 }
 
 
@@ -1167,23 +1218,24 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 		// first_word.at(first_word);
 		cur_iter++;
 	}
-	
-
 	if (checkNessaryOrUniqueField(validate_server_field_map) == false)
 		return (false);
 	return (true);
 }
 
 bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begin_iter, 
-									const std::vector<std::string>::iterator &src_end_iter)
+									const std::vector<std::string>::iterator &src_end_iter,
+									ServerConfig& server_config)
 {
-	std::map<std::string, ValidateFieldInfo>			validate_location_field_map;
+	LocationConfig										location_config;
+	std::map<std::string, ValidateFieldInfo>			location_field_map;
 	std::map<std::string, ValidateFieldInfo>::iterator	map_iter;
-	std::map<std::string, ValidateFieldInfo>::iterator	validate_location_field_map_iter;
+	std::map<std::string, ValidateFieldInfo>::iterator	location_field_map_iter;
 	std::vector<std::string>::iterator 					cur_iter;
+	std::string 										location_path;
 
-	validate_location_field_map = getValidateLocationFieldMap();
-	cur_iter = src_begin_iter;
+	location_field_map = getValidateLocationFieldMap();
+	cur_iter = src_begin_iter; // location path {} skip
 	for (; cur_iter != src_end_iter; cur_iter++)
 	{
 		std::string					clean_str;
@@ -1194,94 +1246,79 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 		// if (clean_str.size() == 0 || clean_str[0] == '#')
 		if (clean_str.size() == 0 || clean_str[0] == '#' || clean_str[0] == '{' || clean_str[0] == '}')
 			continue ;
-		// printContent(clean_str, "clean_str", BRW);
+		printContent(clean_str, "clean_str", BRW);
 		word_list = ft_split(clean_str, this->whitespace);
 		// printVector(word_list, "word", GRN);
 		// key value";" comment
 		// #comment
 		first_word = *(word_list.begin());
-		validate_location_field_map_iter = validate_location_field_map.find(first_word);
-		if (validate_location_field_map_iter == validate_location_field_map.end())
+		location_field_map_iter = location_field_map.find(first_word);
+		if (location_field_map_iter == location_field_map.end())
 			return (false);
 		else
 		{
-			std::vector<std::string>::iterator	vec_iter;
-			ValidateFieldInfo					validate_field_info;
 			std::string							field_name;
+			std::string							field_value;
+			std::vector<std::string>			allow_method_vector;
+			std::vector<std::string>::iterator	allow_method_value_iter;
 
-			field_name = validate_location_field_map_iter->first;
-			validate_field_info = validate_location_field_map_iter->second;
+			field_name = location_field_map_iter->first;
 
-			/*
-				key value; #
-				key value ; #
-				error_page를 제외하고는 getCount == 0 이어야 정상
-				location은 별도 block 에서 확인하며
-				parse 할때 혹은 default_error_page는 생성자에서 값을 넣어준다.
-			*/
-			if (first_word == "allow_method")
+
+			field_value = *(word_list.begin() + 1);
+			field_value = removeAfterSemicolon(field_value); // important!
+			if (first_word == "location")
+				location_path = field_value;
+			else if (first_word == "allow_method")
 			{
-				if (checkDuplicateConfigField(validate_field_info) == false)
-					return (false);
-				if (checkAllowMethodConfigField(clean_str) == false)
-					return (false);
-				// allow method에 맞는 validate 함수 필요
-				// 여러개의 값이 들어올 수 있으며 마지막 값이 경로로 들어간다.
-				// 중간에 오는 값들은 GET, POST, DELTE가 될 수 있으며 
-				// GET, POST, DELET가 중복되어서는 안된다.
-					//-> 중복을 허용해줄지는 추가 고려 필요
-				// if (checkCommonConfigLineForm(word_list) == false)
-				// 	return (false);
-				validate_location_field_map[field_name]++; // count increament!!!
+				std::map<MethodType, bool>			allow_method_map;
+				std::vector<std::string>			allow_method_vector;
+				std::vector<std::string>::iterator	field_value_iter;
+
+				field_value_iter = word_list.begin() + 1;
+				// allow_method_map[GET] = false;
+				// allow_method_map[POST] = false;
+				// allow_method_map[DELETE] = false;
+				for (;field_value_iter != word_list.end(); field_value_iter++)
+				{
+					field_value = removeAfterSemicolon(*field_value_iter); // important!s
+					// printContent(field_value, "field_value", PUP);
+					if (field_value == "GET")
+						allow_method_map[GET] = true;
+					else if (field_value == "POST")
+						allow_method_map[POST] = true;
+					else if (field_value == "DELETE")
+						allow_method_map[DELETE] = true;
+					else
+					{
+						std::cerr << RED <<  "Unkwon allow method type : " << *field_value_iter << WHI<<std::endl;
+						return (false);
+					}
+				}
+				location_config.setAllowMethod(allow_method_map);
+				std::map<MethodType, bool> got_allow_method_map;
+				got_allow_method_map = location_config.getAllowMethod();
+				for (std::map<MethodType, bool>::iterator iter = got_allow_method_map.begin(); iter != got_allow_method_map.end(); iter++)
+				{
+					std::cout << BLU << std::boolalpha << "iter->first : " << iter->first << "\titer->second : " << iter->second << std::endl; 
+				}
+
 			}
 			else if (first_word == "autoindex")
 			{
-				if (checkDuplicateConfigField(validate_field_info) == false)
-						return (false);
-				if (checkCommonConfigLineForm(word_list) == false)
-					return (false);
-				std::string 	value_with_semicolon_comment;
-				std::string 	value;
-				
-				// checkCommonConfigLineForm() 이후라서 ';'이 무조건 있다. 어디에 있느냐에 차이, "value;" or "value" ";#"
-				// ';', '#' 이후를 잘라내서 value만 남도록 하는 것이 목적.
-				// 이미 각 줄마다 checkCommonConfigLineForm() 통해 유효성 검사를 한 이후이므로 #은 ;이후에 있긴하다
-				value_with_semicolon_comment = *(word_list.begin() + 1);
-				value = removeAfterSemicolon(value_with_semicolon_comment);
-				if (value != "on" && value != "off") // 입력값에 대해서는 대소문자 구분없이도 되게할지는 추후 고민 후 수정하거나 그대로 놔둠.
-					return (false);
-				validate_location_field_map[field_name]++; // count increament!!!
+				bool	autoindex_flag;
+
+				autoindex_flag = false;
+				if (field_value == "on")
+					autoindex_flag = true;
+				location_config.setAutoindex(autoindex_flag);
 			}
 			else if (first_word == "root")
-			{
-				if (checkDuplicateConfigField(validate_field_info) == false)
-						return (false);
-				if (checkCommonConfigLineForm(word_list) == false)
-					return (false);
-				validate_location_field_map[field_name]++; // count increament!!!
-			}
+				location_config.setRoot(field_value);
 			else if (first_word == "index")
-			{
-				if (checkDuplicateConfigField(validate_field_info) == false)
-						return (false);
-				if (checkCommonConfigLineForm(word_list) == false)
-					return (false);
-				validate_location_field_map[field_name]++; // count increament!!!
-			}
+				location_config.setRoot(field_value);
 			else if (first_word == "redirect")
-			{
-				if (checkDuplicateConfigField(validate_field_info) == false)
-						return (false);
-				if (checkCommonConfigLineForm(word_list) == false)
-					return (false);
-				validate_location_field_map[field_name]++; // count increament!!!
-			}
-			else if (first_word == "location")
-			{
-				if (checkDuplicateConfigField(validate_field_info) == false)
-						return (false);
-					validate_location_field_map[field_name]++; // count increament!!!
-			}
+				location_config.setRoot(field_value);
 			else
 			{
 				//find()이후라 없을 것이지만 혹시 모르니 체크
@@ -1290,6 +1327,28 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 			}
 		}
 	}
+	std::map<std::string, LocationConfig> _locations_map;
+	printContent(location_path, "location_path", RED);
+	// location_config.
+	// if (server_config.getLocations().size() > 0 &&
+	// server_config.getLocations
+	
+	// print all locations
+	std::map<std::string, LocationConfig> got_locations_map;
+	got_locations_map = server_config.getLocations();
+	for (std::map<std::string, LocationConfig>::iterator iter = got_locations_map.begin();iter != got_locations_map.end();iter++)
+		printContent(iter->first, "server_config.getLocations()", RED);
+	std::map<std::string, LocationConfig>::const_iterator loc_iter = server_config.getLocations().find(location_path);
+	if (loc_iter != server_config.getLocations().end())
+	{
+		return (false);
+	}
+	//  > 0 && 
+	// 	server_config.getLocations().find(location_path) != server_config.getLocations().end()
+	_locations_map[location_path] = location_config;
+	server_config.setLocations(_locations_map);
+	got_locations_map = server_config.getLocations();
+	std::cout << "got_locations_map.size() : " << got_locations_map.size() << std::endl;
 	return (true);
 }
 
@@ -1306,36 +1365,41 @@ IPv4
 */
 void ConfigInfo::parseHostConfigField(ServerConfig& server_config, std::string field_value)
 {
-	std::string	ip_class;
-	size_t		dot_count;
-
 	printContent(field_value, "field_value before removeAfterSemicolon", GRN);
 	field_value = removeAfterSemicolon(field_value);
 	printContent(field_value, "field_value after removeAfterSemicolon", BRW);
 	server_config.setHost(field_value);
 }
 
+void ConfigInfo::parsePortConfigField(ServerConfig &server_config, std::string port)
+{
+	server_config.setPort(std::atoi(port.c_str()));
+	std::stringstream strstream;
+	std::cout << "server_config.getPort() : " << server_config.getPort() << std::endl;
+	// printContent(, "server_config.getPort()", BRW);
+}
+
 /*
-	1. 유효필드 검사를 위해 map<std::string, ValidateFieldInfo>를 사용한다.
-		struct ValidateFieldInfo
-		{
-			VaildateFieldType	validate_field_type;
-			size_t			count;
-		};
+    1. 유효필드 검사를 위해 map<std::string, ValidateFieldInfo>를 사용한다.
+        struct ValidateFieldInfo
+        {
+            VaildateFieldType	validate_field_type;
+            size_t			count;
+        };
 
-		enum	VaildateFieldType
-		{
-			NESSARY_UNIQUE
-			NESSARY_MULTI
-			OPTION_UNIQUE
-			OPTION_MULTI
-		};
+        enum	VaildateFieldType
+        {
+            NESSARY_UNIQUE
+            NESSARY_MULTI
+            OPTION_UNIQUE
+            OPTION_MULTI
+        };
 
-	2. 각 줄을 읽으면서 validate한지 확인한다.
-		- 각 field 마다 value type, value range 등의 제한조건이 다르다.
-		- ;
-		- # 확인 필요
-	3. locatoin이 나오면 find location block을 쓴다.
+    2. 각 줄을 읽으면서 validate한지 확인한다.
+        - 각 field 마다 value type, value range 등의 제한조건이 다르다.
+        - ;
+        - # 확인 필요
+    3. locatoin이 나오면 find location block을 쓴다.
 
 */
 bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator& src_begin_iter,
@@ -1554,7 +1618,14 @@ void	test(void)
 int main(int argc, char *argv[])
 {
 	// std::string line;
-	ConfigInfo	configPaser;
+	ConfigInfo	config_info;
+	std::vector<ServerConfig>	_server_config_vector;
+
+	_server_config_vector = config_info.getWebservConfig();
+	// _server_config_vector.size()
+	std::cout << "_server_config_vector.size() : " << _server_config_vector.size() << std::endl;
+	// for (auto iter = _server_config_vector.begin(); iter != _server_config_vector.end(); iter++)
+	// 	std::cout << "*iter : " << iter << std::endl;
 
 	if (argc != 2) {
 		std::cout << "Usage : string" << std::endl;
@@ -1562,14 +1633,22 @@ int main(int argc, char *argv[])
 	}
 	try
 	{
-		configPaser.parseConfig(argv[1]);
+		config_info.parseConfig(argv[1]);
 		/* code */
+		_server_config_vector = config_info.getWebservConfig();
+		config_info.printWebservConfig();
+		// _server_config_vector.begin()->printServerConfingContent();
+		// _server_config_vector
+		std::cout << GRN <<  "_server_config_vector.begin()->getClientMaxBodySize(); : " << _server_config_vector.begin()->getClientMaxBodySize() << WHI<< std::endl;
+		// _server_config_vector.size()
+		std::cout << RED <<  "_server_config_vector.size() : " << _server_config_vector.size() << WHI<< std::endl;
 	}
 	catch(const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
 		return (1);
 	}
+
 	// atexit(test);
 	return (0);
 }

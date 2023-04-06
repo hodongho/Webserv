@@ -19,6 +19,16 @@ class ConfigInfo
 			OPTION_MULTI,
 		};
 
+        /*
+        struct ValidateFieldInfo
+        {
+            size_t              count;
+            VaildateFieldType   validate_field_tnfo;
+
+            ValidateFieldInfo(void)
+        };
+        */
+        
         class  ValidateFieldInfo
         {
             private:
@@ -38,7 +48,7 @@ class ConfigInfo
 
     private:
         const std::string           whitespace;
-        std::vector<ServerConfig>	webserv_config;
+        std::vector<ServerConfig>	server_config_vector;
         // std::map<std::string, ServerConfig>	webserv_config;
 
         bool	    checkFileNameExtension(const char *file_name_parms);
@@ -76,8 +86,8 @@ class ConfigInfo
 
         // void    parseCommonConfigLineForm(std::string config_line);
         void    parseHostConfigField(ServerConfig& server_config, std::string field_value);
-        // void    parseIpClass(const std::string& ip_class);
-        // void    parsePortConfigField(std::string port);
+        void    parsePortConfigField(ServerConfig& server_config, std::string field_value);
+        bool    parseErrorPageConfigField(std::string error_page, std::map<int, std::string>& error_page_map);
         // void    parseClientMaxBodySizeConfigField(std::string port);
         // void    parseErrorPageConfigField(std::string error_page);
         // void    parseErrorPageStatusCodde(const std::string& status_code);
@@ -92,7 +102,9 @@ class ConfigInfo
         bool    parse(const std::string& file_content);
         bool    parseServerBlock(std::vector<std::string> server_block_vec);
         bool    parseLocationBlock(std::vector<std::string>::iterator& src_begin_iter,
-                                        const std::vector<std::string>::iterator& src_end_iter);
+                                    const std::vector<std::string>::iterator& src_end_iter,
+                                    ServerConfig& server_config);
+        
 
         //util
         void	    printContent(const std::string& str, const std::string& str_name, const std::string& color);
@@ -100,7 +112,12 @@ class ConfigInfo
         
     public:
         ConfigInfo(void);
+        virtual ~ConfigInfo();
         void    parseConfig(const char *file);
+
+        // std::vector<ServerConfig>	webserv_config;
+        const std::vector<ServerConfig> getWebservConfig(void) const;
+        void    printWebservConfig(void);
 
 };
 

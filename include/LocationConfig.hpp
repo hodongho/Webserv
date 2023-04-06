@@ -19,6 +19,45 @@ class LocationConfig
 	public:
 		LocationConfig(void);
 		virtual ~LocationConfig();
+
+		// setter()
+		void	setRoot(const std::string& _root);
+		void	setIndex(const std::string& _index);
+		void	setRedirect(const std::string& _redirect);
+		void	setAutoindex(const bool& _autoindex);
+		void	setAllowMethod(const std::map<MethodType, bool>& _allow_method);
+
+		// getter()
+		const std::string			getRoot(void) const;
+		const std::string			getIndex(void) const;
+		const std::string			getRedirect(void) const;
+		bool						getAutoindex(void) const;
+		std::map<MethodType, bool>	getAllowMethod(void) const;
+
+		// print 
+		template <typename T>
+		void	printContent(const T &val, std::string name, std::string color) const;
+
+		void	printMapContent(const std::map<MethodType, bool> &pair_map, std::string name, std::string color) const ;
+		void	printLocationConfingContent(void)  const;
 };
+
+
+template <typename T>
+inline void LocationConfig::printContent(const T &val, std::string name, std::string color) const
+{
+	std::cout << color << name << " : $" <<  val << "$" << WHI << std::endl;
+}
+
+inline void LocationConfig::printMapContent(const std::map<MethodType, bool> &pair_map, std::string name, std::string color) const
+{
+	std::cout << color << "-----" << name << ": " << pair_map.size() << "-----" << std::endl;
+	for (std::map<MethodType, bool>::const_iterator iter = pair_map.begin(); iter != pair_map.end(); iter++)
+	{
+		std::cout << "$" << iter->first << ", " << iter->second << "$" << std::endl;
+	}
+	std::cout << WHI << std::endl;
+}
+
 
 #endif
