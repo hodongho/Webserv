@@ -33,7 +33,9 @@ class ServerConfig
 		void	setClientMaxBodySize(const size_t& _client_max_body_size);
 		void	setDefaultErrorPage(const std::map<int, std::string>& _default_error_page);
 		void	setErrorPage(const std::map<int, std::string>& _error_page);
+		void	addErrorPageElement(const int& error_status_code, const std::string& erro_page_uri);
 		void	setLocations(const std::map<std::string, LocationConfig>& _locations);
+		void	addLocationElement(const std::string& location_path, const LocationConfig& location_config);
 
 		// getter()
 		const std::string&							getServerName(void) const;			// 선택 필드, 유일값, 입력 없으면 ""

@@ -2,6 +2,7 @@
 #include <map>
 #include <string>
 #include <iostream> // TODO remove
+#include "ServerConfig.hpp"
 
 ServerConfig::ServerConfig(void)
     : server_name(""), host(""), port(0), index(""), client_max_body_size(0)
@@ -61,12 +62,21 @@ void ServerConfig::setErrorPage(const std::map<int, std::string> & _error_page)
     this->error_page = _error_page;
 }
 
+void ServerConfig::addErrorPageElement(const int& error_status_code, const std::string& erro_page_uri)
+{
+    this->error_page[error_status_code] = erro_page_uri;
+}
+
 void ServerConfig::setLocations(const std::map<std::string, LocationConfig>& _locations)
 {
     this->locations = _locations;
 }
 
-const std::string& ServerConfig::getServerName(void) const
+void ServerConfig::addLocationElement(const std::string &location_path, const LocationConfig &location_config)
+{
+    this->locations[location_path] = location_config;
+}
+const std::string &ServerConfig::getServerName(void) const
 {
     return (this->server_name);
 }
@@ -119,6 +129,7 @@ void ServerConfig::printServerConfingContent(void) const
     this->printContent(this->getPort(), "this->getPort()",GRN);
     this->printContent(this->getRoot(), "this->getRoot()",GRN);
     this->printContent(this->getIndex(), "this->getIndex()",GRN);
+    this->printContent(this->getClientMaxBodySize(), "this->getClientMaxBodySize()",GRN);
     std::cout << "--------------------(MAP_DATA)-------------------------" << std::endl;
     this->printMapContent(this->default_error_page, "this->getDefaultErrorPage()", GRN);
     this->printMapContent(this->error_page, "this->getErrorPage()", GRN);

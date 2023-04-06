@@ -243,7 +243,7 @@ bool	ConfigInfo::checkCurlyBracketPair(const std::string& file_content)
 		std::vector<std::string>	word_list;
 
 		clean_str = ft_strtrim(str, this->whitespace);
-		// printContent(clean_str, "clean_str", BLU);
+		// // printContent(clean_str, "clean_str", BLU);
 		if (clean_str == "" || clean_str[0] == '#')
 			continue ;
 		word_list = ft_split(clean_str, this->whitespace);
@@ -254,12 +254,12 @@ bool	ConfigInfo::checkCurlyBracketPair(const std::string& file_content)
 			word = *word_iter;
 			if ((word)[0] == '#')
 				break ;
-			// printContent(word, "\tword_iter");
+			// // printContent(word, "\tword_iter");
 			if ((word == "{" || word == "}"))
 			{
 				if (word_iter + 1 != word_list.end() && (word_iter + 1)->at(0) != '#') // '{', '}' ,다음 단어가 있다면 "#"로 시작해야함
 					return (false);
-				// printContent(*word_iter, "\t###word_iter ", GRN);
+				// // printContent(*word_iter, "\t###word_iter ", GRN);
 				if (word == "{")
 					curly_stack.push(word);
 				else if (!curly_stack.empty())
@@ -289,7 +289,7 @@ bool	findOpenCurlyBracket(const std::vector<std::string>::iterator& begin_iter,
 								bool& location_flag,
 								bool& error_flag)
 {
-	// printContent(*(begin_iter + 1) , "*(begin_iter + 1) ");
+	// // printContent(*(begin_iter + 1) , "*(begin_iter + 1) ");
 	if (*begin_iter == "server")
 	{
 		if ((((begin_iter + 1) != end_iter &&*(begin_iter + 1) == "{") && ((begin_iter + 2) == end_iter || (*(begin_iter + 2))[0] == '#')) || \
@@ -349,14 +349,14 @@ bool	ConfigInfo::findLocationBlock(std::vector<std::string>::iterator& iter, \
 		std::string					clean_str;
 
 		clean_str = ft_strtrim(*iter, this->whitespace);
-		// printContent(clean_str, "clean_str", CYN);
+		// // printContent(clean_str, "clean_str", CYN);
 		// 만약 block 짝이 안맞을때 에러케이스 거르기 위함
 		if (clean_str == "" || clean_str[0] == '#')
 			continue ;
 		word_list = ft_split(clean_str, this->whitespace);
 		// printVector(word_list, "word_list", GRN);
 		// for (std::vector<std::string>::iterator tmp_iter = word_list.begin(); tmp_iter != word_list.end(); tmp_iter++)
-		// 	printContent(*tmp_iter, "#*tmp_iter in findServerBlock", CYN);
+		// 	// printContent(*tmp_iter, "#*tmp_iter in findServerBlock", CYN);
 	 	if (findOpenCurlyBracket(word_list.begin(), word_list.end(), server_flag, location_flag, error_flag))
 		{
 			// std::cout << WHI << std::boolalpha << "server_flag : " << server_flag << WHI << std::endl;
@@ -378,9 +378,9 @@ bool	ConfigInfo::findLocationBlock(std::vector<std::string>::iterator& iter, \
 				// begin_iter++; // block내부만 가리키게 만듦
 				end_iter = iter;
 				// for (std::vector<std::string>::iterator iter = begin_iter; iter != end_iter; iter++)
-				// 	printContent(*iter, "#*iter about findServerBlock :", CYN);
-				// printContent(*begin_iter, "begin_iter");
-				// printContent(*end_iter, "end_iter");
+				// 	// printContent(*iter, "#*iter about findServerBlock :", CYN);
+				// // printContent(*begin_iter, "begin_iter");
+				// // printContent(*end_iter, "end_iter");
 				return (true);
 			}
 		}
@@ -538,9 +538,9 @@ bool ConfigInfo::checkAllowMethodConfigField(std::string allow_method)
 	semicolon_pos = allow_method.find(';');
 	if (semicolon_pos == std::string::npos)
 		return (false);
-	// printContent(allow_method, "allow_method before removeAfterSemicolon", GRN);
+	// // printContent(allow_method, "allow_method before removeAfterSemicolon", GRN);
 	allow_method = removeAfterSemicolon(allow_method);
-	// printContent(allow_method, "allow_method after removeAfterSemicolon", RED);
+	// // printContent(allow_method, "allow_method after removeAfterSemicolon", RED);
 	comment_pos = allow_method.find('#');
 	if (comment_pos != std::string::npos)
 	{
@@ -661,14 +661,14 @@ bool	ConfigInfo::checkCommonConfigLineForm(std::vector<std::string> word_list)
 	size_t								comment_pos;
 
 	// for (std::vector<std::string>::iterator iter = word_list.begin(); iter != word_list.end(); iter++)
-	// 	printContent(*iter, "*iter", BRW);
+	// 	// printContent(*iter, "*iter", BRW);
 	value_iter = word_list.begin() + 1;
-	// printContent(*value_iter, "*value_iter", BRW);
+	// // printContent(*value_iter, "*value_iter", BRW);
 	if (value_iter == word_list.end())
 		return (false);
 
 	value = *value_iter;
-	// printContent(value, "value", BRW);
+	// // printContent(value, "value", BRW);
 	if (value.size() == 0 || value[0] == '#')
 		return (false);
 	// value; ,value ;#
@@ -755,13 +755,13 @@ bool	ConfigInfo::findServerBlock(std::vector<std::string>::iterator& iter, \
 		std::string					clean_str;
 
 		clean_str = ft_strtrim(*iter, this->whitespace);
-		// printContent(clean_str, "clean_str", CYN);
+		// // printContent(clean_str, "clean_str", CYN);
 		// 만약 block 짝이 안맞을때 에러케이스 거르기 위함
 		if (clean_str == "" || clean_str[0] == '#')
 			continue ;
 		word_list = ft_split(clean_str, this->whitespace);
 		// for (std::vector<std::string>::iterator tmp_iter = word_list.begin(); tmp_iter != word_list.end(); tmp_iter++)
-		// 	printContent(*tmp_iter, "#*tmp_iter in findServerBlock", CYN);
+		// 	// printContent(*tmp_iter, "#*tmp_iter in findServerBlock", CYN);
 	 	if (findOpenCurlyBracket(word_list.begin(), word_list.end(), server_flag, location_flag, error_flag))
 		{
 			// std::cout << WHI << std::boolalpha << "server_flag : " << server_flag << WHI << std::endl;
@@ -794,9 +794,9 @@ bool	ConfigInfo::findServerBlock(std::vector<std::string>::iterator& iter, \
 				begin_iter++; // block내부만 가리키게 만듦
 				end_iter = iter;
 				// for (std::vector<std::string>::iterator iter = begin_iter; iter != end_iter; iter++)
-				// 	printContent(*iter, "#*iter about findServerBlock :", CYN);
-				// printContent(*begin_iter, "begin_iter");
-				// printContent(*end_iter, "end_iter");
+				// 	// printContent(*iter, "#*iter about findServerBlock :", CYN);
+				// // printContent(*begin_iter, "begin_iter");
+				// // printContent(*end_iter, "end_iter");
 				return (true);
 				// validateServerBlock(begin_iter, end_iter); // block위치를 알게됨
 			}
@@ -932,7 +932,7 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 		std::vector<std::string>	word_list;
 		std::string					first_word;
 
-		// printContent(*cur_iter, "cur_iter", PUP);
+		// // printContent(*cur_iter, "cur_iter", PUP);
 		clean_str = ft_strtrim(*cur_iter, this->whitespace);
 		// if (clean_str.size() == 0 || clean_str[0] == '#')
 		if (clean_str.size() == 0 || clean_str[0] == '#' || clean_str[0] == '{' || clean_str[0] == '}')
@@ -940,18 +940,18 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 			cur_iter++;
 			continue ;
 		}
-		// printContent(clean_str, "clean_str", CYN);
+		// // printContent(clean_str, "clean_str", CYN);
 		word_list = ft_split(clean_str, this->whitespace);
 		first_word = *(word_list.begin());
 		// printVector(word_list, "parseServerBlock", GRN);
-		// printContent(first_word, "first_word", BLU);
+		// // printContent(first_word, "first_word", BLU);
 		if (first_word == "location")
 		{
 			
 			if (findLocationBlock(cur_iter, src_end_iter, begin_iter, end_iter) == false)
 				return (false);
 			// for (std::vector<std::string>::iterator tmp_iter = begin_iter; tmp_iter != end_iter; tmp_iter++)
-			// 	printContent(*tmp_iter, "Locatoin", RED);
+			// 	// printContent(*tmp_iter, "Locatoin", RED);
 			// Location에 추가
 			if (parseLocationBlock(begin_iter, end_iter, server_config) == false)
 				return (false);
@@ -971,8 +971,8 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 				std::string							field_value;
 
 				field_name = server_field_map_iter->first;
-				// printContent(field_name, "field_name", GRN);
-				// printContent(first_word, "first_word", BLU);
+				// // printContent(field_name, "field_name", GRN);
+				// // printContent(first_word, "first_word", BLU);
 
 				field_value = *(word_list.begin() + 1);
 				field_value = removeAfterSemicolon(field_value); // important!
@@ -995,14 +995,18 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 					std::vector<std::string>			error_page_vector;
 					std::vector<std::string>::iterator	field_value_iter;
 
+					// server_config.setErrorPage(error_page_map);
 					parseErrorPageConfigField(clean_str, error_page_map);
-					server_config.setErrorPage(error_page_map);
-					std::map<int, std::string> got_error_page_map;
-					got_error_page_map = server_config.getErrorPage();
-					for (std::map<int, std::string>::iterator iter = got_error_page_map.begin(); iter != got_error_page_map.end(); iter++)
-					{
-						std::cout << BLU << std::boolalpha << "iter->first : " << iter->first << "\titer->second : " << iter->second << std::endl; 
-					}
+					std::map<int, std::string>::const_iterator error_page_iter = error_page_map.begin();
+					for (; error_page_iter != error_page_map.end(); error_page_iter++)
+						server_config.addErrorPageElement(error_page_iter->first, error_page_iter->second);
+					// error_page_map
+					// std::map<int, std::string> got_error_page_map;
+					// got_error_page_map = server_config.getErrorPage();
+					// for (std::map<int, std::string>::iterator iter = got_error_page_map.begin(); iter != got_error_page_map.end(); iter++)
+					// {
+					// 	std::cout << BLU << std::boolalpha << "iter->first : " << iter->first << "\titer->second : " << iter->second << std::endl; 
+					// }
 				}
 				else
 				{
@@ -1015,7 +1019,6 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 		cur_iter++;
 	}
 	// _server_config_vector = config_info.getWebservConfig();
-	// // _server_config_vector.size()
 	// std::cout << "_server_config_vector.size() : " << _server_config_vector.size() << std::endl;
 	this->server_config_vector.push_back(server_config);
 	return (true);
@@ -1037,15 +1040,15 @@ bool	ConfigInfo::parseErrorPageConfigField(std::string error_page, std::map<int,
 	std::vector<std::string>::iterator	error_page_value_iter;
 
 	error_page = removeAfterSemicolon(error_page); // important!
-	// printContent(error_page, "error_page", RED);
+	// // printContent(error_page, "error_page", RED);
 	error_page = ft_strtrim(error_page, this->whitespace);
-	// printContent(error_page, "error_page", GRN);
+	// // printContent(error_page, "error_page", GRN);
 	error_page_vector = ft_split(error_page, this->whitespace);
 	// printVector(error_page_vector, "error_page_vector", GRN);
 	error_page_value_iter = error_page_vector.begin() + 1;
 	error_page_end_value_iter = error_page_vector.end() - 1;
 	error_page_end_value = *error_page_end_value_iter;
-	printContent(error_page_end_value, "error_page_end_value", BLU);
+	// printContent(error_page_end_value, "error_page_end_value", BLU);
 	for (std::vector<std::string>::iterator iter = error_page_value_iter; iter != error_page_end_value_iter; iter++)
 	{
 		std::string	error_status_code_str;
@@ -1083,7 +1086,7 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 		std::vector<std::string>	word_list;
 		std::string					first_word;
 
-		// printContent(*iter, "iter", PUP);
+		// // printContent(*iter, "iter", PUP);
 		clean_str = ft_strtrim(*cur_iter, this->whitespace);
 		// if (clean_str.size() == 0 || clean_str[0] == '#')
 		if (clean_str.size() == 0 || clean_str[0] == '#' || clean_str[0] == '{' || clean_str[0] == '}')
@@ -1091,25 +1094,25 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 			cur_iter++;
 			continue ;
 		}
-		// printContent(clean_str, "clean_str", CYN);
+		// // printContent(clean_str, "clean_str", CYN);
 		word_list = ft_split(clean_str, this->whitespace);
 		// printVector(word_list, "word", GRN);
 		// key value";" comment
 		// #comment
 		// if (word_list.begin() != word_list.end())
 		first_word = *(word_list.begin());
-		// printContent(first_word, "first_word", BLU);
+		// // printContent(first_word, "first_word", BLU);
 		if (first_word == "location")
 		{
-			// printContent(first_word, "first_word", RED);
-			// printContent(*cur_iter, "before *cur_iter", GRN);
+			// // printContent(first_word, "first_word", RED);
+			// // printContent(*cur_iter, "before *cur_iter", GRN);
 			if (findLocationBlock(cur_iter, src_end_iter, begin_iter, end_iter) == false)
 				return (false);
-			// printContent(*begin_iter, "*begin_iter", PUP);
-			// printContent(*end_iter, "*end_iter", PUP);
-			// printContent(*cur_iter, "*cur_iter", PUP);
+			// // printContent(*begin_iter, "*begin_iter", PUP);
+			// // printContent(*end_iter, "*end_iter", PUP);
+			// // printContent(*cur_iter, "*cur_iter", PUP);
 			// for (std::vector<std::string>::iterator	tmp_iter = begin_iter; tmp_iter != end_iter; tmp_iter++)
-			// 	printContent(*tmp_iter, "Locatoin Block", BRW);
+			// 	// printContent(*tmp_iter, "Locatoin Block", BRW);
 			if (validateLocationBlock(begin_iter, end_iter) == false)
 				return (false);
 			validate_server_field_map[first_word]++;
@@ -1132,11 +1135,11 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 
 				field_name = validate_server_field_map_iter->first;
 				validate_field_info = validate_server_field_map_iter->second;
-				// printContent(field_name, "field_name", GRN);
+				// // printContent(field_name, "field_name", GRN);
 				// printVector(word_list, "word_list", PUP);
 				// for(vec_iter = word_list.begin(); vec_iter != word_list.end(); vec_iter++)
-				// 	printContent(*vec_iter, "*vec_iter", PUP);
-				// printContent(first_word, "first_word", BLU);
+				// 	// printContent(*vec_iter, "*vec_iter", PUP);
+				// // printContent(first_word, "first_word", BLU);
 				
 				/*
 					key value; #
@@ -1211,7 +1214,7 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 					std::cerr << RED <<  "Could not found field " << first_word << WHI<<std::endl;
 					return (false);
 				}
-				// printContent(first_word, "first_word", RED);
+				// // printContent(first_word, "first_word", RED);
 			}
 		}
 		
@@ -1246,7 +1249,7 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 		// if (clean_str.size() == 0 || clean_str[0] == '#')
 		if (clean_str.size() == 0 || clean_str[0] == '#' || clean_str[0] == '{' || clean_str[0] == '}')
 			continue ;
-		printContent(clean_str, "clean_str", BRW);
+		// printContent(clean_str, "clean_str", BRW);
 		word_list = ft_split(clean_str, this->whitespace);
 		// printVector(word_list, "word", GRN);
 		// key value";" comment
@@ -1264,10 +1267,10 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 
 			field_name = location_field_map_iter->first;
 
-			printContent(first_word, "first_word in parseLocationBlock", RED);
+			// printContent(first_word, "first_word in parseLocationBlock", RED);
 			field_value = *(word_list.begin() + 1);
 			field_value = removeAfterSemicolon(field_value); // important!
-			printContent(field_value, "field_value in parseLocationBlock", GRN);
+			// printContent(field_value, "field_value in parseLocationBlock", GRN);
 			if (first_word == "location")
 				location_path = field_value;
 			else if (first_word == "allow_method")
@@ -1283,7 +1286,7 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 				for (;field_value_iter != word_list.end(); field_value_iter++)
 				{
 					field_value = removeAfterSemicolon(*field_value_iter); // important!s
-					// printContent(field_value, "field_value", PUP);
+					// // printContent(field_value, "field_value", PUP);
 					if (field_value == "GET")
 						allow_method_map[GET] = true;
 					else if (field_value == "POST")
@@ -1297,39 +1300,30 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 					}
 				}
 				location_config.setAllowMethod(allow_method_map);
-				std::map<MethodType, bool> got_allow_method_map;
-				got_allow_method_map = location_config.getAllowMethod();
-				for (std::map<MethodType, bool>::iterator iter = got_allow_method_map.begin(); iter != got_allow_method_map.end(); iter++)
-				{
-					std::cout << BLU << std::boolalpha << "iter->first : " << iter->first << "\titer->second : " << iter->second << std::endl; 
-				}
+				// std::map<MethodType, bool> got_allow_method_map;
+				// got_allow_method_map = location_config.getAllowMethod();
+				// for (std::map<MethodType, bool>::iterator iter = got_allow_method_map.begin(); iter != got_allow_method_map.end(); iter++)
+				// {
+				// 	std::cout << BLU << std::boolalpha << "iter->first : " << iter->first << "\titer->second : " << iter->second << std::endl; 
+				// }
 
 			}
 			else if (first_word == "autoindex")
 			{
 				bool	autoindex_flag;
 
-				// printContent(field_value, "field_value in parseLocationBlock", BRW);
+				// // printContent(field_value, "field_value in parseLocationBlock", BRW);
 				autoindex_flag = false;
 				if (field_value == "on")
 					autoindex_flag = true;
 				location_config.setAutoindex(autoindex_flag);
 			}
 			else if (first_word == "root")
-			{
-
 				location_config.setRoot(field_value);
-			}
 			else if (first_word == "index")
-			{
-
 				location_config.setIndex(field_value);
-			}
 			else if (first_word == "redirect")
-			{
-
 				location_config.setRedirect(field_value);
-			}
 			else
 			{
 				//find()이후라 없을 것이지만 혹시 모르니 체크
@@ -1338,34 +1332,34 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 			}
 		}
 	}
-	std::map<std::string, LocationConfig> _locations_map;
-	// printContent(location_path, "location_path", RED);
+	// // printContent(location_path, "location_path", RED);
 	// location_config.
 	// if (server_config.getLocations().size() > 0 &&
 	// server_config.getLocations
 	
 	// print all locations
-	std::map<std::string, LocationConfig> got_locations_map;
+	// std::map<std::string, LocationConfig> got_locations_map;
 	// got_locations_map = server_config.getLocations();
 	// for (std::map<std::string, LocationConfig>::iterator iter = got_locations_map.begin();iter != got_locations_map.end();iter++)
-	// 	printContent(iter->first, "server_config.getLocations() before", RED);
+	// 	// printContent(iter->first, "server_config.getLocations() before", RED);
 	std::map<std::string, LocationConfig>::const_iterator loc_iter = server_config.getLocations().find(location_path);
 	if (loc_iter != server_config.getLocations().end())
 	{
 		return (false);
 	}
 	//  > 0 && 
-	// 	server_config.getLocations().find(location_path) != server_config.getLocations().end()
+		// server_config.getLocations().find(location_path) != server_config.getLocations().end()
 	// _locations_map[location_path] = location_config;
-	got_locations_map[location_path] = location_config; // TODO setLocation말고 다르것으로 처리한다.
-	// got_locations_map
-	server_config.setLocations(got_locations_map);
+	// got_locations_map[location_path] = location_config; // TODO setLocation말고 다르것으로 처리한다.
+	// server_config.setLocations(got_locations_map);
+	// location_config.printLocationConfingContent(RED);
+	server_config.addLocationElement(location_path, location_config);
 	// got_locations_map = server_config.getLocations();
-	std::cout << "########################################################" << std::endl;
-	location_config.printLocationConfingContent(PUP);
-	std::cout << "########################################################" << std::endl;
+	// std::cout << "########################################################" << std::endl;
+	// location_config.printLocationConfingContent(PUP);
+	// std::cout << "########################################################" << std::endl;
 	// for (std::map<std::string, LocationConfig>::iterator iter = got_locations_map.begin();iter != got_locations_map.end();iter++)
-	// 	printContent(iter->first, "server_config.getLocations()", RED);
+	// 	// printContent(iter->first, "server_config.getLocations()", RED);
 	// std::cout << "got_locations_map.size() : " << got_locations_map.size() << std::endl;
 	return (true);
 }
@@ -1414,7 +1408,7 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 		// if (clean_str.size() == 0 || clean_str[0] == '#')
 		if (clean_str.size() == 0 || clean_str[0] == '#' || clean_str[0] == '{' || clean_str[0] == '}')
 			continue ;
-		// printContent(clean_str, "clean_str", BRW);
+		// // printContent(clean_str, "clean_str", BRW);
 		word_list = ft_split(clean_str, this->whitespace);
 		// printVector(word_list, "word", GRN);
 		// key value";" comment
@@ -1423,7 +1417,7 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 		validate_location_field_map_iter = validate_location_field_map.find(first_word);
 		if (validate_location_field_map_iter == validate_location_field_map.end())
 		{
-			printContent(first_word, "first_word in validateLocationBlock()", RED);
+			// printContent(first_word, "first_word in validateLocationBlock()", RED);
 			return (false);
 		}
 		else
@@ -1613,9 +1607,9 @@ int main(int argc, char *argv[])
 	ConfigInfo	config_info;
 	std::vector<ServerConfig>	_server_config_vector;
 
-	_server_config_vector = config_info.getWebservConfig();
+	// _server_config_vector = config_info.getWebservConfig();
 	// _server_config_vector.size()
-	std::cout << "_server_config_vector.size() : " << _server_config_vector.size() << std::endl;
+	// std::cout << "_server_config_vector.size() : " << _server_config_vector.size() << std::endl;
 	// for (auto iter = _server_config_vector.begin(); iter != _server_config_vector.end(); iter++)
 	// 	std::cout << "*iter : " << iter << std::endl;
 
@@ -1628,7 +1622,7 @@ int main(int argc, char *argv[])
 		config_info.parseConfig(argv[1]);
 		/* code */
 		// _server_config_vector = config_info.getWebservConfig();
-		// config_info.printWebservConfig();
+		config_info.printWebservConfig();
 		// _server_config_vector.begin()->printServerConfingContent();
 		// _server_config_vector
 		// std::cout << GRN <<  "_server_config_vector.begin()->getClientMaxBodySize(); : " << _server_config_vector.begin()->getClientMaxBodySize() << WHI<< std::endl;
