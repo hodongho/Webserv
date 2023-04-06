@@ -35,11 +35,8 @@ void	ServerHandler::handleListenEvent(void)
 		delete client_socket;
 		throwError("accept: ");
 	}
-	client_socket->id_type = CLIENT_SOCKET;
-	client_socket->status = CLIENT_RECV_HEADER;
-	client_socket->buf_str = "";
+	this->initClientSocketData(client_socket, client_sock_fd);
 	this->sock_list[client_sock_fd] = client_socket;
-
 	std::cout << "accept new client: " << client_sock_fd << std::endl;
 
 	bool	tmp = true;
@@ -417,10 +414,7 @@ void	ServerHandler::sendResponse(struct kevent * const & curr_event, SocketData*
 	}
 	else
 	{
-		client_socket->http_response.clear();
-		client_socket->header_str.clear();
-		client_socket->body_str.clear();
-		client_socket->status = CLIENT_RECV_HEADER;
+		this->clearClientSocketData(client_socket);
 		changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
 		changeEvent(curr_event->ident, EVFILT_READ, EV_ENABLE, 0, NULL, client_socket);
 		// end of response.
@@ -542,4 +536,21 @@ void	ServerHandler::closeEvent(struct kevent * const & curr_event)
 	if (event_id_type == CLIENT_SOCKET || event_id_type == LISTEN_SOCKET)
 		delete static_cast<SocketData *>(curr_event->udata);
 	this->sock_list.erase(curr_event->ident);
+}
+
+void	ServerHandler::initClientSocketData(struct SocketData* client_socket, const int& _sock_fd)
+{
+	client_socket->sock_fd = _sock_fd;
+	client_socket->id_type = CLIENT_SOCKET;
+	client_socket->status = CLIENT_RECV_HEADER;
+	client_socket->buf_str = "";
+}
+
+void	ServerHandler::clearClientSocketData(struct SocketData* client_socket)
+{
+	client_socket->id_type = CLIENT_SOCKET;
+	client_socket->status = CLIENT_RECV_HEADER;
+	client_socket->http_request.clear();
+	client_socket->http_response.clear();
+	client_socket->buf_str.clear();
 }

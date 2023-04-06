@@ -35,6 +35,7 @@ enum SocketStatus
 
 struct SocketData
 {
+	int				sock_fd;
 	sockaddr_in		addr;
 	IdentType		id_type;
 	SocketStatus	status;

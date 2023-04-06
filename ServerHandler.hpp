@@ -36,6 +36,8 @@ class ServerHandler {
 							const intptr_t& data,
 							void* const & udata);
 		void	closeEvent(struct kevent * const & curr_event);
+		void	initClientSocketData(struct SocketData* socket, const int& _sock_fd);
+		void	clearClientSocketData(struct SocketData* socket);
 
 		// serverReady sub function
 		int			serverListen(void);
