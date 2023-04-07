@@ -4,8 +4,9 @@
 #include <iostream> // TODO remove
 #include "ServerConfig.hpp"
 
+
 ServerConfig::ServerConfig(void)
-    : server_name(""), host(""), port(0), index(""), client_max_body_size(0)
+    : server_name(""), host("172.0"), port(0), index("index.html"), client_max_body_size(0)
 {
     std::map<int, std::string>              _default_error_page;
 

@@ -12,7 +12,7 @@ class ServerConfig
 	private:
 		std::string								server_name;			// 선택 필드, 유일값, 입력 없으면 ""
 		std::string								host;					// 필수 필드, IPv4 style "0.0.0.0"
-		unsigned short								port;					// 필수 필드, 0~65525 범위 내에 존재해야함
+		unsigned short							port;					// 필수 필드, 0~65525 범위 내에 존재해야함
 		std::string								root;					// 필수 필드, 빈 문자열 입력은 허용하지 않음
 		std::string								index;					// 필수 필드, 빈 문자열 입력은 허용하지 않음
 		size_t									client_max_body_size;	// 필수 필드, 양수만 허용, atoi로 변환하여 처리, 숫자가 아닌 문자열인 경우는?, isdigit()사용

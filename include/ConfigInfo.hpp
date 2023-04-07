@@ -8,6 +8,14 @@
     - 그렇다고 ConfigInfo라고 하기에는 주요 동작이 parse이다.
 */
 
+enum PathState
+{
+   PATH_NOTFOUND,
+   PATH_VALID,
+   PATH_AUTOINDEX,
+   PATH_CGI // 
+};
+
 class ConfigInfo
 {
     private:
@@ -16,7 +24,7 @@ class ConfigInfo
 			NESSARY_UNIQUE,
 			NESSARY_MULTI,
 			OPTION_UNIQUE,
-			OPTION_MULTI,
+			OPTION_MULTI
 		};
 
         /*
@@ -110,6 +118,9 @@ class ConfigInfo
         // std::vector<ServerConfig>	webserv_config;
         const std::vector<ServerConfig> getWebservConfig(void) const;
         void    printWebservConfig(void);
+
+        // for using config info 
+        enum PathState convUriToPath(const std::string& URI, std::string& file_path);
 
 };
 

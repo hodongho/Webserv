@@ -8,52 +8,11 @@
 #include <stack>
 #include <stdlib.h>
 #include <limits>
+#include "ConfigInfo.hpp"
 
 static std::vector<std::string>	ft_split(const std::string& str, const std::string& delimiter);
 static std::string 				ft_strtrim(const std::string& str, const std::string& set);
 
-ConfigInfo::ValidateFieldInfo::ValidateFieldInfo(void)
-	:count(0)
-{}
-
-ConfigInfo::ValidateFieldInfo &ConfigInfo::ValidateFieldInfo::operator++(int)
-{
-	this->count++;
-	return (*this);
-}
-
-void ConfigInfo::ValidateFieldInfo::setValidateFieldType(const VaildateFieldType& _validate_field_type)
-{
-	this->validate_field_type = _validate_field_type;
-}
-
-void ConfigInfo::ValidateFieldInfo::setCount(const size_t &_count)
-{
-	this->count = _count;
-}
-
-const ConfigInfo::VaildateFieldType &ConfigInfo::ValidateFieldInfo::getValidateFieldType(void) const
-{
-	return (this->validate_field_type);
-}
-
-const size_t &ConfigInfo::ValidateFieldInfo::getCount(void) const
-{
-	return (this->count);
-}
-
-void ConfigInfo::printContent(const std::string &str, const std::string &str_name, const std::string &color)
-{
-	std::cout << color << str_name << " : $" << str << "$" << WHI << std::endl;
-}
-
-void ConfigInfo::printVector(std::vector<std::string> &word_list, const std::string &str_name, const std::string &color)
-{
-	std::vector<std::string>::iterator	iter;
-
-	for(iter = word_list.begin(); iter != word_list.end(); iter++)
-		printContent(*iter, str_name, color);
-}
 
 ConfigInfo::ConfigInfo(void)
 	: whitespace(" \t\n\v\f\r")
@@ -115,9 +74,10 @@ void ConfigInfo::printWebservConfig(void)
 	}
 }
 
+
 /*
-	throw하는 식으로 변경 필요
-	throw 이후 exit()
+    throw하는 식으로 변경 필요
+    throw 이후 exit()
 */
 bool	ConfigInfo::checkFileNameExtension(const char *file_name_parms)
 {
@@ -1359,6 +1319,83 @@ bool	ConfigInfo::validateConfigFile(const std::string& file_content)
 	return (true);
 }
 
+
+ConfigInfo::ValidateFieldInfo::ValidateFieldInfo(void)
+	:count(0)
+{}
+
+ConfigInfo::ValidateFieldInfo &ConfigInfo::ValidateFieldInfo::operator++(int)
+{
+	this->count++;
+	return (*this);
+}
+
+void ConfigInfo::ValidateFieldInfo::setValidateFieldType(const VaildateFieldType& _validate_field_type)
+{
+	this->validate_field_type = _validate_field_type;
+}
+
+void ConfigInfo::ValidateFieldInfo::setCount(const size_t &_count)
+{
+	this->count = _count;
+}
+
+const ConfigInfo::VaildateFieldType &ConfigInfo::ValidateFieldInfo::getValidateFieldType(void) const
+{
+	return (this->validate_field_type);
+}
+
+const size_t &ConfigInfo::ValidateFieldInfo::getCount(void) const
+{
+	return (this->count);
+}
+
+void ConfigInfo::printContent(const std::string &str, const std::string &str_name, const std::string &color)
+{
+	std::cout << color << str_name << " : $" << str << "$" << WHI << std::endl;
+}
+
+void ConfigInfo::printVector(std::vector<std::string> &word_list, const std::string &str_name, const std::string &color)
+{
+	std::vector<std::string>::iterator	iter;
+
+	for(iter = word_list.begin(); iter != word_list.end(); iter++)
+		printContent(*iter, str_name, color);
+}
+
+/*
+	- URI로 들어오는 것이 서버 내에 있는지
+		있다면 어떤 경로에 있는지 찾아준다.
+	- URI로 들어올 수 있는 것들의 경우
+		- full path [servern_name]:[port][directory_path][file_name_with_extension]
+			- localhost:4242/index.html
+		- servern_name:port
+			- localhost:4242
+			- with file_path
+				localhost:4242/
+		- 127.0.0.1:4242/index.php
+		
+	"URI    "
+	'\t'' ' 
+	trim(whitepace )
+	rfind 
+	.php 
+	입력은 정상적으로 들어온다고 가정한다.
+	"index.php " -> 의도해서 사용자가 보냈다고 생각. ' '가 ascii로 변한됨
+	isCGIRequest()호출하여 사용됨
+	//
+	
+*/
+PathState ConfigInfo::convUriToPath(const std::string &URI, std::string &file_path)
+{
+	PathState ret_pathState = PATH_NOTFOUND;
+	(void)URI;
+	(void)file_path;
+
+    return PathState(ret_pathState);
+}
+
+// gconv
 
 //TODO remove
 // void	test(void)

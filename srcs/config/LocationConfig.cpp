@@ -2,7 +2,7 @@
 #include <iostream> // TODO remove
 
 LocationConfig::LocationConfig(void)
-    : root(""), index(""), redirect(""), autoindex(false)
+    : root(""), index("index.html"), redirect(""), autoindex(false)
 {
     this->allow_method[GET] = true;
     this->allow_method[POST] = true;
