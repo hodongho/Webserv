@@ -13,7 +13,7 @@ enum PathState
    PATH_NOTFOUND,
    PATH_VALID,
    PATH_AUTOINDEX,
-   PATH_CGI // 
+   PATH_CGI //
 };
 
 class ConfigInfo
@@ -36,7 +36,7 @@ class ConfigInfo
             ValidateFieldInfo(void)
         };
         */
-        
+
         class  ValidateFieldInfo
         {
             private:
@@ -75,7 +75,7 @@ class ConfigInfo
         bool	findLocationBlock(std::vector<std::string>::iterator& src_begin_iter, \
                                                     const std::vector<std::string>::iterator& src_end_iter, \
 													std::vector<std::string>::iterator& begin_iter, \
-													std::vector<std::string>::iterator& end_iter);    
+													std::vector<std::string>::iterator& end_iter);
 
         // check function for validate
         bool    checkCommonConfigLineForm(std::vector<std::string> word_list);
@@ -93,7 +93,7 @@ class ConfigInfo
 
         bool    parseErrorPageConfigField(std::string error_page, std::map<int, std::string>& error_page_map);
 
-        // get validate info                                            
+        // get validate info
         std::map<std::string, ValidateFieldInfo>	getValidateServerFieldMap(void);
         std::map<std::string, ValidateFieldInfo>	getValidateLocationFieldMap(void);
 
@@ -103,12 +103,12 @@ class ConfigInfo
         bool    parseLocationBlock(std::vector<std::string>::iterator& src_begin_iter,
                                     const std::vector<std::string>::iterator& src_end_iter,
                                     ServerConfig& server_config);
-        
+
 
         //util
         void	    printContent(const std::string& str, const std::string& str_name, const std::string& color);
         void	    printVector(std::vector<std::string>& word_list, const std::string& str_name, const std::string& color);
-        
+
     public:
         ConfigInfo(void);
         virtual ~ConfigInfo();
@@ -118,8 +118,9 @@ class ConfigInfo
         const std::vector<ServerConfig> getWebservConfig(void) const;
         void    printWebservConfig(void);
 
-        // for using config info 
+        // for using config info
         enum PathState convUriToPath(const std::string& URI, std::string& file_path);
+        bool isAllowedMethod(std::string URI, unsigned short port, enum MethodType method);
 
 };
 
