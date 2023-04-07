@@ -1,7 +1,7 @@
 #include "HTTPRequest.hpp"
 
 HTTPRequest::HTTPRequest()
-:HTTPMessage(), method(NONE), URI("")
+:HTTPMessage(), method(METHOD_NONE), URI("")
 {};
 
 HTTPRequest::~HTTPRequest()
@@ -10,7 +10,7 @@ HTTPRequest::~HTTPRequest()
 int	HTTPRequest::validateStartLine(void)
 {
 	//일단은 METHOD가 GET이 아닐경우 에러처리, 프로토콜이 HTTP가 아닌 경우 Error
-	if (this->method == NONE || this->version.find("HTTP/1.1") == std::string::npos)
+	if (this->method == METHOD_NONE || this->version.find("HTTP/1.1") == std::string::npos)
 		return (-1);
 
 	//access를 통해 URI가 존재하는 경로인지 확인
@@ -27,11 +27,11 @@ int	HTTPRequest::parseStartLine(std::stringstream& request_stream)
 	request_stream >> string_method >> this->URI >> this->version;
 
 	if (string_method == "GET")
-		this->method = GET;
+		this->method = METHOD_GET;
 	else if (string_method == "POST")
-		this->method = POST;
+		this->method = METHOD_POST;
 	else if (string_method == "DELETE")
-		this->method = DELETE;
+		this->method = METHOD_DELETE;
 
 	//이번 행에서 남은 문자는 "\r\n"이어야만함으로 \n기준으로 라인을 받아오는데 "\r\n"이 아닌경우 400 Error
 	std::getline(request_stream, end, '\n');
@@ -123,14 +123,14 @@ const std::string&							HTTPRequest::getURI() const		{ return (this->URI); }
 const std::string&							HTTPRequest::getBody() const	{ return (this->body); }
 const std::map<std::string, std::string>&	HTTPRequest::getHeader() const	{ return (this->header); }
 
-ssize_t		HTTPRequest::getContentLength()
+ssize_t	HTTPRequest::getContentLength() const
 {
-	std::map<std::string, std::string>::iterator	content_length_it;
-	ssize_t											content_length;
+	std::map<std::string, std::string>::const_iterator	content_length_it;
+	ssize_t												content_length;
 
 	content_length_it = header.find("Content-length");
 	if (content_length_it == header.end())
-		std::cerr << RED << "400 Bad Request!" << WHI << std::endl;
+		return (-1);
 
 	for (size_t i = 0; i < content_length_it->second.size(); i++)
 	{
@@ -142,5 +142,25 @@ ssize_t		HTTPRequest::getContentLength()
 	return (content_length);
 }
 
+const std::string	HTTPRequest::getConnection() const
+{
+	std::map<std::string, std::string>::const_iterator	connection_it;
+
+	connection_it = header.find(CONNECTION);
+	if (connection_it == header.end())
+		return ("");
+	else
+		return(connection_it->second);
+
+}
+
+void	HTTPRequest::clear()
+{
+	this->method = METHOD_NONE;
+	this->URI.clear();
+	this->version.clear();
+	this->header.clear();
+	this->body.clear();
+}
 
 // std::cerr << RED << "400 Bad Request!" << WHI << std::endl;

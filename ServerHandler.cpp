@@ -121,7 +121,7 @@ void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 		client_socket->header_str.erase(header_end_pos + HEADER_END_SIZE);
 		client_socket->http_request.parseRequestMessage(client_socket->header_str);
 		MethodType method = client_socket->http_request.getMethod();
-		if (method == POST)
+		if (method == METHOD_POST)
 		{
 			// client_socket->body_size = client_socket->http_request.getContentLength();
 			// if (client_socket->body_size < 0)
@@ -132,7 +132,7 @@ void	ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 			// }
 			client_socket->status = CLIENT_RECV_BODY;
 		}
-		else if (method == GET || method == DELETE)
+		else if (method == METHOD_GET || method == METHOD_DELETE)
 		{
 			client_socket->status = CLIENT_SEND_RESPONSE;
 			changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
