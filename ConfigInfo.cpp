@@ -9,11 +9,7 @@
 #include <stack>
 #include <stdlib.h>
 #include <limits>
-#include "ConfigInfo.hpp"
-
-static std::vector<std::string>	ft_split(const std::string& str, const std::string& delimiter);
-static std::string 				ft_strtrim(const std::string& str, const std::string& set);
-
+#include "utils.hpp"
 
 ConfigInfo::ConfigInfo(void)
 	: whitespace(" \t\n\v\f\r")
@@ -111,58 +107,6 @@ std::string ConfigInfo::readFile(std::string file_name)
 		exit(1);
 	}
 	return (s);
-}
-
-static bool	in_str(const std::string& str, const char& ch)
-{
-	for(size_t idx = 0; idx < str.size(); idx++)
-	{
-		if (ch == str[idx])
-			return (true);
-	}
-	return (false);
-}
-
-// char delimiter -> std::string delimiter
-static std::vector<std::string>    ft_split(const std::string& str, const std::string& delimiter)
-{
-	std::vector<std::string>	word_list;
-	size_t						idx;
-
-	idx = 0;
-	while (idx < str.size())
-	{
-		if (in_str(delimiter, str[idx]))
-			idx++;
-		else
-		{
-			size_t  begin_of_word;
-			size_t  len;
-
-			begin_of_word = idx;
-			while (str[idx] && (in_str(delimiter, str[idx]) == false))
-				idx++;
-			len = idx - begin_of_word;
-			word_list.push_back(str.substr(begin_of_word, len));
-		}
-	}
-	return (word_list);
-}
-
-static std::string ft_strtrim(const std::string& str, const std::string& set)
-{
-	std::string clean_str;
-	size_t      start_of_str;
-	size_t      end_of_str;
-
-	if (str == "" || set == "")
-		return (str);
-	start_of_str = str.find_first_not_of(set);
-	end_of_str = str.find_last_not_of(set);
-	if (start_of_str == std::string::npos || end_of_str == std::string::npos)
-		return ("");
-	clean_str = str.substr(start_of_str, end_of_str - start_of_str + 1);
-	return (clean_str);
 }
 
 /*
@@ -1395,32 +1339,3 @@ PathState ConfigInfo::convUriToPath(const std::string &URI, std::string &file_pa
 
     return PathState(ret_pathState);
 }
-
-//TODO remove
-// void	test(void)
-// {
-// 	system("leaks ConfigInfo");
-// }
-
-// int main(int argc, char *argv[])
-// {
-// 	ConfigInfo	config_info;
-// 	std::vector<ServerConfig>	_server_config_vector;
-
-// 	if (argc != 2) {
-// 		std::cout << "Usage : string" << std::endl;
-// 		return (1);
-// 	}
-// 	try
-// 	{
-// 		config_info.parseConfig(argv[1]);
-// 		config_info.printWebservConfig();
-// 	}
-// 	catch(const std::exception& e)
-// 	{
-// 		std::cerr << e.what() << '\n';
-// 		return (1);
-// 	}
-// 	// atexit(test);
-// 	return (0);
-// }
