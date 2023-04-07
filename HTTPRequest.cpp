@@ -130,7 +130,7 @@ ssize_t		HTTPRequest::getContentLength()
 
 	content_length_it = header.find("Content-length");
 	if (content_length_it == header.end())
-		std::cerr << RED << "400 Bad Request!" << WHI << std::endl;
+		return (-1);
 
 	for (size_t i = 0; i < content_length_it->second.size(); i++)
 	{
@@ -142,8 +142,15 @@ ssize_t		HTTPRequest::getContentLength()
 	return (content_length);
 }
 
-const std::string	getConnection(void)
+const std::string	HTTPRequest::getConnection(void)
 {
+	std::map<std::string, std::string>::iterator	connection_it;
+
+	connection_it = header.find(CONNECTION);
+	if (connection_it == header.end())
+		return ("");
+	else
+		return(connection_it->second);
 
 }
 

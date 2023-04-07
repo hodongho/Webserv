@@ -75,7 +75,7 @@ std::string	HTTPResponse::makeResponseMessage()
 void	HTTPResponse::setVersion(std::string _version)				{ this->version = _version; }
 void	HTTPResponse::setStatusMessage(std::string _status_message)	{ this->status_message = _status_message; }
 void	HTTPResponse::setBody(std::string _body) 					{ this->body = _body; }
-void	HTTPResponse::addHeader(std::string _header_name, std::string _header_value) { header[_header_name] = _header_value; }
+void	HTTPResponse::addHeader(const std::string& _header_name, const std::string& _header_value) { header[_header_name] = _header_value; }
 
 void	HTTPResponse::setStatusCode(StatusCode _status_code)
 {
@@ -122,9 +122,8 @@ const std::string	HTTPResponse::getBodySize()
 	return (size);
 }
 
-void	HTTPResponse::setBasicField(HTTPMessage* http_request)
+void	HTTPResponse::setBasicField(HTTPRequest& http_request)
 {
-	addHeader(CONTENT_TYPE, "text/html; charset=UTF-8");
-	addHeader(CONTENT_LENGTH, this->getBodySize());
-	addHeader(CONNECTION, http_request->getConnection());
+	this->addHeader(CONTENT_LENGTH, this->getBodySize());
+	this->addHeader(CONNECTION, http_request.getConnection());
 }
