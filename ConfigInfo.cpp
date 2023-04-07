@@ -1406,14 +1406,14 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 				else
 				{
 					// location_path
-					/*
-						root + location_path index와 조합하여 일치하는 것을 찾는다.
-						- stat으로 파일이 존재하는지 확인
-						- 요청이 디렉터리일때 맨마지막에 /포함시키기
-						// "\*/$"
-						PATH_AUTOINDEX,
-					*/
-					return ();
+					// /*
+					// 	root + location_path index와 조합하여 일치하는 것을 찾는다.
+					// 	- stat으로 파일이 존재하는지 확인
+					// 	- 요청이 디렉터리일때 맨마지막에 /포함시키기
+					// 	// "\*/$"
+					// 	PATH_AUTOINDEX,
+					// */
+					// return ();
 				}
 			}
 		}

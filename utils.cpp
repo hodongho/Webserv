@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include <string.h>
 
 void	throwError(std::string msg)
 {
