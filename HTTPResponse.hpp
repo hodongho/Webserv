@@ -16,9 +16,11 @@ class HTTPResponse : public HTTPMessage
 		std::string	status_code;
 		std::string	status_message;
 
-		void		makeStatusLine(void);
-		void		makeHeaderField(void);
-		void		makeBody(void);
+		void				makeStatusLine(void);
+		void				makeHeaderField(void);
+		void				makeBody(void);
+
+		const std::string	getBodySize(void);
 
 	public:
 		HTTPResponse(void);
@@ -34,6 +36,8 @@ class HTTPResponse : public HTTPMessage
 		void		addHeader(std::string _header_name, std::string _header_value);
 
 		void		clear();
+
+		void		setBasicField(HTTPMessage* http_request);
 };
 
 #endif

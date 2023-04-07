@@ -1,5 +1,7 @@
 #include "HTTPResponse.hpp"
 #include <fstream>
+#include <stdlib.h>
+#include "utils.hpp"
 
 HTTPResponse::HTTPResponse()
 :HTTPMessage(), response(""), status_code(""), status_message("")
@@ -114,8 +116,15 @@ void	HTTPResponse::clear()
 	this->response.clear();
 }
 
+const std::string	HTTPResponse::getBodySize()
+{
+	std::string size = itos(body.size());
+	return (size);
+}
 
-// response = "HTTP/1.1 200 OK\r\n";
-// response += "Content-Type: text/html\r\n";
-// response += "Content-Length: 163\r\n";
-// response += "Connection: keep-alive\r\n\r\n";
+void	HTTPResponse::setBasicField(HTTPMessage* http_request)
+{
+	addHeader(CONTENT_TYPE, "text/html; charset=UTF-8");
+	addHeader(CONTENT_LENGTH, this->getBodySize());
+	addHeader(CONNECTION, http_request->getConnection());
+}

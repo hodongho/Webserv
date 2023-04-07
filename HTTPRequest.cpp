@@ -142,5 +142,18 @@ ssize_t		HTTPRequest::getContentLength()
 	return (content_length);
 }
 
+const std::string	getConnection(void)
+{
+
+}
+
+void	HTTPRequest::clear()
+{
+	this->method = NONE;
+	this->URI.clear();
+	this->version.clear();
+	this->header.clear();
+	this->body.clear();
+}
 
 // std::cerr << RED << "400 Bad Request!" << WHI << std::endl;

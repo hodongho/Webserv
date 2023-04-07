@@ -46,6 +46,8 @@ class HTTPRequest : public HTTPMessage
 		const std::map<std::string, std::string>&	getHeader(void) const;
 		const std::string&							getBody(void) const;
 		ssize_t 									getContentLength(void);
+
+		void										clear();
 };
 
 #endif

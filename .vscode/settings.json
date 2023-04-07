@@ -1,5 +1,6 @@
 {
 	"files.associations": {
+		"*.embeddedhtml": "html",
 		"ostream": "cpp",
 		"__bit_reference": "cpp",
 		"__bits": "cpp",
@@ -68,6 +69,7 @@
 		"algorithm": "cpp",
 		"filesystem": "cpp",
 		"__verbose_abort": "cpp",
-		"bit": "cpp"
+		"bit": "cpp",
+		"iterator": "cpp"
 	}
 }

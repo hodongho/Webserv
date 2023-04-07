@@ -4,7 +4,9 @@
 # include <iostream>
 # include <errno.h>
 
-void	throwError(std::string msg);
+void		throwError(std::string msg);
+std::string	itos(size_t num);
+
 
 class funcException : public std::exception
 {
