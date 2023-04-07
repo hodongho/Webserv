@@ -36,7 +36,7 @@ class HTTPResponse : public HTTPMessage
 
 		void		addHeader(const std::string& _header_name, const std::string& _header_value);
 
-		void		clear();
+		void		clear(void);
 
 		void		setBasicField(const HTTPRequest& http_request);
 };

@@ -28,7 +28,6 @@ void	HTTPResponse::makeHeaderField()
 	{
 		this->response += it->first + ": " + it->second + "\r\n";
 	}
-	this->response += "\r\n";
 }
 
 void	HTTPResponse::makeBody()
@@ -39,7 +38,7 @@ void	HTTPResponse::makeBody()
 std::string	HTTPResponse::makeResponseMessage()
 {
 	this->setVersion("HTTP/1.1");
-	this->setStatusCode(OK);
+	this->setStatusCode(STATCODE_OK);
 	this->setStatusMessage("OK");
 
 	this->addHeader(CONTENT_TYPE, "text/html; charset=utf-8");
@@ -81,23 +80,23 @@ void	HTTPResponse::setStatusCode(StatusCode _status_code)
 {
 	switch (_status_code)
 	{
-	case OK:
+	case STATCODE_OK:
 		this->status_code = "200";
 		break;
 
-	case REDIR:
+	case STATCODE_REDIR:
 		this->status_code = "301";
 		break;
 
-	case BADREQ:
+	case STATCODE_BADREQ:
 		this->status_code = "400";
 		break;
 
-	case NOTFOUND:
+	case STATCODE_NOTFOUND:
 		this->status_code = "404";
 		break;
 
-	case SERVERR:
+	case STATCODE_SERVERR:
 		this->status_code = "500";
 		break;
 
