@@ -6,7 +6,7 @@
 #    By: yolee <yolee@student.42seoul.kr>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/03/31 01:14:02 by yolee             #+#    #+#              #
-#    Updated: 2023/04/04 16:34:58 by yolee            ###   ########.fr        #
+#    Updated: 2023/04/04 17:33:33 by yolee            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,10 +18,13 @@ CPPFLAGS = -MMD
 
 SRCS = ServerHandler.cpp \
 	utils.cpp \
-	Webserv.cpp \
+	webserv.cpp \
 	HTTPMessage.cpp \
 	HTTPRequest.cpp \
-	HTTPResponse.cpp
+	HTTPResponse.cpp \
+	ConfigInfo.cpp \
+	ServerConfig.cpp \
+	LocationConfig.cpp \
 
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)

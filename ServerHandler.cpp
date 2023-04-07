@@ -1,4 +1,5 @@
 #include "ServerHandler.hpp"
+#include "ConfigInfo.hpp"
 
 ServerHandler::ServerHandler() {};
 
@@ -46,7 +47,6 @@ void	ServerHandler::handleListenEvent(void)
 	setsockopt(client_sock_fd, SOL_SOCKET, SO_KEEPALIVE, &tmp, sizeof(tmp));
 
 	fcntl(client_sock_fd, F_SETFL, O_NONBLOCK);
-
 	changeEvent(client_sock_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
 	changeEvent(client_sock_fd, EVFILT_WRITE, EV_ADD | EV_EOF | EV_DISABLE, 0, NULL, client_socket);
 }
@@ -216,7 +216,6 @@ void ServerHandler::initListenerData(struct SocketData* listen_sock)
 int ServerHandler::serverListen(void)
 {
 	this->listen_sock_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-
 	if (this->listen_sock_fd == -1)
 		throwError("socket: ");
 
@@ -244,15 +243,17 @@ int ServerHandler::serverListen(void)
 	return (0);
 }
 
-
-void ServerHandler::serverReady(void)
+void ServerHandler::serverReady(const char *conf_file)
 {
-	this->kq = kqueue();
 
-	if (this->kq == -1)
-		throwError("kqueue: ");
+	this->conf.parseConfig(conf_file);
+	this->conf.printWebservConfig(); //for test
+	// this->kq = kqueue();
 
-	this->serverListen();
+	// if (this->kq == -1)
+	// 	throwError("kqueue: ");
+
+	// this->serverListen();
 }
 
 void	ServerHandler::serverRun()
@@ -278,7 +279,6 @@ void	ServerHandler::serverRun()
 		{
 			curr_event = &this->event_list[i];
 			event_id_type = static_cast<EventData *>(curr_event->udata)->id_type;
-
 			if (fstat(curr_event->ident, &stat_buf) == -1)
 				continue;
 			if (curr_event->flags & EV_ERROR)
