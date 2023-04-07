@@ -1,13 +1,13 @@
 #ifndef ConfigInfo_HPP
 # define ConfigInfo_HPP
-# include "configStructure.hpp"
+# include "ServerConfig.hpp"
+# include "LocationConfig.hpp"
 # include "manageStdout.hpp"
 # include <vector>
 /*
     - 가져다 쓸떄는 config 정보가 담겨있어서 쓸텐데 config parser라는 이름이 맞을 것인가?
     - 그렇다고 ConfigInfo라고 하기에는 주요 동작이 parse이다.
 */
-
 enum PathState
 {
    PATH_NOTFOUND,
@@ -57,7 +57,6 @@ class ConfigInfo
     private:
         const std::string           whitespace;
         std::vector<ServerConfig>	server_config_vector;
-        // std::map<std::string, ServerConfig>	webserv_config;
 
         bool	    checkFileNameExtension(const char *file_name_parms);
         std::string readFile(std::string file_name);
@@ -120,7 +119,7 @@ class ConfigInfo
         void    printWebservConfig(void);
 
         // for using config info 
-        enum PathState convUriToPath(const std::string& URI, std::string& file_path);
+        enum PathState convUriToPath(const std::string& URI, const unsigned short& port, std::string& file_path);
 
 };
 

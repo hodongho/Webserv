@@ -1,4 +1,4 @@
-#include "../../include/LocationConfig.hpp"
+#include "LocationConfig.hpp"
 #include <iostream> // TODO remove
 
 LocationConfig::LocationConfig(void)
@@ -73,3 +73,4 @@ void LocationConfig::printLocationConfingContent(std::string color) const
     std::cout << "--------------------(LOCATION MAP_DATA)-------------------------" << WHI << std::endl;
     printMapContent(this->getAllowMethod(), "this->getAllowMethod()", GRN);
 }
+

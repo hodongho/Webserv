@@ -1,4 +1,4 @@
-#include "../../include/ServerConfig.hpp"
+#include "ServerConfig.hpp"
 #include <map>
 #include <string>
 #include <iostream> // TODO remove
@@ -132,3 +132,4 @@ void ServerConfig::printServerConfingContent(void) const
     this->printMapContent(this->error_page, "this->getErrorPage()", GRN);
     this->printMapContent(this->locations, "this->getLocations()", GRN);
 }
+

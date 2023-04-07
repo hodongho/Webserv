@@ -1,10 +1,19 @@
-// ft_split.cpp
-#include <string>
-#include <vector>
+#include "utils.hpp"
+
+void	throwError(std::string msg)
+{
+	std::cerr << msg << std::flush;
+	throw(funcException());
+}
+
+const char* funcException::what() const throw()
+{
+	return (strerror(errno));
+}
+
 
 static bool	in_str(const std::string& str, const char& ch)
 {
-	// for(std::string::iterator iter = str.begin(); iter != str.end(); iter++)
 	for(size_t idx = 0; idx < str.size(); idx++)
 	{
 		if (ch == str[idx])
@@ -13,7 +22,6 @@ static bool	in_str(const std::string& str, const char& ch)
 	return (false);
 }
 
-// char delimiter -> std::string delimiter
 std::vector<std::string>    ft_split(const std::string& str, const std::string& delimiter)
 {
 	std::vector<std::string>	word_list;
@@ -39,18 +47,18 @@ std::vector<std::string>    ft_split(const std::string& str, const std::string& 
 	return (word_list);
 }
 
-// #include <iostream>
+std::string ft_strtrim(const std::string& str, const std::string& set)
+{
+	std::string clean_str;
+	size_t      start_of_str;
+	size_t      end_of_str;
 
-// int	main()
-// {
-// 	std::string					origin_str;
-// 	std::vector<std::string>	word_list;
-// 	std::string					delimiter;
-
-// 	origin_str = "hello \tworld\t\n42";
-// 	delimiter = " \t";
-// 	word_list = ft_split(origin_str, delimiter);
-// 	for (auto iter = word_list.begin(); iter != word_list.end(); iter++)
-// 		std::cout << "*iter : $" << *iter << "$" << std::endl;
-// 	return (0);
-// }
+	if (str == "" || set == "")
+		return (str);
+	start_of_str = str.find_first_not_of(set);
+	end_of_str = str.find_last_not_of(set);
+	if (start_of_str == std::string::npos || end_of_str == std::string::npos)
+		return ("");
+	clean_str = str.substr(start_of_str, end_of_str - start_of_str + 1);
+	return (clean_str);
+}

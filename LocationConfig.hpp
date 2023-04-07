@@ -59,5 +59,4 @@ inline void LocationConfig::printMapContent(const std::map<MethodType, bool> &pa
 	std::cout << WHI << std::endl;
 }
 
-
 #endif

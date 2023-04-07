@@ -1,5 +1,6 @@
-#include "../../include/ConfigInfo.hpp"
-#include "../../include/configStructure.hpp"
+#include "ConfigInfo.hpp"
+#include "ServerConfig.hpp"
+#include "LocationConfig.hpp"
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -8,11 +9,7 @@
 #include <stack>
 #include <stdlib.h>
 #include <limits>
-#include "ConfigInfo.hpp"
-
-static std::vector<std::string>	ft_split(const std::string& str, const std::string& delimiter);
-static std::string 				ft_strtrim(const std::string& str, const std::string& set);
-
+#include "utils.hpp"
 
 ConfigInfo::ConfigInfo(void)
 	: whitespace(" \t\n\v\f\r")
@@ -110,58 +107,6 @@ std::string ConfigInfo::readFile(std::string file_name)
 		exit(1);
 	}
 	return (s);
-}
-
-static bool	in_str(const std::string& str, const char& ch)
-{
-	for(size_t idx = 0; idx < str.size(); idx++)
-	{
-		if (ch == str[idx])
-			return (true);
-	}
-	return (false);
-}
-
-// char delimiter -> std::string delimiter
-static std::vector<std::string>    ft_split(const std::string& str, const std::string& delimiter)
-{
-	std::vector<std::string>	word_list;
-	size_t						idx;
-
-	idx = 0;
-	while (idx < str.size())
-	{
-		if (in_str(delimiter, str[idx]))
-			idx++;
-		else
-		{
-			size_t  begin_of_word;
-			size_t  len;
-
-			begin_of_word = idx;
-			while (str[idx] && (in_str(delimiter, str[idx]) == false))
-				idx++;
-			len = idx - begin_of_word;
-			word_list.push_back(str.substr(begin_of_word, len));
-		}
-	}
-	return (word_list);
-}
-
-static std::string ft_strtrim(const std::string& str, const std::string& set)
-{
-	std::string clean_str;
-	size_t      start_of_str;
-	size_t      end_of_str;
-
-	if (str == "" || set == "")
-		return (str);
-	start_of_str = str.find_first_not_of(set);
-	end_of_str = str.find_last_not_of(set);
-	if (start_of_str == std::string::npos || end_of_str == std::string::npos)
-		return ("");
-	clean_str = str.substr(start_of_str, end_of_str - start_of_str + 1);
-	return (clean_str);
 }
 
 /*
@@ -328,7 +273,7 @@ bool	ConfigInfo::checkDuplicateConfigField(const ValidateFieldInfo& validate_fie
 
 /*
 	# 주석은 상관없다
-	이미 이전에 확인한 상태이므로 무조건 ;이 #
+	이미 이전에 확인한 상태이므로 무조건 ;이 #x
 */
 std::string	removeAfterSemicolon(const std::string& origin_value)
 {
@@ -1374,7 +1319,14 @@ void ConfigInfo::printVector(std::vector<std::string> &word_list, const std::str
 			- with file_path
 				localhost:4242/
 		- 127.0.0.1:4242/index.php
-		
+	
+	- 어떤 port에 대해서 들어오는지 알아야함 
+		나의 경우 가장 처음 발생하는 '/'로 잘라야한다
+		[host][port]'/'[file_path]
+		- '/'가 없이 들어올 수도 있는가?
+			그런 경우 404
+	- 레퍼런스로 넘어온 file_path에 찾은 경로를 넣어줌
+
 	"URI    "
 	'\t'' ' 
 	trim(whitepace )
@@ -1384,44 +1336,87 @@ void ConfigInfo::printVector(std::vector<std::string> &word_list, const std::str
 	"index.php " -> 의도해서 사용자가 보냈다고 생각. ' '가 ascii로 변한됨
 	isCGIRequest()호출하여 사용됨
 	//
-	
+
+	string (1)	
+	int compare (const string& str) const;
+	substrings (2)	
+	int compare (size_t pos, size_t len, const string& str) const;
+	int compare (size_t pos, size_t len, const string& str, size_t subpos, size_t sublen) const;
+	c-string (3)	
+	int compare (const char* s) const;int compare (size_t pos, size_t len, const char* s) const;
+	buffer (4)	
+	int compare (size_t pos, size_t len, const char* s, size_t n) const;
+	enum PathState
+	{
+		PATH_NOTFOUND,
+		PATH_VALID,
+		PATH_AUTOINDEX,
+		PATH_CGI // 
+	};
 */
-PathState ConfigInfo::convUriToPath(const std::string &URI, std::string &file_path)
+enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path)
 {
-	PathState ret_pathState = PATH_NOTFOUND;
-	(void)URI;
-	(void)file_path;
+	size_t		file_path_start_idx;
+	std::string	file_path_of_URI;
 
-    return PathState(ret_pathState);
-}
-
-// gconv
-
-//TODO remove
-// void	test(void)
-// {
-// 	system("leaks ConfigInfo");
-// }
-
-int main(int argc, char *argv[])
-{
-	ConfigInfo	config_info;
-	std::vector<ServerConfig>	_server_config_vector;
-
-	if (argc != 2) {
-		std::cout << "Usage : string" << std::endl;
-		return (1);
-	}
-	try
+	file_path = "";
+	file_path_start_idx = startline_of_URI.find('/');
+	if (file_path_start_idx == std::string::npos)
+		return (PATH_NOTFOUND);
+	// 길이에 +1이 필요할지 확인 필요 substr(file_path_start_idx,  startline_of_URI.size() - file_path_start_idx + 1)
+	file_path_of_URI = startline_of_URI.substr(file_path_start_idx,  startline_of_URI.size() - file_path_start_idx); // substr(start_pos, len)
+	// port를 기준으로 일치하는게 있는지 확인한다.
+	std::vector<ServerConfig>::const_iterator	server_iter;
+	server_iter = this->server_config_vector.begin();
+	for (;server_iter != this->server_config_vector.end(); server_iter++)
 	{
-		config_info.parseConfig(argv[1]);
-		config_info.printWebservConfig();
+		ServerConfig	server_config;
+
+		server_config = *server_iter;
+		// location을 돌면서 일치하는게 있나봐야한다.
+		if (server_config.getPort() == port)
+		{
+			// std::vector<ServerConfig>::const_iterator	server_iter;
+			// server_iter = this->server_config_vector.begin();
+			const std::map<std::string, LocationConfig>& location_config_maps = server_config.getLocations();
+
+			std::map<std::string, LocationConfig>::const_iterator location_iter = location_config_maps.begin();
+			for (;location_iter != location_config_maps.end() ;location_iter++)
+			{
+				std::string		location_path;
+				LocationConfig	location_config;
+
+				location_path = location_iter->first;
+				location_config = location_iter->second;
+				// 어느 일부분도 일치하지 않는 경우
+				// 일부분이 일치했다하더라도 찾고자하는 location이 아닐수 있다.
+				// 그러한 케이스 고려 필요. 경로는 항상 완전히 일치하는가?
+				/*
+					location_path => /html/test
+					file_path_of_URI => /test
+					file_path_of_URI => localhost:80/test
+					- location에 root가 없는 경우의 동작 확인 필요
+					동작을 확인한 이후에는 어떻게 처리할 것인가?
+					// testtttt
+					// test
+				*/
+				if (file_path_of_URI.compare(location_path) == 0 && 
+					location_path.compare(file_path_of_URI) == 0)
+					return (PATH_NOTFOUND);
+				else
+				{
+					// location_path
+					/*
+						root + location_path index와 조합하여 일치하는 것을 찾는다.
+						- stat으로 파일이 존재하는지 확인
+						- 요청이 디렉터리일때 맨마지막에 /포함시키기
+						// "\*/$"
+						PATH_AUTOINDEX,
+					*/
+					return ();
+				}
+			}
+		}
 	}
-	catch(const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-		return (1);
-	}
-	// atexit(test);
-	return (0);
+	return (PATH_NOTFOUND);
 }
