@@ -14,10 +14,11 @@
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <arpa/inet.h>
-# include "webserv.hpp"
+# include "Webserv.hpp"
 # include "HTTPMessage.hpp"
 # include "HTTPRequest.hpp"
 # include "HTTPResponse.hpp"
+# include "ConfigInfo.hpp"
 
 class ServerHandler {
 	private:
@@ -26,7 +27,7 @@ class ServerHandler {
 		std::vector<struct kevent>	change_list;
 		struct kevent				event_list[8];
 		std::map<int, EventData*>	fd_list;
-		// Conf						conf;
+		ConfigInfo					conf;
 
 		void	changeEvent(const uintptr_t& ident,
 							const int16_t& filter,
@@ -52,7 +53,7 @@ class ServerHandler {
 		ServerHandler(void);
 		virtual ~ServerHandler(void);
 
-		void	serverReady(void);
+		void	serverReady(const char *conf_file);
 		void	serverRun(void);
 };
 
