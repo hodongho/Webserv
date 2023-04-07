@@ -82,7 +82,10 @@ void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 			break;
 		case SOCKSTAT_CLIENT_MAKE_RESPONSE:
 			if (curr_event->filter == EVFILT_WRITE)
-				this->readLocal(curr_event, client_data);
+				this->readFileToBody(curr_event, client_data);
+			break;
+		case SOCKSTAT_CLIENT_MAKE_CGI_RESPONSE:
+			this->readCgiPipeToBody(curr_event, client_data);
 			break;
 		case SOCKSTAT_CLIENT_SEND_RESPONSE:
 			if (curr_event->filter == EVFILT_WRITE)
@@ -194,7 +197,7 @@ void ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* cons
 	}
 }
 
-void ServerHandler::readLocal(struct kevent* const & curr_event, SocketData* const & client_socket)
+void ServerHandler::readFileToBody(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
 	char		buf[RECV_BUF_SIZE];
 	ssize_t		ret;
@@ -206,6 +209,7 @@ void ServerHandler::readLocal(struct kevent* const & curr_event, SocketData* con
 		if (ret < 0)
 			throwError("read respond body: ");
 		close(curr_event->ident);
+		client_socket->buf_str.insert(0, "\r\n");
 		client_socket->http_response.setBody(client_socket->buf_str);
 		client_socket->http_response.setBasicField(client_socket->http_request);
 		client_socket->buf_str.clear();
@@ -216,24 +220,78 @@ void ServerHandler::readLocal(struct kevent* const & curr_event, SocketData* con
 	client_socket->buf_str.append(buf, ret);
 }
 
-void ServerHandler::makeCgiPipeIoEvent(std::string cgi_file_path,
+void ServerHandler::readCgiPipeToBody(struct kevent* const & curr_event, SocketData* const & client_socket)
+{
+	if (curr_event->filter == EVFILT_WRITE)
+	{
+		ssize_t		wr_size;
+
+		wr_size = write(curr_event->ident, client_socket->buf_str.c_str(), client_socket->buf_str.size());
+		if (wr_size <= 0)
+		{
+			if (wr_size < 0)
+				throwError("write to cgi pipe");
+			close(curr_event->ident);
+		}
+		client_socket->buf_str.erase(0, wr_size);
+	}
+	else if (curr_event->filter == EVFILT_READ)
+	{
+		char		buf[RECV_BUF_SIZE];
+		ssize_t		ret;
+
+		ret = read(curr_event->ident, buf, RECV_BUF_SIZE - 1);
+		buf[ret] = 0;
+		if (ret <= 0)
+		{
+			if (ret < 0)
+				throwError("read respond body: ");
+			close(curr_event->ident);
+			client_socket->http_response.setBody(client_socket->buf_str);
+			client_socket->http_response.setBasicField(client_socket->http_request);
+			client_socket->buf_str.clear();
+			client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
+			changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+			return ;
+		}
+		client_socket->buf_str.append(buf, ret);
+	}
+}
+
+void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 			struct kevent* const & curr_event,
 			SocketData* const & client_socket)
 {
-	pid_t pid = fork();
+	std::string	cgi_program_path;
+	pid_t pid;
 	int pipe_fd_result[2];
 	int pipe_fd_input[2];
+	
+	pid = fork();
+	cgi_program_path = conf.getCgiProgramPath(getExtension(cgi_script_path));
 	if (pipe(pipe_fd_result))
 		throwError("pipe: ");
 	if (pipe(pipe_fd_input))
 		throwError("pipe: ");
 	if (pid == 0)
 	{
-		close(pipe_fd_result[PIPE_RD]);
-		close(pipe_fd_input[PIPE_RD]);
-		dup2(pipe_fd_result[PIPE_WR], STDOUT_FILENO);
-		dup2(pipe_fd_input[PIPE_RD], STDIN_FILENO);
-		execve(cgi_file_path.c_str(), NULL, NULL); // CGI use
+		char *arg[4];
+		char **env;
+		arg[0] = const_cast<char *>(cgi_program_path.c_str());
+		arg[1] = const_cast<char *>(cgi_script_path.c_str());
+		arg[2] = 0;
+		arg[3] = 0;
+		//  env = setCgiEnv();
+		if (close(pipe_fd_result[PIPE_RD]) == -1)
+			exit(-1);
+		if (close(pipe_fd_input[PIPE_RD]) == -1)
+			exit(-1);
+		if (dup2(pipe_fd_result[PIPE_WR], STDOUT_FILENO) == -1)
+			exit(-1);
+		if (dup2(pipe_fd_input[PIPE_RD], STDIN_FILENO) == -1)
+			exit(-1);
+		if (execve(cgi_program_path.c_str(), arg, env) == -1) // CGI use
+			exit(-1);
 	}
 	else
 	{
@@ -241,10 +299,12 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_file_path,
 		close(pipe_fd_input[PIPE_RD]);
 		fcntl(pipe_fd_result[PIPE_RD], F_SETFL, O_NONBLOCK);
 		fcntl(pipe_fd_input[PIPE_RD], F_SETFL, O_NONBLOCK);
+		client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
+		client_socket->buf_str = client_socket->http_request.getBody();
 		changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
 		changeEvent(pipe_fd_result[PIPE_RD], EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
 		changeEvent(pipe_fd_input[PIPE_WR], EVFILT_WRITE, EV_ADD | EV_EOF, 0, NULL, client_socket);
-		changeEvent(pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, NULL, client_socket);
+		changeEvent(pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, 0, NULL, client_socket);
 	}
 }
 
@@ -260,7 +320,7 @@ void ServerHandler::makeFileIoEvent(const std::string& stat_code,
 	if (file_fd == -1)
 	{
 		client_socket->http_response.setStatusCode("500");
-		client_socket->http_response.setBody("Server file open error.");
+		client_socket->http_response.setBody("\r\nServer file open error.");
 		client_socket->http_response.addHeader("Content-Type", "text/plain");
 		client_socket->http_response.setBasicField(client_socket->http_request);
 		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
@@ -377,7 +437,7 @@ void ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* 
 			if (errno == EISDIR)
 			{
 				client_socket->http_response.setStatusCode("403");
-				client_socket->http_response.setBody("delete rejected. (directory delete)");
+				client_socket->http_response.setBody("\r\ndelete rejected. (directory delete)");
 				client_socket->http_response.addHeader("Content-Type", "text/plain");
 				client_socket->http_response.setBasicField(client_socket->http_request);
 				client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
@@ -388,7 +448,7 @@ void ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* 
 		else
 		{
 			client_socket->http_response.setStatusCode("200");
-			client_socket->http_response.setBody("delete sucess!");
+			client_socket->http_response.setBody("\r\ndelete sucess!");
 			client_socket->http_response.addHeader("Content-Type", "text/plain");
 			client_socket->http_response.setBasicField(client_socket->http_request);
 			client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;

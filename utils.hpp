@@ -12,4 +12,6 @@ class funcException : public std::exception
 		const char* what() const throw();
 };
 
+std::string	getExtension(const std::string& file_path);
+
 #endif

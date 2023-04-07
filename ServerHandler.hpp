@@ -54,10 +54,12 @@ class ServerHandler {
 						SocketData* const & client_socket);
 		void		recvBody(struct kevent* const & curr_event, 
 						SocketData* const & client_socket);
-		void		readLocal(struct kevent* const & curr_event, 
+		void		readFileToBody(struct kevent* const & curr_event, 
+						SocketData* const & client_socket);
+		void		readCgiPipeToBody(struct kevent* const & curr_event, 
 						SocketData* const & client_socket);
 
-		void		makeCgiPipeIoEvent(std::string cgi_file_path,
+		void		makeCgiPipeIoEvent(std::string cgi_script_path,
 						struct kevent* const & curr_event,
 						SocketData* const & client_socket);
 		void		makeFileIoEvent(const std::string& stat_code,

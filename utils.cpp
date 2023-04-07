@@ -10,3 +10,8 @@ const char* funcException::what() const throw()
 {
 	return (strerror(errno));
 }
+
+std::string	getExtension(const std::string& file_path)
+{
+	return (file_path.substr(file_path.rfind(".")));
+}
