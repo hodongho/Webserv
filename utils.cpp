@@ -13,15 +13,14 @@ const char* funcException::what() const throw()
 
 std::string	itos(size_t num)
 {
-	std::string new_num(""), old_num("");
+	std::string new_string_num(""), old_string_num("");
 
-	while (num != 0)
+	for (; num != 0; num /= 10)
 	{
-		old_num = new_num;
-		new_num = num % 10 + '0';
-		new_num += old_num;
-		num /= 10;
+		new_string_num = num % 10 + '0';
+		new_string_num += old_string_num;
+		old_string_num = new_string_num;
 	}
 
-	return (new_num);
+	return (new_string_num);
 }
