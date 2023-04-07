@@ -36,7 +36,7 @@ class HTTPResponse : public HTTPMessage
 		StatusCode	getStatusCode(void) const;
 		void		clear();
 
-		void		setBasicField();
+		void		setBasicField(const HTTPRequest& http_request);
 };
 
 #endif

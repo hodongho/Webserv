@@ -1,6 +1,7 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 # define HEADER_END_SIZE 4
+# define MAX_HEADER_SIZE 3000
 # define RECV_BUF_SIZE 50
 
 # include <iostream>
@@ -55,11 +56,12 @@ class ServerHandler {
 						SocketData* const & client_socket);
 		void		readLocal(struct kevent* const & curr_event, 
 						SocketData* const & client_socket);
+
 		void		makeCgiPipeIoEvent(std::string cgi_file_path,
 						struct kevent* const & curr_event,
 						SocketData* const & client_socket);
-		void		makeFileIoEvent(enum PathState path_stat,
-						std::string file_path,
+		void		makeFileIoEvent(const std::string& stat_code,
+						const std::string& file_path,
 						struct kevent* const & curr_event,
 						SocketData* const & client_socket);
 		void		makeAutoIndexResponse(HTTPResponse& res, 

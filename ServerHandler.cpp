@@ -7,6 +7,7 @@ ServerHandler::ServerHandler()
 	this->content_type_table_map[".txt"] = "text/plain";
 	this->content_type_table_map[".jpeg"] = "image/jpeg";
 	this->content_type_table_map[".gif"] = "image/gif";
+	this->content_type_table_map[".png"] = "image/png";
 };
 
 ServerHandler::~ServerHandler()
@@ -123,15 +124,11 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 	client_socket->buf_str.append(buf, ret);
 	header_end_pos = client_socket->buf_str.rfind("\r\n\r\n");
 
-	/*
-	if (client_socket->buf_str.size() > conf->getMaxHeaderSize())
+	if (client_socket->buf_str.size() > MAX_HEADER_SIZE)
 	{
-		client_socket->status = CLIENT_RECV_ERROR;
-		client_socket->http_response.setStatusCode("400");
-		changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-		changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+		this->makeFileIoEvent("400", this->conf.getErrorPage(STATCODE_BADREQ), curr_event, client_socket);
+		return ;
 	}
- 	*/
 
 	if (header_end_pos != std::string::npos)
 	{
@@ -149,14 +146,10 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 				changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 				break;
 			case METHOD_POST :
-				// if (client_socket->http_request.getContentLength() < 0)
-				// {
-				// 	client_socket->status = SOCKSTAT_CLIENT_RECV_ERROR;
-				//	client_socket->http_response.setStatusCode("400");
-				// 	changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-				// 	changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
-				// }
-				client_socket->status = SOCKSTAT_CLIENT_RECV_BODY;
+				if (client_socket->http_request.getContentLength() < 0)
+					this->makeFileIoEvent("400", this->conf.getErrorPage(STATCODE_BADREQ), curr_event, client_socket);
+				else
+					client_socket->status = SOCKSTAT_CLIENT_RECV_BODY;
 				break;
 			case METHOD_DELETE :
 				client_socket->status = SOCKSTAT_CLIENT_DELETE;
@@ -164,11 +157,7 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 				changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 				break;
 			case METHOD_NONE :
-				client_socket->http_response.setStatusCode("400");
-				client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
-				int fd = open(this->conf.getErrorPage(), O_RDONLY | O_NONBLOCK);
-				changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-				changeEvent(fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+				this->makeFileIoEvent("400", this->conf.getErrorPage(STATCODE_BADREQ), curr_event, client_socket);
 				break;
 		}
 	}
@@ -192,15 +181,8 @@ void ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* cons
 	}
 	client_socket->buf_str.append(buf, ret);
 
-	/*
 	if (client_socket->header_str.size() > conf->getMaxBodySize() )
-	{
-		client_socket->status = CLIENT_RECV_ERROR;
-		client_socket->http_response.setStatusCode("400");
-		changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-		changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
-	}
- 	*/
+		this->makeFileIoEvent("400", this->conf.getErrorPage(STATCODE_BADREQ), curr_event, client_socket);
 
 	if (client_socket->http_request.getContentLength() <= client_socket->buf_str.size())
 	{
@@ -225,7 +207,7 @@ void ServerHandler::readLocal(struct kevent* const & curr_event, SocketData* con
 			throwError("read respond body: ");
 		close(curr_event->ident);
 		client_socket->http_response.setBody(client_socket->buf_str);
-		client_socket->http_response.setBasicField();
+		client_socket->http_response.setBasicField(client_socket->http_request);
 		client_socket->buf_str.clear();
 		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 		changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
@@ -266,39 +248,27 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_file_path,
 	}
 }
 
-void ServerHandler::makeFileIoEvent(enum PathState path_stat,
-			std::string file_path,
+void ServerHandler::makeFileIoEvent(const std::string& stat_code,
+			const std::string& file_path,
 			struct kevent* const & curr_event,
 			SocketData* const & client_socket)
 {
 	int file_fd;
 
-	switch (path_status)
+	client_socket->http_response.setStatusCode(stat_code);
+	file_fd = open(file_path.c_str(), O_RDONLY | O_NONBLOCK);
+	if (file_fd == -1)
 	{
-	case PATH_NOTFOUND:
-		client_socket->http_response.setStatusCode("404");
-		file_fd = open(this->conf.getErrorPage(STATCODE_NOTFOUND), O_RDONLY | O_NONBLOCK);
-		client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
-		changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
-		changeEvent(file_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
-		break;
-	case PATH_VALID:
-		client_socket->http_response.setStatusCode("200");
-		file_fd = open(file_path.c_str(), O_RDONLY | O_NONBLOCK);
-		client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
-		changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
-		changeEvent(file_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
-		break;
-	case PATH_AUTOINDEX:
-		client_socket->http_response.setStatusCode("200");
-		this->makeAutoIndexResponse(client_socket->http_response, file_path);
+		client_socket->http_response.setStatusCode("500");
+		client_socket->http_response.setBody("Server file open error.");
+		client_socket->http_response.addHeader("Content-Type", "text/plain");
+		client_socket->http_response.setBasicField(client_socket->http_request);
 		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
-		changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 		return ;
-	case default:
-		throwError("invalid path_status: ");
-		break;
 	}
+	client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
+	changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
+	changeEvent(file_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
 }
 
 void ServerHandler::makeAutoIndexResponse(HTTPResponse& res, std::string dir_path)
@@ -324,17 +294,29 @@ void ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* con
 	std::string		file_path;
 	enum PathState	path_stat;
 
-	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, GET) == -1)
+	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, METHOD_GET) == -1)
 	{
-		client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
-		client_socket->http_response.setStatusCode("405");
-		file_fd = open(this->conf.getErrorPage(STATCODE_NOTALLOW), O_RDONLY | O_NONBLOCK);
-		changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
-		changeEvent(file_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
+		this->makeFileIoEvent("405", this->conf.getErrorPage(STATCODE_NOTALLOW), curr_event, client_socket);
 		return ;
 	}
 	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
-	makeFileIoEvent(path_stat, file_path, curr_event, client_socket);
+	switch (path_stat)
+	{
+	case PATH_NOTFOUND:
+		this->makeFileIoEvent("404", this->conf.getErrorPage(STATCODE_NOTFOUND), curr_event, client_socket);
+		break;
+	case PATH_VALID:
+		this->makeFileIoEvent("200", file_path, curr_event, client_socket);
+		break;
+	case PATH_AUTOINDEX:
+		client_socket->http_response.setStatusCode("200");
+		this->makeAutoIndexResponse(client_socket->http_response, file_path);
+		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
+		break;
+	case PATH_CGI:
+		this->makeFileIoEvent("405", this->conf.getErrorPage(STATCODE_NOTALLOW), curr_event, client_socket);
+		break;
+	}
 }
 
 void ServerHandler::postMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
@@ -343,20 +325,29 @@ void ServerHandler::postMethod(struct kevent* const & curr_event, SocketData* co
 	std::string		file_path;
 	enum PathState	path_stat;
 
-	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, POST) == 0)
+	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, METHOD_POST) == 0)
 	{
-		client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
-		client_socket->http_response.setStatusCode("405");
-		file_fd = open(this->conf.getErrorPage(STATCODE_NOTALLOW), O_RDONLY | O_NONBLOCK);
-		changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
-		changeEvent(file_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
+		this->makeFileIoEvent("405", this->conf.getErrorPage(STATCODE_NOTALLOW), curr_event, client_socket);
 		return ;
 	}
 	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
-	if (this->conf.isCgiRequest(client_socket->http_request.getURI()))
+	switch (path_stat)
+	{
+	case PATH_NOTFOUND:
+		this->makeFileIoEvent("404", this->conf.getErrorPage(STATCODE_NOTFOUND), curr_event, client_socket);
+		break;
+	case PATH_VALID:
+		this->makeFileIoEvent("200", file_path, curr_event, client_socket);
+		break;
+	case PATH_AUTOINDEX:
+		client_socket->http_response.setStatusCode("200");
+		this->makeAutoIndexResponse(client_socket->http_response, file_path);
+		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
+		break;
+	case PATH_CGI:
 		this->makeCgiPipeIoEvent(file_path, curr_event, client_socket);
-	else
-		this->makeFileIoEvent(path_stat, file_path, curr_event, client_socket);
+		break;
+	}
 }
 
 void ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
@@ -365,13 +356,9 @@ void ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* 
 	std::string		file_path;
 	enum PathState	path_stat;
 	
-	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, DELETE) == 0)
+	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, METHOD_DELETE) == 0)
 	{
-		client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
-		client_socket->http_response.setStatusCode("405");
-		file_fd = open(this->conf.getErrorPage(STATCODE_NOTALLOW), O_RDONLY | O_NONBLOCK);
-		changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
-		changeEvent(file_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
+		this->makeFileIoEvent("405", this->conf.getErrorPage(STATCODE_NOTALLOW), curr_event, client_socket);
 		return ;
 	}
 	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
@@ -389,10 +376,11 @@ void ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* 
 		{
 			if (errno == EISDIR)
 			{
-				client_socket->http_response.setStatusCode("405");
+				client_socket->http_response.setStatusCode("403");
 				client_socket->http_response.setBody("delete rejected. (directory delete)");
-				client_socket->http_response.setBasicField();
-				client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
+				client_socket->http_response.addHeader("Content-Type", "text/plain");
+				client_socket->http_response.setBasicField(client_socket->http_request);
+				client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 			}
 			else
 				throwError("file unlink: ");
@@ -401,8 +389,9 @@ void ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* 
 		{
 			client_socket->http_response.setStatusCode("200");
 			client_socket->http_response.setBody("delete sucess!");
-			client_socket->http_response.setBasicField();
-			client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
+			client_socket->http_response.addHeader("Content-Type", "text/plain");
+			client_socket->http_response.setBasicField(client_socket->http_request);
+			client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 		}
 	}
 }
