@@ -122,7 +122,7 @@ const std::string	HTTPResponse::getBodySize()
 	return (size);
 }
 
-void	HTTPResponse::setBasicField(HTTPRequest& http_request)
+void	HTTPResponse::setBasicField(const HTTPRequest& http_request)
 {
 	this->addHeader(CONTENT_LENGTH, this->getBodySize());
 	this->addHeader(CONNECTION, http_request.getConnection());

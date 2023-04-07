@@ -123,9 +123,9 @@ const std::string&							HTTPRequest::getURI() const		{ return (this->URI); }
 const std::string&							HTTPRequest::getBody() const	{ return (this->body); }
 const std::map<std::string, std::string>&	HTTPRequest::getHeader() const	{ return (this->header); }
 
-ssize_t		HTTPRequest::getContentLength()
+const ssize_t	HTTPRequest::getContentLength() const
 {
-	std::map<std::string, std::string>::iterator	content_length_it;
+	std::map<std::string, std::string>::const_iterator	content_length_it;
 	ssize_t											content_length;
 
 	content_length_it = header.find("Content-length");
@@ -142,9 +142,9 @@ ssize_t		HTTPRequest::getContentLength()
 	return (content_length);
 }
 
-const std::string	HTTPRequest::getConnection(void)
+const std::string	HTTPRequest::getConnection(void) const
 {
-	std::map<std::string, std::string>::iterator	connection_it;
+	std::map<std::string, std::string>::const_iterator	connection_it;
 
 	connection_it = header.find(CONNECTION);
 	if (connection_it == header.end())

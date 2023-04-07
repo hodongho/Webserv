@@ -38,7 +38,7 @@ class HTTPResponse : public HTTPMessage
 
 		void		clear();
 
-		void		setBasicField(HTTPRequest& http_request);
+		void		setBasicField(const HTTPRequest& http_request);
 };
 
 #endif
