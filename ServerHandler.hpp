@@ -23,11 +23,12 @@
 
 class ServerHandler {
 	private:
-		int							kq;
-		int							listen_sock_fd;
-		std::vector<struct kevent>	change_list;
-		struct kevent				event_list[8];
-		std::map<int, SocketData*>	sock_list;
+		int									kq;
+		int									listen_sock_fd;
+		std::vector<struct kevent>			change_list;
+		struct kevent						event_list[8];
+		std::map<int, SocketData*>			sock_list;
+		std::map<std::string, std::string>	content_type_table_map;
 		// ConfigInfo				conf;
 
 		void	changeEvent(const uintptr_t& ident,

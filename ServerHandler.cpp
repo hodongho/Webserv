@@ -1,6 +1,13 @@
 #include "ServerHandler.hpp"
 
-ServerHandler::ServerHandler() {};
+ServerHandler::ServerHandler()
+{
+	// initialize content_type_table
+	this->content_type_table_map[".html"] = "text/html";
+	this->content_type_table_map[".txt"] = "text/plain";
+	this->content_type_table_map[".jpeg"] = "image/jpeg";
+	this->content_type_table_map[".gif"] = "image/gif";
+};
 
 ServerHandler::~ServerHandler()
 {
