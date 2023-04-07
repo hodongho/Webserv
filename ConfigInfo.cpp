@@ -45,7 +45,7 @@ void ConfigInfo::parseConfig(const char *file_name)
 		std::cout << "Config file content is N.O.T validate" << std::endl;
 		exit(1);
 	}
-	
+
 	if (this->parse(file_content))
 		std::cout << "Config parse is OK" << std::endl;
 	else
@@ -63,7 +63,7 @@ const std::vector<ServerConfig> ConfigInfo::getWebservConfig(void) const
 void ConfigInfo::printWebservConfig(void)
 {
 	std::vector<ServerConfig>::iterator	iter = this->server_config_vector.begin();
-	
+
 	for (;iter != this->server_config_vector.end(); iter++)
 	{
 		iter->printServerConfingContent();
@@ -110,10 +110,10 @@ std::string ConfigInfo::readFile(std::string file_name)
 }
 
 /*
-	여러번 파일을 읽을것이라서 const불가, 
+	여러번 파일을 읽을것이라서 const불가,
 	reference하면 파일 pos가 맨 밑으로 갈것으로 예상되어서 deep copy되게 놔둠
 	- 짝은 맞지만 불필요한 곳에 {}가 있는 경우에 대한 처리 필요.
-	- split된 인자의시작이 
+	- split된 인자의시작이
 */
 bool	ConfigInfo::checkCurlyBracketPair(const std::string& file_content)
 {
@@ -133,7 +133,7 @@ bool	ConfigInfo::checkCurlyBracketPair(const std::string& file_content)
 		for (std::vector<std::string>::iterator word_iter = word_list.begin(); word_iter != word_list.end(); word_iter++)
 		{
 			std::string	word;
-			
+
 			word = *word_iter;
 			if ((word)[0] == '#')
 				break ;
@@ -148,7 +148,7 @@ bool	ConfigInfo::checkCurlyBracketPair(const std::string& file_content)
 				else
 					return (false);
 			}// '{' '}'로 시작하는데 길이가 1보다 크고, #이 ';' 바로 다음에 없으면 error처리
-			else if ((word.at(0) == '{' || word.at(0) == '}') &&  
+			else if ((word.at(0) == '{' || word.at(0) == '}') &&
 				(word.size() > 1 && word.at(1) != '#'))
 				return (false);
 		}
@@ -159,7 +159,7 @@ bool	ConfigInfo::checkCurlyBracketPair(const std::string& file_content)
 /*
 case
 - server {
-- server { #4242 sdf 
+- server { #4242 sdf
 - server
   { # comment dsf erw tdfg
 - serverr test {
@@ -257,7 +257,7 @@ bool	ConfigInfo::findLocationBlock(std::vector<std::string>::iterator& iter, \
 
 /*
 	ValidateFieldInfo 내부에count가 1인지 확인
-	count를 증가시키기 전에 확인할것이므로 중복 필드가 아니면 
+	count를 증가시키기 전에 확인할것이므로 중복 필드가 아니면
 	count가 0이어야 정상이다.
 */
 bool	ConfigInfo::checkDuplicateConfigField(const ValidateFieldInfo& validate_field_info)
@@ -310,7 +310,7 @@ bool ConfigInfo::checkHostConfigField(std::string field_value)
 			ip_class = "";
 			dot_count++;
 			continue ;
-		}	
+		}
 		ip_class += field_value[idx];
 	}
 	if (checkIpClass(ip_class) == false)
@@ -335,7 +335,7 @@ bool ConfigInfo::checkIpClass(const std::string& ip_class)
 }
 
 /*
-port 
+port
 0 ~ 65526
 */
 bool ConfigInfo::checkPortConfigField(std::string port)
@@ -443,12 +443,12 @@ bool ConfigInfo::checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::Val
 	{
 		if (map_iter->second.getValidateFieldType() == NESSARY_UNIQUE)
 		{
-			if (map_iter->second.getCount() != 1) // 중복 및 누락여부 확인 가능 
+			if (map_iter->second.getCount() != 1) // 중복 및 누락여부 확인 가능
 				return (false);
 		}
 		if (map_iter->second.getValidateFieldType() == NESSARY_MULTI)
 		{
-			if (map_iter->second.getCount() == 0) // 누락여부 확인 가능 
+			if (map_iter->second.getCount() == 0) // 누락여부 확인 가능
 				return (false);
 		}
 		if (map_iter->second.getValidateFieldType() == OPTION_UNIQUE)
@@ -688,7 +688,7 @@ bool	ConfigInfo::parse(const std::string &file_content)
 	std::vector<std::string>::iterator 	cur_iter;
 	std::vector<std::string>::iterator 	begin_iter;
 	std::vector<std::string>::iterator 	end_iter;
-	
+
 	file_content_vector = ft_split(file_content, "\n");
 	cur_iter = file_content_vector.begin();
 	while (cur_iter != file_content_vector.end())
@@ -702,7 +702,7 @@ bool	ConfigInfo::parse(const std::string &file_content)
 			continue ;
 		}
 		std::vector<std::string>	word_list;
-		
+
 		word_list = ft_split(*cur_iter, this->whitespace);
 		if (word_list[0] != "server")
 			return (false);
@@ -749,7 +749,7 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 		first_word = *(word_list.begin());
 		if (first_word == "location")
 		{
-			
+
 			if (findLocationBlock(cur_iter, src_end_iter, begin_iter, end_iter) == false)
 				return (false);
 			if (parseLocationBlock(begin_iter, end_iter, server_config) == false)
@@ -963,7 +963,7 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 	return (true);
 }
 
-bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begin_iter, 
+bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begin_iter,
 									const std::vector<std::string>::iterator &src_end_iter,
 									ServerConfig& server_config)
 {
@@ -1010,18 +1010,18 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 				std::vector<std::string>::iterator	field_value_iter;
 
 				field_value_iter = word_list.begin() + 1;
-				allow_method_map[GET] = false;
-				allow_method_map[POST] = false;
-				allow_method_map[DELETE] = false;
+				allow_method_map[METHOD_GET] = false;
+				allow_method_map[METHOD_POST] = false;
+				allow_method_map[METHOD_DELETE] = false;
 				for (;field_value_iter != word_list.end(); field_value_iter++)
 				{
 					field_value = removeAfterSemicolon(*field_value_iter); // important!s
 					if (field_value == "GET")
-						allow_method_map[GET] = true;
+						allow_method_map[METHOD_GET] = true;
 					else if (field_value == "POST")
-						allow_method_map[POST] = true;
+						allow_method_map[METHOD_POST] = true;
 					else if (field_value == "DELETE")
-						allow_method_map[DELETE] = true;
+						allow_method_map[METHOD_DELETE] = true;
 					else
 					{
 						std::cerr << RED <<  "Unkwon allow method type : " << *field_value_iter << WHI<<std::endl;
@@ -1134,7 +1134,7 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 					return (false);
 				std::string 	value_with_semicolon_comment;
 				std::string 	value;
-				
+
 				value_with_semicolon_comment = *(word_list.begin() + 1);
 				value = removeAfterSemicolon(value_with_semicolon_comment);
 				if (value != "on" && value != "off")
@@ -1209,7 +1209,7 @@ bool	ConfigInfo::checkWhole(const std::string& file_content)
 	std::vector<std::string>::iterator 	cur_iter;
 	std::vector<std::string>::iterator 	begin_iter;
 	std::vector<std::string>::iterator 	end_iter;
-	
+
 	file_content_vector = ft_split(file_content, "\n");
 	cur_iter = file_content_vector.begin();
 	while (cur_iter != file_content_vector.end())
@@ -1223,7 +1223,7 @@ bool	ConfigInfo::checkWhole(const std::string& file_content)
 			continue ;
 		}
 		std::vector<std::string>	word_list;
-		
+
 		word_list = ft_split(*cur_iter, this->whitespace);
 		if (word_list[0] != "server")
 			return (false);
@@ -1241,7 +1241,7 @@ bool	ConfigInfo::checkWhole(const std::string& file_content)
 
 /*
 	curly bracket pair
-	block이 제대로 되었는지 확인을 추가시킬지 포함 
+	block이 제대로 되었는지 확인을 추가시킬지 포함
 		- server, locatoin 이후에 {}이 왔는지
 		- {}이 아예 안오는 경우
 			다른 key에 {가 붙는 경우
@@ -1319,17 +1319,17 @@ void ConfigInfo::printVector(std::vector<std::string> &word_list, const std::str
 			- with file_path
 				localhost:4242/
 		- 127.0.0.1:4242/index.php
-		
+
 	"URI    "
-	'\t'' ' 
+	'\t'' '
 	trim(whitepace )
-	rfind 
-	.php 
+	rfind
+	.php
 	입력은 정상적으로 들어온다고 가정한다.
 	"index.php " -> 의도해서 사용자가 보냈다고 생각. ' '가 ascii로 변한됨
 	isCGIRequest()호출하여 사용됨
 	//
-	
+
 */
 PathState ConfigInfo::convUriToPath(const std::string &URI, std::string &file_path)
 {

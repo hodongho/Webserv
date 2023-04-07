@@ -4,9 +4,9 @@
 LocationConfig::LocationConfig(void)
     : root(""), index("index.html"), redirect(""), autoindex(false)
 {
-    this->allow_method[GET] = true;
-    this->allow_method[POST] = true;
-    this->allow_method[DELETE] = true;
+    this->allow_method[METHOD_GET] = true;
+    this->allow_method[METHOD_POST] = true;
+    this->allow_method[METHOD_DELETE] = true;
 }
 
 LocationConfig::~LocationConfig()
