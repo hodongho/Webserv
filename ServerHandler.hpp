@@ -10,6 +10,7 @@
 # include <map>
 # include <unistd.h>
 # include <fcntl.h>
+# include <dirent.h>
 # include <sys/stat.h>
 # include <sys/event.h>
 # include <sys/types.h>
@@ -45,12 +46,24 @@ class ServerHandler {
 
 		// serverRun sub function
 		void		keventError(const IdentType& event_id_type);
-		void		handleListenEvent();
+		void		handleListenEvent(void);
 		void		handleClientEvent(struct kevent* const & curr_event);
-		void		makeErrorResponse(struct kevent* const & curr_event, SocketData* const & client_socket);
-		void		recvHeader(struct kevent* const & curr_event, SocketData* const & client_socket);
-		void		recvBody(struct kevent* const & curr_event, SocketData* const & client_socket);
-		void		readLocal(struct kevent* const & curr_event, SocketData* const & client_socket);
+		void		recvHeader(struct kevent* const & curr_event, 
+						SocketData* const & client_socket);
+		void		recvBody(struct kevent* const & curr_event, 
+						SocketData* const & client_socket);
+		void		readLocal(struct kevent* const & curr_event, 
+						SocketData* const & client_socket);
+		void		makeCgiPipeIoEvent(std::string cgi_file_path,
+						struct kevent* const & curr_event,
+						SocketData* const & client_socket);
+		void		makeFileIoEvent(enum PathState path_stat,
+						std::string file_path,
+						struct kevent* const & curr_event,
+						SocketData* const & client_socket);
+		void		makeAutoIndexResponse(HTTPResponse& res, 
+						std::string dir_path);
+
 		void		getMethod(struct kevent* const & curr_event, SocketData* const & client_socket);
 		void		postMethod(struct kevent* const & curr_event, SocketData* const & client_socket);
 		void		deleteMethod(struct kevent* const & curr_event, SocketData* const & client_socket);

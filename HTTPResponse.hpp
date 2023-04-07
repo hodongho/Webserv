@@ -9,11 +9,6 @@
 # define CONTENT_TYPE "Content-type"
 # define CONNECTION "Connection"
 
-# define ERR_BADREQ_PAGE_FILE_PATH "./error_page/400.html"
-# define ERR_NOTFOUND_PAGE_FILE_PATH "./error_page/404.html"
-# define ERR_NOTALLOW_PAGE_FILE_PATH "./error_page/405.html"
-# define ERR_SERVERR_PAGE_FILE_PATH "./error_page/500.html"
-
 class HTTPResponse : public HTTPMessage
 {
 	private:
@@ -41,12 +36,7 @@ class HTTPResponse : public HTTPMessage
 		StatusCode	getStatusCode(void) const;
 		void		clear();
 
-		void makeOkResponse(void);
-		void makeRedirectResponse(const std::string& location);
-		void makeBadrequestResponse(void);
-		void makeNotFoundResponse(void);
-		void makeNotAllowResponse(void);
-		void makeServerErrorResponse(void);
+		void		setBasicField();
 };
 
 #endif
