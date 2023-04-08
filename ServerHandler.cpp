@@ -262,13 +262,11 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 			struct kevent* const & curr_event,
 			SocketData* const & client_socket)
 {
-	std::string	cgi_program_path;
 	pid_t pid;
 	int pipe_fd_result[2];
 	int pipe_fd_input[2];
 	
 	pid = fork();
-	cgi_program_path = conf.getCgiProgramPath(getExtension(cgi_script_path));
 	if (pipe(pipe_fd_result))
 		throwError("pipe: ");
 	if (pipe(pipe_fd_input))
@@ -277,7 +275,7 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 	{
 		char **arg;
 		char **env;
-		initCgiVariable(arg, env, client_socket);
+		initCgiVariable(arg, env, client_socket, cgi_script_path);
 		if (close(pipe_fd_result[PIPE_RD]) == -1)
 			exit(-1);
 		if (close(pipe_fd_input[PIPE_RD]) == -1)
@@ -286,7 +284,7 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 			exit(-1);
 		if (dup2(pipe_fd_input[PIPE_RD], STDIN_FILENO) == -1)
 			exit(-1);
-		if (execve(cgi_program_path.c_str(), arg, env) == -1) // CGI use
+		if (execve(arg[0], arg, env) == -1) // CGI use
 			exit(-1);
 	}
 	else
