@@ -22,6 +22,9 @@ SRCS = ServerHandler.cpp \
 	HTTPMessage.cpp \
 	HTTPRequest.cpp \
 	HTTPResponse.cpp \
+	ConfigInfo.cpp \
+	ServerConfig.cpp \
+	LocationConfig.cpp \
 
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)

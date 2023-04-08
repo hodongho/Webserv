@@ -1,4 +1,5 @@
 #include "ServerHandler.hpp"
+#include "ConfigInfo.hpp"
 
 ServerHandler::ServerHandler()
 {
@@ -529,15 +530,17 @@ int ServerHandler::serverListen(void)
 	return (0);
 }
 
-
-void ServerHandler::serverReady(void)
+void ServerHandler::serverReady(const char *conf_file)
 {
-	this->kq = kqueue();
 
-	if (this->kq == -1)
-		throwError("kqueue: ");
+	this->conf.parseConfig(conf_file);
+	this->conf.printWebservConfig(); //for test
+	// this->kq = kqueue();
 
-	this->serverListen();
+	// if (this->kq == -1)
+	// 	throwError("kqueue: ");
+
+	// this->serverListen();
 }
 
 void ServerHandler::serverRun()

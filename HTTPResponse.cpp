@@ -1,5 +1,7 @@
 #include "HTTPResponse.hpp"
 #include <fstream>
+#include <stdlib.h>
+#include "utils.hpp"
 
 HTTPResponse::HTTPResponse()
 :HTTPMessage(), response(""), status_code(""), status_message("")
@@ -26,7 +28,6 @@ void HTTPResponse::makeHeaderField()
 	{
 		this->response += it->first + ": " + it->second + "\r\n";
 	}
-	this->response += "\r\n";
 }
 
 void HTTPResponse::makeBody()
@@ -45,11 +46,10 @@ std::string HTTPResponse::makeResponseMessage()
 	return (this->response);
 }
 
-void HTTPResponse::setVersion(const std::string& _version)				{ this->version = _version; }
-void HTTPResponse::setStatusCode(const std::string& _status_code)		{ this->status_code = _status_code; }
-void HTTPResponse::setStatusMessage(const std::string& _status_message)	{ this->status_message = _status_message; }
-void HTTPResponse::setBody(const std::string& _body) 					{ this->body = _body; }
-void HTTPResponse::addHeader(const std::string& _header_name, const std::string& _header_value) { header[_header_name] = _header_value; }
+void	HTTPResponse::setVersion(std::string _version)				{ this->version = _version; }
+void	HTTPResponse::setStatusMessage(std::string _status_message)	{ this->status_message = _status_message; }
+void	HTTPResponse::setBody(std::string _body) 					{ this->body = _body; }
+void	HTTPResponse::addHeader(const std::string& _header_name, const std::string& _header_value) { header[_header_name] = _header_value; }
 
 StatusCode HTTPResponse::getStatusCode(void) const
 {
@@ -69,6 +69,35 @@ StatusCode HTTPResponse::getStatusCode(void) const
 		return (static_cast<enum StatusCode>(-1));
 }
 
+void HTTPResponse::setStatusCode(const std::string& _status_code)
+{
+	switch (_status_code)
+	{
+	case STATCODE_OK:
+		this->status_code = "200";
+		break;
+
+	case STATCODE_REDIR:
+		this->status_code = "301";
+		break;
+
+	case STATCODE_BADREQ:
+		this->status_code = "400";
+		break;
+
+	case STATCODE_NOTFOUND:
+		this->status_code = "404";
+		break;
+
+	case STATCODE_SERVERR:
+		this->status_code = "500";
+		break;
+
+	default:
+		break;
+	}
+}
+
 void HTTPResponse::clear()
 {
 	this->version.clear();
@@ -79,8 +108,14 @@ void HTTPResponse::clear()
 	this->response.clear();
 }
 
+const std::string	HTTPResponse::getBodySize()
+{
+	std::string size = itos(body.size());
+	return (size);
+}
 
-// response = "HTTP/1.1 200 OK\r\n";
-// response += "Content-Type: text/html\r\n";
-// response += "Content-Length: 163\r\n";
-// response += "Connection: keep-alive\r\n\r\n";
+void	HTTPResponse::setBasicField(const HTTPRequest& http_request)
+{
+	this->addHeader(CONTENT_LENGTH, this->getBodySize());
+	this->addHeader(CONNECTION, http_request.getConnection());
+}

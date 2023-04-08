@@ -17,10 +17,11 @@
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <arpa/inet.h>
-# include "webserv.hpp"
+# include "Webserv.hpp"
 # include "HTTPMessage.hpp"
 # include "HTTPRequest.hpp"
 # include "HTTPResponse.hpp"
+# include "ConfigInfo.hpp"
 
 class ServerHandler {
 	private:
@@ -30,7 +31,7 @@ class ServerHandler {
 		struct kevent						event_list[8];
 		std::map<int, SocketData*>			sock_list;
 		std::map<std::string, std::string>	content_type_table_map;
-		// ConfigInfo				conf;
+		ConfigInfo					conf;
 
 		void	changeEvent(const uintptr_t& ident,
 							const int16_t& filter,
@@ -78,7 +79,7 @@ class ServerHandler {
 		ServerHandler(void);
 		virtual ~ServerHandler(void);
 
-		void	serverReady(void);
+		void	serverReady(const char *conf_file);
 		void	serverRun(void);
 };
 
