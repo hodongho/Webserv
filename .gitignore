@@ -2,5 +2,6 @@ Webserv file/
 .vscode/
 .DS_Store
 test/
-temp
+temp/*.o
+temp/*.d
 webserv
