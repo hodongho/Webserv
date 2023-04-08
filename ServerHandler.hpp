@@ -31,17 +31,17 @@ class ServerHandler {
 		struct kevent						event_list[8];
 		std::map<int, SocketData*>			sock_list;
 		std::map<std::string, std::string>	content_type_table_map;
-		ConfigInfo					conf;
+		ConfigInfo							conf;
 
-		void	changeEvent(const uintptr_t& ident,
-							const int16_t& filter,
-							const uint16_t& flags,
-							const uint32_t& fflags,
-							const intptr_t& data,
-							void* const & udata);
-		void	closeEvent(struct kevent * const & curr_event);
-		void	initClientSocketData(struct SocketData* socket, const int& _sock_fd);
-		void	clearClientSocketData(struct SocketData* socket);
+		void		changeEvent(const uintptr_t& ident,
+								const int16_t& filter,
+								const uint16_t& flags,
+								const uint32_t& fflags,
+								const intptr_t& data,
+								void* const & udata);
+		void		closeEvent(struct kevent * const & curr_event);
+		void		initClientSocketData(struct SocketData* socket, const int& _sock_fd);
+		void		clearClientSocketData(struct SocketData* socket);
 
 		// serverReady sub function
 		int			serverListen(void);
@@ -81,6 +81,13 @@ class ServerHandler {
 						const std::string& cgi_script_path);
 		void		initCgiArg(char **&arg, const std::string& cgi_script_path);
 		void		initCgiEnv(char **&arg, char **&env, const SocketData& socket_data);
+
+		//default error page response generate
+		void		setErrorPageResponse(StatusCode err_stat, struct kevent* const & curr_event, SocketData* const & client_socket);
+		void		setDefaultBadRequest(HTTPResponse& http_res, const HTTPRequest& http_req);
+		void		setDefaultNotFound(HTTPResponse& http_res, const HTTPRequest& http_req);
+		void		setDefaultNotAllow(HTTPResponse& http_res, const HTTPRequest& http_req);
+		void		setDefaultServerError(HTTPResponse& http_res, const HTTPRequest& http_req);
 
 	public:
 		ServerHandler(void);
