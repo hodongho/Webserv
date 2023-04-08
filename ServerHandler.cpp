@@ -130,7 +130,7 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 
 	if (client_socket->buf_str.size() > MAX_HEADER_SIZE)
 	{
-		this->makeFileIoEvent("400", this->conf.getErrorPage(STATCODE_BADREQ), curr_event, client_socket);
+		setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
 		return ;
 	}
 
@@ -151,7 +151,7 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 				break;
 			case METHOD_POST :
 				if (client_socket->http_request.getContentLength() < 0)
-					this->makeFileIoEvent("400", this->conf.getErrorPage(STATCODE_BADREQ), curr_event, client_socket);
+					setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
 				else
 					client_socket->status = SOCKSTAT_CLIENT_RECV_BODY;
 				break;
@@ -161,7 +161,7 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, SocketData* co
 				changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 				break;
 			case METHOD_NONE :
-				this->makeFileIoEvent("400", this->conf.getErrorPage(STATCODE_BADREQ), curr_event, client_socket);
+				setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
 				break;
 		}
 	}
@@ -185,8 +185,8 @@ void ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* cons
 	}
 	client_socket->buf_str.append(buf, ret);
 
-	if (client_socket->buf_str.size() > conf.getMaxBodySize() )
-		this->makeFileIoEvent("400", this->conf.getErrorPage(STATCODE_BADREQ), curr_event, client_socket);
+	if (client_socket->buf_str.size() > conf.getMaxBodySize())
+		setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
 
 	if (client_socket->http_request.getContentLength() <= client_socket->buf_str.size())
 	{
@@ -342,7 +342,7 @@ void ServerHandler::makeAutoIndexResponse(HTTPResponse& res, std::string dir_pat
 	if (dir_ptr == NULL)
 		throwError("opendir: ");
 	
-	page_body = "";
+	page_body = "\r\n";
 	page_body += "<!DOCTYPE html>\r\n";
 	page_body += "<html>\r\n";
 	page_body += "<head>\r\n";
@@ -373,14 +373,14 @@ void ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* con
 
 	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, METHOD_GET) == -1)
 	{
-		this->makeFileIoEvent("405", this->conf.getErrorPage(STATCODE_NOTALLOW), curr_event, client_socket);
+		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
 	}
 	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
 	switch (path_stat)
 	{
 	case PATH_NOTFOUND:
-		this->makeFileIoEvent("404", this->conf.getErrorPage(STATCODE_NOTFOUND), curr_event, client_socket);
+		setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
 		break;
 	case PATH_VALID:
 		this->makeFileIoEvent("200", file_path, curr_event, client_socket);
@@ -391,7 +391,7 @@ void ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* con
 		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 		break;
 	case PATH_CGI:
-		this->makeFileIoEvent("405", this->conf.getErrorPage(STATCODE_NOTALLOW), curr_event, client_socket);
+		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		break;
 	}
 }
@@ -404,14 +404,14 @@ void ServerHandler::postMethod(struct kevent* const & curr_event, SocketData* co
 
 	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, METHOD_POST) == 0)
 	{
-		this->makeFileIoEvent("405", this->conf.getErrorPage(STATCODE_NOTALLOW), curr_event, client_socket);
+		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
 	}
 	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
 	switch (path_stat)
 	{
 	case PATH_NOTFOUND:
-		this->makeFileIoEvent("404", this->conf.getErrorPage(STATCODE_NOTFOUND), curr_event, client_socket);
+		setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
 		break;
 	case PATH_VALID:
 		this->makeFileIoEvent("200", file_path, curr_event, client_socket);
@@ -435,13 +435,13 @@ void ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* 
 	
 	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, METHOD_DELETE) == 0)
 	{
-		this->makeFileIoEvent("405", this->conf.getErrorPage(STATCODE_NOTALLOW), curr_event, client_socket);
+		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
 	}
 	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
 	if (path_stat == PATH_NOTFOUND)
 	{
-		this->makeFileIoEvent("404", this->conf.getErrorPage(STATCODE_NOTFOUND), curr_event, client_socket);
+		setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
 		return ;
 	}
 	else
@@ -538,7 +538,6 @@ int ServerHandler::serverListen(void)
 
 void ServerHandler::serverReady(const char *conf_file)
 {
-
 	this->conf.parseConfig(conf_file);
 	this->conf.printWebservConfig(); //for test
 	// this->kq = kqueue();
@@ -641,7 +640,7 @@ void ServerHandler::setErrorPageResponse(StatusCode err_stat, struct kevent* con
 {
 	std::string	err_file_path;
 	
-	if (this->conf.getErrorPage(err_stat, err_file_path) == -1)
+	if (this->conf.getErrorPage(err_stat, client_socket->addr.sin_port, err_file_path) == -1)
 	{
 		switch (err_stat)
 		{
@@ -685,17 +684,18 @@ void ServerHandler::setDefaultBadRequest(HTTPResponse& http_res, const HTTPReque
 {
 	std::string body;
 
-	body += "<!DOCTYPE html>";
-	body += "<html>";
-	body += "<head>";
-	body += "    <title>Bad Request</title>";
-	body += "</head>";
-	body += "<body>";
-	body += "    <h1>400 Bad Request</h1>";
-	body += "	<hr>";
-	body += "	<p>Bad Request message accepted</p>";
-	body += "</body>";
-	body += "</html>";
+	body = "\r\n";
+	body += "<!DOCTYPE html>\r\n";
+	body += "<html>\r\n";
+	body += "<head>\r\n";
+	body += "    <title>Bad Request</title>\r\n";
+	body += "</head>\r\n";
+	body += "<body>\r\n";
+	body += "    <h1>400 Bad Request</h1>\r\n";
+	body += "	<hr>\r\n";
+	body += "	<p>Bad Request message accepted</p>\r\n";
+	body += "</body>\r\n";
+	body += "</html>\r\n";
 
 	http_res.setStatusCode("400");
 	http_res.setBody(body);
@@ -707,17 +707,18 @@ void ServerHandler::setDefaultNotFound(HTTPResponse& http_res, const HTTPRequest
 {
 	std::string body;
 
-	body += "<!DOCTYPE html>";
-	body += "<html>";
-	body += "<head>";
-	body += "    <title>Not Found</title>";
-	body += "</head>";
-	body += "<body>";
-	body += "    <h1>404 Not Found</h1>";
-	body += "	<hr>";
-	body += "	<p>Not found requested file</p>";
-	body += "</body>";
-	body += "</html>";
+	body = "\r\n";
+	body += "<!DOCTYPE html>\r\n";
+	body += "<html>\r\n";
+	body += "<head>\r\n";
+	body += "    <title>Not Found</title>\r\n";
+	body += "</head>\r\n";
+	body += "<body>\r\n";
+	body += "    <h1>404 Not Found</h1>\r\n";
+	body += "	<hr>\r\n";
+	body += "	<p>Not found requested file</p>\r\n";
+	body += "</body>\r\n";
+	body += "</html>\r\n";
 
 	http_res.setStatusCode("404");
 	http_res.setBody(body);
@@ -729,17 +730,18 @@ void ServerHandler::setDefaultNotAllow(HTTPResponse& http_res, const HTTPRequest
 {
 	std::string body;
 
-	body += "<!DOCTYPE html>";
-	body += "<html>";
-	body += "<head>";
-	body += "    <title>Not Allowed Method</title>";
-	body += "</head>";
-	body += "<body>";
-	body += "    <h1>405 Not Allowed Method</h1>";
-	body += "	<hr>";
-	body += "	<p>Not Allowed Method requested.</p>";
-	body += "</body>";
-	body += "</html>";
+	body = "\r\n";
+	body += "<!DOCTYPE html>\r\n";
+	body += "<html>\r\n";
+	body += "<head>\r\n";
+	body += "    <title>Not Allowed Method</title>\r\n";
+	body += "</head>\r\n";
+	body += "<body>\r\n";
+	body += "    <h1>405 Not Allowed Method</h1>\r\n";
+	body += "	<hr>\r\n";
+	body += "	<p>Not Allowed Method requested.</p>\r\n";
+	body += "</body>\r\n";
+	body += "</html>\r\n";
 
 	http_res.setStatusCode("405");
 	http_res.setBody(body);
@@ -751,17 +753,18 @@ void ServerHandler::setDefaultServerError(HTTPResponse& http_res, const HTTPRequ
 {
 	std::string body;
 
-	body = "<!DOCTYPE html>";
-	body += "<html>";
-	body += "<head>";
-	body += "    <title>Server error</title>";
-	body += "</head>";
-	body += "<body>";
-	body += "    <h1>500 Server error</h1>";
-	body += "	<hr>";
-	body += "	<p>Something went wrong with the server.</p>";
-	body += "</body>";
-	body += "</html>";
+	body = "\r\n";
+	body += "<!DOCTYPE html>\r\n";
+	body += "<html>\r\n";
+	body += "<head>\r\n";
+	body += "    <title>Server error</title>\r\n";
+	body += "</head>\r\n";
+	body += "<body>\r\n";
+	body += "    <h1>500 Server error</h1>\r\n";
+	body += "	<hr>\r\n";
+	body += "	<p>Something went wrong with the server.</p>\r\n";
+	body += "</body>\r\n";
+	body += "</html>\r\n";
 
 	http_res.setStatusCode("500");
 	http_res.setBody(body);
