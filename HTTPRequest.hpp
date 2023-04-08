@@ -28,13 +28,6 @@ class HTTPRequest : public HTTPMessage
 		HTTPRequest(void);
 		virtual ~HTTPRequest(void);
 
-		/**
-		 * @brief HTTP Request start-line과 Header field를 파싱하는 함수입니다.
-		 * 멤버변수에 값을 넣어준 뒤 start-line과 Header field의 유효성을 검사합니다.
-		 *
-		 *
-		 * @param msg HTTP Request
-		 */
 		int											parseRequestMessage(std::string& msg);
 
 		void										saveBody(const std::string& _body);
@@ -46,6 +39,8 @@ class HTTPRequest : public HTTPMessage
 		const std::map<std::string, std::string>&	getHeader(void) const;
 		const std::string&							getBody(void) const;
 		const std::string							getConnection(void) const;
+		const std::string							getServerName(void)	const;
+		const std::string							getServerPort(void)	const;
 		ssize_t										getContentLength(void) const;
 
 		void										clear(void);

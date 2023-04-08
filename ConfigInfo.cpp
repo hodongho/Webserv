@@ -1340,17 +1340,23 @@ PathState ConfigInfo::convUriToPath(const std::string &URI, std::string &file_pa
     return PathState(ret_pathState);
 }
 
-bool ConfigInfo::isAllowedMethod(std::string URI, unsigned short port, enum MethodType method)
+bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& port, const enum MethodType& method)
 {
+	size_t									URI_start_idx;
+	std::string								origin_URI;
 	std::vector<ServerConfig>::iterator		server_config_iter = server_config_vector.begin();
 	std::map<std::string, LocationConfig>	location_config_map;
 	LocationConfig							location_config;
 	std::map<MethodType, bool>				allowed_method_type_map;
 
+    URI_start_idx = URI.find('/');
+    if (URI_start_idx == std::string::npos)
+        return (PATH_NOTFOUND);
+    origin_URI = URI.substr(URI_start_idx, URI.size() - URI_start_idx);
 	while (server_config_iter->getPort() != port)
 		server_config_iter++;
 	location_config_map = server_config_iter->getLocations();
-	location_config = location_config_map.find(URI)->second;
+	location_config = location_config_map.find(origin_URI)->second;
 	allowed_method_type_map = location_config.getAllowMethod();
 
 	return (allowed_method_type_map.find(method)->second);
