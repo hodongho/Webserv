@@ -265,7 +265,7 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 	pid_t pid;
 	int pipe_fd_result[2];
 	int pipe_fd_input[2];
-	
+
 	pid = fork();
 	if (pipe(pipe_fd_result))
 		throwError("pipe: ");
@@ -360,7 +360,6 @@ void ServerHandler::makeAutoIndexResponse(HTTPResponse& res, std::string dir_pat
 	dir_ptr = opendir(dir_path.c_str());
 	if (dir_ptr == NULL)
 		throwError("opendir: ");
-	
 	page_body = "\r\n";
 	page_body += "<!DOCTYPE html>\r\n";
 	page_body += "<html>\r\n";
@@ -451,7 +450,7 @@ void ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* 
 	int				file_fd;
 	std::string		file_path;
 	enum PathState	path_stat;
-	
+
 	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->addr.sin_port), METHOD_DELETE) == 0)
 	{
 		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
@@ -655,6 +654,52 @@ void ServerHandler::clearClientSocketData(struct SocketData* client_socket)
 	client_socket->buf_str.clear();
 }
 
+void	ServerHandler::initCgiArg(char **&arg, const std::string& cgi_script_path)
+{
+	std::string cgi_program_path = conf.getCgiProgramPath(getExtension(cgi_script_path));
+
+	arg = new char *[3];
+	arg[0] = strdup(cgi_program_path.c_str());
+	arg[1] = strdup(cgi_script_path.c_str());
+	arg[2] = NULL;
+}
+
+void	ServerHandler::initCgiEnv(char **&arg, char **&env, const SocketData& socket_data)
+{
+	std::map<std::string, std::string>	env_map;
+
+	env_map["REQUEST_METHOD"]		= "POST";
+	env_map["SERVER_PROTOCOL"]		= "HTTP/1.1";
+	env_map["GATEWAY_INTERFACE"]	= "CGI/1.1";
+	env_map["REMOTE_ADDR"]			= inet_ntop(AF_INET, &(socket_data.addr), 0, 0);
+	env_map["REMOTE_HOST"]			= itos(ntohs(socket_data.addr.sin_port));
+	env_map["SCRIPT_NAME"]			= socket_data.http_request.getURI();
+	env_map["SERVER_NAME"]			= socket_data.http_request.getServerName();
+	env_map["SERVER_PORT"]			= socket_data.http_request.getServerPort();;
+	env_map["SERVER_SOFTWARE"]		= "42 Web Server";
+	env_map["SCRIPT_FILENAME"]		= arg[1];
+	env_map["REDIRECT_STATUS"]		= "200";
+	env_map[CONTENT_LENGTH]			= itos(socket_data.http_request.getBody().size());
+	env_map[CONTENT_TYPE]			= "application/x-www-form-urlencoded";
+
+	int i = 0;
+	env = new char *[14];
+	for (std::map<std::string, std::string>::iterator it = env_map.begin(); it != env_map.end(); it++)
+	{
+		env[i] = strdup((it->first + "=" + it->second).c_str());
+		i++;
+	}
+	env[i] = NULL;
+}
+
+void	ServerHandler::initCgiVariable(char **&arg, char **&env,
+			const SocketData& socket_data,
+			const std::string& cgi_script_path)
+{
+	this->initCgiArg(arg, cgi_script_path);
+	this->initCgiEnv(arg, env, socket_data);
+}
+
 void ServerHandler::setErrorPageResponse(StatusCode err_stat, struct kevent* const & curr_event, SocketData* const & client_socket)
 {
 	std::string	err_file_path;
@@ -697,7 +742,6 @@ void ServerHandler::setErrorPageResponse(StatusCode err_stat, struct kevent* con
 		}
 	}
 }
-
 
 void ServerHandler::setDefaultBadRequest(HTTPResponse& http_res, const HTTPRequest& http_req)
 {
