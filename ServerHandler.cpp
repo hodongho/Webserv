@@ -660,7 +660,7 @@ void	ServerHandler::initCgiEnv(char **&arg, char **&env, const SocketData& socke
 	env_map[CONTENT_TYPE]			= "application/x-www-form-urlencoded";
 
 	int i = 0;
-
+	env = new char *[14];
 	for (std::map<std::string, std::string>::iterator it = env_map.begin(); it != env_map.end(); it++)
 	{
 		env[i] = strdup((it->first + "=" + it->second).c_str());
