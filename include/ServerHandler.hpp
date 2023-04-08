@@ -40,50 +40,50 @@ class ServerHandler {
 								const intptr_t& data,
 								void* const & udata);
 		void		closeEvent(struct kevent * const & curr_event);
-		void		initClientSocketData(struct SocketData* socket, const int& _sock_fd);
-		void		clearClientSocketData(struct SocketData* socket);
+		void		initClientSocketData(struct ClientSocketData* socket, const int& _sock_fd, const sockaddr_in _listen_addr);
+		void		clearClientSocketData(struct ClientSocketData* socket);
 
 		// serverReady sub function
 		int			serverListen(const ServerConfig& serv_conf);
-		void		initListenerData(struct SocketData* listen_sockm, const ServerConfig& server_conf);
+		void		initListenerData(struct SocketData* listen_sock, const ServerConfig& server_conf);
 
 		// serverRun sub function
 		void		keventError(const IdentType& event_id_type);
-		void		handleListenEvent(void);
+		void		handleListenEvent(const sockaddr_in& listen_sock_addr);
 		void		handleClientEvent(struct kevent* const & curr_event);
 		void		recvHeader(struct kevent* const & curr_event,
-						SocketData* const & client_socket);
+						ClientSocketData* const & client_socket);
 		void		recvBody(struct kevent* const & curr_event,
-						SocketData* const & client_socket);
+						ClientSocketData* const & client_socket);
 		void		readFileToBody(struct kevent* const & curr_event,
-						SocketData* const & client_socket);
+						ClientSocketData* const & client_socket);
 		void		readCgiPipeToBody(struct kevent* const & curr_event,
-						SocketData* const & client_socket);
+						ClientSocketData* const & client_socket);
 
 		void		makeCgiPipeIoEvent(std::string cgi_script_path,
 						struct kevent* const & curr_event,
-						SocketData* const & client_socket);
+						ClientSocketData* const & client_socket);
 		void		makeFileIoEvent(const std::string& stat_code,
 						const std::string& file_path,
 						struct kevent* const & curr_event,
-						SocketData* const & client_socket);
+						ClientSocketData* const & client_socket);
 		void		makeAutoIndexResponse(HTTPResponse& res,
 						std::string dir_path);
 
-		void		getMethod(struct kevent* const & curr_event, SocketData* const & client_socket);
-		void		postMethod(struct kevent* const & curr_event, SocketData* const & client_socket);
-		void		deleteMethod(struct kevent* const & curr_event, SocketData* const & client_socket);
-		void		sendResponse(struct kevent* const & curr_event, SocketData* const & client_socket);
+		void		getMethod(struct kevent* const & curr_event, ClientSocketData* const & client_socket);
+		void		postMethod(struct kevent* const & curr_event, ClientSocketData* const & client_socket);
+		void		deleteMethod(struct kevent* const & curr_event, ClientSocketData* const & client_socket);
+		void		sendResponse(struct kevent* const & curr_event, ClientSocketData* const & client_socket);
 
 		// CGI
 		void		initCgiVariable(char **&arg, char **&env,
-						SocketData* const & socket_data,
+						ClientSocketData* const & socket_data,
 						const std::string& cgi_script_path);
 		void		initCgiArg(char **&arg, const std::string& cgi_script_path);
-		void		initCgiEnv(char **&arg, char **&env, SocketData* const & socket_data);
+		void		initCgiEnv(char **&arg, char **&env, ClientSocketData* const & socket_data);
 
 		//default error page response generate
-		void		setErrorPageResponse(StatusCode err_stat, struct kevent* const & curr_event, SocketData* const & client_socket);
+		void		setErrorPageResponse(StatusCode err_stat, struct kevent* const & curr_event, ClientSocketData* const & client_socket);
 		void		setDefaultBadRequest(HTTPResponse& http_res, const HTTPRequest& http_req);
 		void		setDefaultNotFound(HTTPResponse& http_res, const HTTPRequest& http_req);
 		void		setDefaultNotAllow(HTTPResponse& http_res, const HTTPRequest& http_req);
