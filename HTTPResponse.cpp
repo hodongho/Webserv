@@ -47,6 +47,7 @@ std::string HTTPResponse::makeResponseMessage()
 }
 
 void	HTTPResponse::setVersion(const std::string& _version)										{ this->version = _version; }
+void	HTTPResponse::setStatusCode(const std::string& _status_code)									{ this->status_code = _status_code; }
 void	HTTPResponse::setStatusMessage(const std::string& _status_message)							{ this->status_message = _status_message; }
 void	HTTPResponse::setBody(const std::string& _body) 											{ this->body = _body; }
 void	HTTPResponse::addHeader(const std::string& _header_name, const std::string& _header_value)	{ header[_header_name] = _header_value; }
@@ -67,35 +68,6 @@ StatusCode HTTPResponse::getStatusCode(void) const
 		return (STATCODE_SERVERR);
 	else
 		return (static_cast<enum StatusCode>(-1));
-}
-
-void HTTPResponse::setStatusCode(const StatusCode& _status_code)
-{
-	switch (_status_code)
-	{
-	case STATCODE_OK:
-		this->status_code = "200";
-		break;
-
-	case STATCODE_REDIR:
-		this->status_code = "301";
-		break;
-
-	case STATCODE_BADREQ:
-		this->status_code = "400";
-		break;
-
-	case STATCODE_NOTFOUND:
-		this->status_code = "404";
-		break;
-
-	case STATCODE_SERVERR:
-		this->status_code = "500";
-		break;
-
-	default:
-		break;
-	}
 }
 
 void HTTPResponse::clear()

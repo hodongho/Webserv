@@ -1351,7 +1351,7 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
 
     URI_start_idx = URI.find('/');
     if (URI_start_idx == std::string::npos)
-        return (PATH_NOTFOUND);
+        return (false);
     origin_URI = URI.substr(URI_start_idx, URI.size() - URI_start_idx);
 	while (server_config_iter->getPort() != port)
 		server_config_iter++;

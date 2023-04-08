@@ -17,7 +17,7 @@
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <arpa/inet.h>
-# include "Webserv.hpp"
+# include "webserv.hpp"
 # include "HTTPMessage.hpp"
 # include "HTTPRequest.hpp"
 # include "HTTPResponse.hpp"
@@ -77,10 +77,10 @@ class ServerHandler {
 
 		// CGI
 		void		initCgiVariable(char **&arg, char **&env,
-						const SocketData& socket_data,
+						SocketData* const & socket_data,
 						const std::string& cgi_script_path);
 		void		initCgiArg(char **&arg, const std::string& cgi_script_path);
-		void		initCgiEnv(char **&arg, char **&env, const SocketData& socket_data);
+		void		initCgiEnv(char **&arg, char **&env, SocketData* const & socket_data);
 
 		//default error page response generate
 		void		setErrorPageResponse(StatusCode err_stat, struct kevent* const & curr_event, SocketData* const & client_socket);

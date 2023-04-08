@@ -187,7 +187,7 @@ void ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* cons
 
 	if (client_socket->buf_str.size() > conf.getMaxBodySize(ntohs(client_socket->addr.sin_port)))
 		setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
-	if (client_socket->http_request.getContentLength() <= client_socket->buf_str.size())
+	if (static_cast<size_t>(client_socket->http_request.getContentLength()) <= client_socket->buf_str.size())
 	{
 		client_socket->status = SOCKSTAT_CLIENT_POST;
 		client_socket->http_request.saveBody(client_socket->buf_str);
@@ -385,11 +385,10 @@ void ServerHandler::makeAutoIndexResponse(HTTPResponse& res, std::string dir_pat
 
 void ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
-	int				file_fd;
 	std::string		file_path;
 	enum PathState	path_stat;
 
-	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->addr.sin_port), METHOD_GET) == -1)
+	if (!this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->addr.sin_port), METHOD_GET))
 	{
 		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
@@ -416,11 +415,10 @@ void ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* con
 
 void ServerHandler::postMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
-	int				file_fd;
 	std::string		file_path;
 	enum PathState	path_stat;
 
-	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->addr.sin_port), METHOD_POST) == 0)
+	if (!this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->addr.sin_port), METHOD_POST))
 	{
 		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
@@ -447,11 +445,10 @@ void ServerHandler::postMethod(struct kevent* const & curr_event, SocketData* co
 
 void ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* const & client_socket)
 {
-	int				file_fd;
 	std::string		file_path;
 	enum PathState	path_stat;
 
-	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->addr.sin_port), METHOD_DELETE) == 0)
+	if (!this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->addr.sin_port), METHOD_DELETE))
 	{
 		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
@@ -630,8 +627,6 @@ void ServerHandler::changeEvent(const uintptr_t& ident,
 
 void ServerHandler::closeEvent(struct kevent * const & curr_event)
 {
-	IdentType event_id_type = static_cast<SocketData *>(curr_event->udata)->id_type;
-
 	close(curr_event->ident);
 	delete static_cast<SocketData *>(curr_event->udata);
 	this->sock_list.erase(curr_event->ident);
@@ -664,22 +659,22 @@ void	ServerHandler::initCgiArg(char **&arg, const std::string& cgi_script_path)
 	arg[2] = NULL;
 }
 
-void	ServerHandler::initCgiEnv(char **&arg, char **&env, const SocketData& socket_data)
+void	ServerHandler::initCgiEnv(char **&arg, char **&env,  SocketData* const & socket_data)
 {
 	std::map<std::string, std::string>	env_map;
 
 	env_map["REQUEST_METHOD"]		= "POST";
 	env_map["SERVER_PROTOCOL"]		= "HTTP/1.1";
 	env_map["GATEWAY_INTERFACE"]	= "CGI/1.1";
-	env_map["REMOTE_ADDR"]			= inet_ntop(AF_INET, &(socket_data.addr), 0, 0);
-	env_map["REMOTE_HOST"]			= itos(ntohs(socket_data.addr.sin_port));
-	env_map["SCRIPT_NAME"]			= socket_data.http_request.getURI();
-	env_map["SERVER_NAME"]			= socket_data.http_request.getServerName();
-	env_map["SERVER_PORT"]			= socket_data.http_request.getServerPort();;
+	env_map["REMOTE_ADDR"]			= inet_ntop(AF_INET, &(socket_data->addr), 0, 0);
+	env_map["REMOTE_HOST"]			= itos(ntohs(socket_data->addr.sin_port));
+	env_map["SCRIPT_NAME"]			= socket_data->http_request.getURI();
+	env_map["SERVER_NAME"]			= socket_data->http_request.getServerName();
+	env_map["SERVER_PORT"]			= socket_data->http_request.getServerPort();;
 	env_map["SERVER_SOFTWARE"]		= "42 Web Server";
 	env_map["SCRIPT_FILENAME"]		= arg[1];
 	env_map["REDIRECT_STATUS"]		= "200";
-	env_map[CONTENT_LENGTH]			= itos(socket_data.http_request.getBody().size());
+	env_map[CONTENT_LENGTH]			= itos(socket_data->http_request.getBody().size());
 	env_map[CONTENT_TYPE]			= "application/x-www-form-urlencoded";
 
 	int i = 0;
@@ -693,7 +688,7 @@ void	ServerHandler::initCgiEnv(char **&arg, char **&env, const SocketData& socke
 }
 
 void	ServerHandler::initCgiVariable(char **&arg, char **&env,
-			const SocketData& socket_data,
+			SocketData* const & socket_data,
 			const std::string& cgi_script_path)
 {
 	this->initCgiArg(arg, cgi_script_path);
@@ -720,6 +715,8 @@ void ServerHandler::setErrorPageResponse(StatusCode err_stat, struct kevent* con
 		case STATCODE_SERVERR:
 			setDefaultBadRequest(client_socket->http_response, client_socket->http_request);
 			break;
+		default:
+			break;
 		}
 		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 	}
@@ -738,6 +735,8 @@ void ServerHandler::setErrorPageResponse(StatusCode err_stat, struct kevent* con
 			break;
 		case STATCODE_SERVERR:
 			this->makeFileIoEvent("500", err_file_path, curr_event, client_socket);
+			break;
+		default:
 			break;
 		}
 	}
