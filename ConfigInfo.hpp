@@ -119,9 +119,10 @@ class ConfigInfo
         void    printWebservConfig(void);
 
         // for using config info
-        enum PathState convUriToPath(const std::string& URI, std::string& file_path);
-        bool isAllowedMethod(std::string URI, unsigned short port, enum MethodType method);
-
+        enum	PathState convUriToPath(const std::string& URI, std::string& file_path);
+        bool	isAllowedMethod(std::string URI, unsigned short port, enum MethodType method);
+		int		getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path);
+		size_t	getMaxBodySize(const unsigned short& port);
 };
 
 #endif

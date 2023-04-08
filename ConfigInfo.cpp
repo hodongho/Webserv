@@ -1355,3 +1355,49 @@ bool ConfigInfo::isAllowedMethod(std::string URI, unsigned short port, enum Meth
 
 	return (allowed_method_type_map.find(method)->second);
 }
+
+int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path)
+{
+	int											err_code;
+	std::vector<ServerConfig>::iterator			server_config_iter;
+	std::map<int, std::string>::const_iterator	err_page_iter;
+
+	server_config_iter = this->server_config_vector.begin();
+	while (server_config_iter->getPort() != port)
+		server_config_iter++;
+
+	const std::map<int, std::string>& err_page = server_config_iter->getErrorPage();
+	switch (stat_code)
+	{
+	case STATCODE_BADREQ:
+		err_code = 400;
+		break;
+	case STATCODE_NOTFOUND:
+		err_code = 404;
+		break;
+	case STATCODE_NOTALLOW:
+		err_code = 405;
+		break;
+	case STATCODE_SERVERR:
+		err_code = 500;
+		break;
+	}
+	err_page_iter = err_page.find(err_code);
+	if (err_page_iter == err_page.end())
+		return (-1);
+	else
+	{
+		err_file_path = err_page_iter->second;
+		return (0);
+	}
+}
+
+size_t ConfigInfo::getMaxBodySize(const unsigned short& port)
+{
+	std::vector<ServerConfig>::iterator			server_config_iter;
+
+	server_config_iter = this->server_config_vector.begin();
+	while (server_config_iter->getPort() != port)
+		server_config_iter++;
+	return (server_config_iter->getClientMaxBodySize());
+}
