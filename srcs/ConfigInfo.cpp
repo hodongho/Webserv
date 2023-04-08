@@ -1362,6 +1362,12 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
 	return (allowed_method_type_map.find(method)->second);
 }
 
+std::string ConfigInfo::getCgiProgramPath(const std::string& cgi_ext)
+{
+	(void)cgi_ext;
+	return ("");
+}
+
 int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path)
 {
 	int											err_code;
@@ -1387,13 +1393,19 @@ int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, s
 	case STATCODE_SERVERR:
 		err_code = 500;
 		break;
+	default:
+		return (-1);
+		break;
 	}
 	err_page_iter = err_page.find(err_code);
 	if (err_page_iter == err_page.end())
 		return (-1);
 	else
 	{
-		err_file_path = err_page_iter->second;
+		std::string	serverRoot = server_config_iter->getRoot();
+		if (serverRoot.back() == '/')
+			serverRoot.pop_back();
+		err_file_path = server_config_iter->getRoot() + '/' + err_page_iter->second;
 		return (0);
 	}
 }

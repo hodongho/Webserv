@@ -6,15 +6,19 @@
 #    By: yolee <yolee@student.42seoul.kr>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/03/31 01:14:02 by yolee             #+#    #+#              #
-#    Updated: 2023/04/04 17:33:33 by yolee            ###   ########.fr        #
+#    Updated: 2023/04/09 00:08:20 by yolee            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = webserv
 
+VPATH = ./srcs
+TEMP_DIR = ./temp
+INCLUDE_DIR = ./include
+
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
-CPPFLAGS = -MMD
+CPPFLAGS = -MMD -I$(INCLUDE_DIR)
 
 SRCS = ServerHandler.cpp \
 	utils.cpp \
@@ -26,15 +30,15 @@ SRCS = ServerHandler.cpp \
 	ServerConfig.cpp \
 	LocationConfig.cpp \
 
-OBJS = $(SRCS:.cpp=.o)
-DEPS = $(SRCS:.cpp=.d)
+OBJS = $(addprefix $(TEMP_DIR)/, $(SRCS:.cpp=.o))
+DEPS = $(addprefix $(TEMP_DIR)/, $(SRCS:.cpp=.d))
 
 all : $(NAME)
 
 $(NAME) : $(OBJS)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OBJS) -o $(NAME)
 
-.cpp.o :
+$(TEMP_DIR)/%.o : %.cpp
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 clean :

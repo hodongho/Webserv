@@ -120,10 +120,11 @@ class ConfigInfo
 
         // for using config info
 
-        enum	PathState convUriToPath(const std::string& URI, std::string& file_path);
-        bool isAllowedMethod(const std::string& URI, const unsigned short& port, const enum MethodType& method);
-    		int		getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path);
-		    size_t	getMaxBodySize(const unsigned short& port);
+        enum		PathState convUriToPath(const std::string& URI, std::string& file_path);
+        bool		isAllowedMethod(const std::string& URI, const unsigned short& port, const enum MethodType& method);
+		std::string	getCgiProgramPath(const std::string& cgi_ext);
+    	int			getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path);
+		size_t		getMaxBodySize(const unsigned short& port);
 };
 
 #endif

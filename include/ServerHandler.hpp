@@ -2,7 +2,7 @@
 # define SERVER_HPP
 # define HEADER_END_SIZE 4
 # define MAX_HEADER_SIZE 3000
-# define RECV_BUF_SIZE 50
+# define RECV_BUF_SIZE 1024
 
 # include <iostream>
 # include <fstream>

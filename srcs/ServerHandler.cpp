@@ -554,13 +554,13 @@ int ServerHandler::serverListen(void)
 void ServerHandler::serverReady(const char *conf_file)
 {
 	this->conf.parseConfig(conf_file);
-	this->conf.printWebservConfig(); //for test
-	// this->kq = kqueue();
+	// this->conf.printWebservConfig(); //for test
+	this->kq = kqueue();
 
-	// if (this->kq == -1)
-	// 	throwError("kqueue: ");
+	if (this->kq == -1)
+		throwError("kqueue: ");
 
-	// this->serverListen();
+	this->serverListen();
 }
 
 void ServerHandler::serverRun()
@@ -651,7 +651,7 @@ void ServerHandler::clearClientSocketData(struct SocketData* client_socket)
 
 void	ServerHandler::initCgiArg(char **&arg, const std::string& cgi_script_path)
 {
-	std::string cgi_program_path = conf.getCgiProgramPath(getExtension(cgi_script_path));
+	std::string cgi_program_path = this->conf.getCgiProgramPath(getExtension(cgi_script_path));
 
 	arg = new char *[3];
 	arg[0] = strdup(cgi_program_path.c_str());
