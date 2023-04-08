@@ -123,6 +123,42 @@ const std::string& HTTPRequest::getURI() const		{ return (this->URI); }
 const std::string& HTTPRequest::getBody() const	{ return (this->body); }
 const std::map<std::string, std::string>& HTTPRequest::getHeader() const	{ return (this->header); }
 
+const std::string	HTTPRequest::getConnection() const
+{
+	std::map<std::string, std::string>::const_iterator	connection_it;
+
+	connection_it = header.find(CONNECTION);
+	if (connection_it == header.end())
+		return ("");
+	else
+		return(connection_it->second);
+
+}
+
+const std::string	HTTPRequest::getServerName() const
+{
+	std::map<std::string, std::string>::const_iterator	server_name_it;
+	size_t												colone_pos;
+
+	server_name_it = header.find(HOST);
+	if (server_name_it == header.end())
+		return ("");
+	colone_pos = server_name_it->second.find(":");
+	return(server_name_it->second.substr(0, colone_pos));
+}
+
+const std::string	HTTPRequest::getServerPort() const
+{
+	std::map<std::string, std::string>::const_iterator	server_port_it;
+	size_t												colone_pos;
+
+	server_port_it = header.find(HOST);
+	if (server_port_it == header.end())
+		return ("");
+	colone_pos = server_port_it->second.find(":");
+	return(server_port_it->second.substr(colone_pos + 1));
+}
+
 ssize_t	HTTPRequest::getContentLength() const
 {
 	std::map<std::string, std::string>::const_iterator	content_length_it;
@@ -140,18 +176,6 @@ ssize_t	HTTPRequest::getContentLength() const
 
 	content_length = static_cast<ssize_t>(atoi(content_length_it->second.c_str()));
 	return (content_length);
-}
-
-const std::string	HTTPRequest::getConnection() const
-{
-	std::map<std::string, std::string>::const_iterator	connection_it;
-
-	connection_it = header.find(CONNECTION);
-	if (connection_it == header.end())
-		return ("");
-	else
-		return(connection_it->second);
-
 }
 
 void	HTTPRequest::clear()
