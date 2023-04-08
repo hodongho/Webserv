@@ -32,7 +32,7 @@ void HTTPResponse::makeHeaderField()
 
 void HTTPResponse::makeBody()
 {
-	this->response += this->body;
+	this->response += "\r\n" + this->body;
 }
 
 std::string HTTPResponse::makeResponseMessage()
@@ -88,6 +88,7 @@ const std::string	HTTPResponse::getBodySize()
 
 void	HTTPResponse::setBasicField(const HTTPRequest& http_request)
 {
+	this->setVersion("HTTP/1.1");
 	this->addHeader(CONTENT_LENGTH, this->getBodySize());
 	this->addHeader(CONNECTION, http_request.getConnection());
 }

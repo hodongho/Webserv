@@ -1352,11 +1352,11 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
     URI_start_idx = URI.find('/');
     if (URI_start_idx == std::string::npos)
         return (false);
-
     origin_URI = URI.substr(URI_start_idx, URI.size() - URI_start_idx);
 	while (server_config_iter->getPort() != port)
 		server_config_iter++;
 	location_config_map = server_config_iter->getLocations();
+	std::cout << location_config_map["/"].getRoot() << std::endl;
 	location_config = location_config_map.find(origin_URI)->second;
 	allowed_method_type_map = location_config.getAllowMethod();
 

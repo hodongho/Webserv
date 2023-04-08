@@ -713,13 +713,13 @@ void ServerHandler::setErrorPageResponse(StatusCode err_stat, struct kevent* con
 			setDefaultBadRequest(client_socket->http_response, client_socket->http_request);
 			break;
 		case STATCODE_NOTFOUND:
-			setDefaultBadRequest(client_socket->http_response, client_socket->http_request);
+			setDefaultNotFound(client_socket->http_response, client_socket->http_request);
 			break;
 		case STATCODE_NOTALLOW:
-			setDefaultBadRequest(client_socket->http_response, client_socket->http_request);
+			setDefaultNotAllow(client_socket->http_response, client_socket->http_request);
 			break;
 		case STATCODE_SERVERR:
-			setDefaultBadRequest(client_socket->http_response, client_socket->http_request);
+			setDefaultServerError(client_socket->http_response, client_socket->http_request);
 			break;
 		default:
 			break;
@@ -752,16 +752,15 @@ void ServerHandler::setDefaultBadRequest(HTTPResponse& http_res, const HTTPReque
 {
 	std::string body;
 
-	body = "\r\n";
-	body += "<!DOCTYPE html>\r\n";
+	body = "<!DOCTYPE html>\r\n";
 	body += "<html>\r\n";
 	body += "<head>\r\n";
-	body += "    <title>Bad Request</title>\r\n";
+	body += "\t<title>Bad Request</title>\r\n";
 	body += "</head>\r\n";
 	body += "<body>\r\n";
-	body += "    <h1>400 Bad Request</h1>\r\n";
-	body += "	<hr>\r\n";
-	body += "	<p>Bad Request message accepted</p>\r\n";
+	body += "<h1>400 Bad Request</h1>\r\n";
+	body += "\t<hr>\r\n";
+	body += "\t<p>Bad Request message accepted</p>\r\n";
 	body += "</body>\r\n";
 	body += "</html>\r\n";
 
@@ -775,8 +774,7 @@ void ServerHandler::setDefaultNotFound(HTTPResponse& http_res, const HTTPRequest
 {
 	std::string body;
 
-	body = "\r\n";
-	body += "<!DOCTYPE html>\r\n";
+	body = "<!DOCTYPE html>\r\n";
 	body += "<html>\r\n";
 	body += "<head>\r\n";
 	body += "    <title>Not Found</title>\r\n";
@@ -798,8 +796,7 @@ void ServerHandler::setDefaultNotAllow(HTTPResponse& http_res, const HTTPRequest
 {
 	std::string body;
 
-	body = "\r\n";
-	body += "<!DOCTYPE html>\r\n";
+	body = "<!DOCTYPE html>\r\n";
 	body += "<html>\r\n";
 	body += "<head>\r\n";
 	body += "    <title>Not Allowed Method</title>\r\n";
@@ -821,8 +818,7 @@ void ServerHandler::setDefaultServerError(HTTPResponse& http_res, const HTTPRequ
 {
 	std::string body;
 
-	body = "\r\n";
-	body += "<!DOCTYPE html>\r\n";
+	body = "<!DOCTYPE html>\r\n";
 	body += "<html>\r\n";
 	body += "<head>\r\n";
 	body += "    <title>Server error</title>\r\n";
