@@ -6,14 +6,13 @@
 #    By: yolee <yolee@student.42seoul.kr>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/03/31 01:14:02 by yolee             #+#    #+#              #
-#    Updated: 2023/04/09 00:08:20 by yolee            ###   ########.fr        #
+#    Updated: 2023/04/09 00:18:00 by yolee            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = webserv
 
 VPATH = ./srcs
-TEMP_DIR = ./temp
 INCLUDE_DIR = ./include
 
 CXX = c++
@@ -30,8 +29,8 @@ SRCS = ServerHandler.cpp \
 	ServerConfig.cpp \
 	LocationConfig.cpp \
 
-OBJS = $(addprefix $(TEMP_DIR)/, $(SRCS:.cpp=.o))
-DEPS = $(addprefix $(TEMP_DIR)/, $(SRCS:.cpp=.d))
+OBJS = $(SRCS:.cpp=.o)
+DEPS = $(SRCS:.cpp=.d)
 
 all : $(NAME)
 
