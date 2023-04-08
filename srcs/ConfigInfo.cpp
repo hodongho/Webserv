@@ -55,7 +55,7 @@ void ConfigInfo::parseConfig(const char *file_name)
 	}
 }
 
-const std::vector<ServerConfig> ConfigInfo::getWebservConfig(void) const
+const std::vector<ServerConfig>& ConfigInfo::getWebservConfig(void) const
 {
     return (this->server_config_vector);
 }
@@ -1344,7 +1344,7 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
 {
 	size_t									URI_start_idx;
 	std::string								origin_URI;
-	std::vector<ServerConfig>::iterator		server_config_iter = server_config_vector.begin();
+	std::vector<ServerConfig>::iterator		server_config_iter = this->server_config_vector.begin();
 	std::map<std::string, LocationConfig>	location_config_map;
 	LocationConfig							location_config;
 	std::map<MethodType, bool>				allowed_method_type_map;
@@ -1352,6 +1352,7 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
     URI_start_idx = URI.find('/');
     if (URI_start_idx == std::string::npos)
         return (false);
+
     origin_URI = URI.substr(URI_start_idx, URI.size() - URI_start_idx);
 	while (server_config_iter->getPort() != port)
 		server_config_iter++;

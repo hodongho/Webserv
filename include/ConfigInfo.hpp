@@ -115,7 +115,7 @@ class ConfigInfo
         void    parseConfig(const char *file);
 
         // std::vector<ServerConfig>	webserv_config;
-        const std::vector<ServerConfig> getWebservConfig(void) const;
+        const std::vector<ServerConfig>& getWebservConfig(void) const;
         void    printWebservConfig(void);
 
         // for using config info

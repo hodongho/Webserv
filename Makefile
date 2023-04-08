@@ -6,7 +6,7 @@
 #    By: yolee <yolee@student.42seoul.kr>           +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/03/31 01:14:02 by yolee             #+#    #+#              #
-#    Updated: 2023/04/09 01:03:55 by yolee            ###   ########.fr        #
+#    Updated: 2023/04/09 02:07:00 by yolee            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ VPATH = ./srcs
 INCLUDE_DIR = ./include
 
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -g
 CPPFLAGS = -MMD -I$(INCLUDE_DIR)
 
 SRCS = ServerHandler.cpp \

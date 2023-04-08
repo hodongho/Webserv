@@ -510,18 +510,18 @@ void ServerHandler::sendResponse(struct kevent * const & curr_event, SocketData*
 	}
 }
 
-void ServerHandler::initListenerData(struct SocketData* listen_sock)
+void ServerHandler::initListenerData(struct SocketData* listen_sock, const ServerConfig& server_conf)
 {
 	listen_sock->id_type = ID_LISTEN_SOCKET;
 	listen_sock->status = SOCKSTAT_SERVER_LISTEN;
 
 	memset(&listen_sock->addr, 0, sizeof(listen_sock->addr));
 	listen_sock->addr.sin_family	= AF_INET;
-	inet_pton(AF_INET, "0.0.0.0", &listen_sock->addr.sin_addr);
-	listen_sock->addr.sin_port = htons(PORT);
+	inet_pton(AF_INET, server_conf.getHost().c_str(), &listen_sock->addr.sin_addr);
+	listen_sock->addr.sin_port = htons(server_conf.getPort());
 }
 
-int ServerHandler::serverListen(void)
+int ServerHandler::serverListen(const ServerConfig& serv_conf)
 {
 	this->listen_sock_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (this->listen_sock_fd == -1)
@@ -536,7 +536,7 @@ int ServerHandler::serverListen(void)
 		throwError("setsockopt: ");
 
 	SocketData* serverSocket = new SocketData();
-	this->initListenerData(serverSocket);
+	this->initListenerData(serverSocket, serv_conf);
 	this->sock_list[this->listen_sock_fd] = serverSocket;
 
 	if (bind(this->listen_sock_fd, (const sockaddr *)&serverSocket->addr, sizeof(sockaddr_in)) == -1)
@@ -553,14 +553,16 @@ int ServerHandler::serverListen(void)
 
 void ServerHandler::serverReady(const char *conf_file)
 {
+	std::vector<ServerConfig>::const_iterator serv_conf_iter;
+
 	this->conf.parseConfig(conf_file);
-	// this->conf.printWebservConfig(); //for test
+	this->conf.printWebservConfig(); //for test
 	this->kq = kqueue();
 
 	if (this->kq == -1)
 		throwError("kqueue: ");
-
-	this->serverListen();
+	for (serv_conf_iter = this->conf.getWebservConfig().begin(); serv_conf_iter < this->conf.getWebservConfig().end(); serv_conf_iter++)
+		this->serverListen(*serv_conf_iter);
 }
 
 void ServerHandler::serverRun()

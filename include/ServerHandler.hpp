@@ -44,8 +44,8 @@ class ServerHandler {
 		void		clearClientSocketData(struct SocketData* socket);
 
 		// serverReady sub function
-		int			serverListen(void);
-		void		initListenerData(struct SocketData* listen_sock);
+		int			serverListen(const ServerConfig& serv_conf);
+		void		initListenerData(struct SocketData* listen_sockm, const ServerConfig& server_conf);
 
 		// serverRun sub function
 		void		keventError(const IdentType& event_id_type);
