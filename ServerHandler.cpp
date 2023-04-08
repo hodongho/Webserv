@@ -275,13 +275,9 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 		throwError("pipe: ");
 	if (pid == 0)
 	{
-		char *arg[4];
+		char **arg;
 		char **env;
-		arg[0] = const_cast<char *>(cgi_program_path.c_str());
-		arg[1] = const_cast<char *>(cgi_script_path.c_str());
-		arg[2] = 0;
-		arg[3] = 0;
-		//  env = setCgiEnv();
+		initCgiVariable(arg, env, client_socket);
 		if (close(pipe_fd_result[PIPE_RD]) == -1)
 			exit(-1);
 		if (close(pipe_fd_input[PIPE_RD]) == -1)
@@ -304,7 +300,7 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 		changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
 		changeEvent(pipe_fd_result[PIPE_RD], EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
 		changeEvent(pipe_fd_input[PIPE_WR], EVFILT_WRITE, EV_ADD | EV_EOF, 0, NULL, client_socket);
-		changeEvent(pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, 0, NULL, client_socket);
+		changeEvent(pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, NULL, client_socket);
 	}
 }
 
@@ -341,10 +337,26 @@ void ServerHandler::makeAutoIndexResponse(HTTPResponse& res, std::string dir_pat
 	if (dir_ptr == NULL)
 		throwError("opendir: ");
 	
-	/**
-	 * @brief write Autoindex page html page to std::string page_body;
-	 * while(dirent_ptr = readdir(dir_ptr)!= NULL)
-	 */
+	page_body = "";
+	page_body += "<!DOCTYPE html>\r\n";
+	page_body += "<html>\r\n";
+	page_body += "<head>\r\n";
+	page_body += "    <title>Index of " + dir_path + "</title>\r\n";
+	page_body += "</head>\r\n";
+	page_body += "<body>\r\n";
+	page_body += "    <h1>Index of " + dir_path + "</h1>\r\n";
+	page_body += "    <hr>\r\n";
+	page_body += "    <ul>\r\n";
+	while ((dirent_ptr = readdir(dir_ptr)) != NULL) {
+        if (dirent_ptr->d_name[0] == '.') {
+            continue;
+		}
+		page_body += "        <li><a href=" + dir_path + dirent_ptr->d_name + ">" + dirent_ptr->d_name + "</a></li>\r\n";
+	}
+	page_body += "    </ul>\r\n";
+	page_body += "    <hr>\r\n";
+	page_body += "</body>\r\n";
+	page_body += "</html>\r\n";
 	res.setBody(page_body);
 }
 
@@ -555,6 +567,13 @@ void ServerHandler::serverRun()
 			sock_type = static_cast<SocketData *>(curr_event->udata);
 			if (fstat(curr_event->ident, &stat_buf) == -1)
 				continue;
+			if (curr_event->filter == EVFILT_PROC)
+			{
+				int status;
+				if (waitpid(static_cast<pid_t>(curr_event->ident), &status, WNOHANG) == -1 || WEXITSTATUS(status) == -1)
+					throwError("cgi proc error: ");
+				continue;
+			}
 			if (curr_event->flags & EV_ERROR)
 				keventError(sock_type->id_type);
 			switch (sock_type->id_type)
