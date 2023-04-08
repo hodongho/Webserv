@@ -277,15 +277,35 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 		char **env;
 		this->initCgiVariable(arg, env, client_socket, cgi_script_path);
 		if (close(pipe_fd_result[PIPE_RD]) == -1)
+		{
+			delete[] arg;
+			delete[] env;
 			exit(-1);
+		}
 		if (close(pipe_fd_input[PIPE_RD]) == -1)
+		{
+			delete[] arg;	
+			delete[] env;	
 			exit(-1);
+		}
 		if (dup2(pipe_fd_result[PIPE_WR], STDOUT_FILENO) == -1)
+		{
+			delete[] arg;	
+			delete[] env;	
 			exit(-1);
+		}
 		if (dup2(pipe_fd_input[PIPE_RD], STDIN_FILENO) == -1)
+		{
+			delete[] arg;	
+			delete[] env;	
 			exit(-1);
+		}
 		if (execve(arg[0], arg, env) == -1) // CGI use
+		{
+			delete[] arg;	
+			delete[] env;	
 			exit(-1);
+		}
 	}
 	else
 	{
