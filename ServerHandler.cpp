@@ -185,9 +185,8 @@ void ServerHandler::recvBody(struct kevent* const & curr_event, SocketData* cons
 	}
 	client_socket->buf_str.append(buf, ret);
 
-	if (client_socket->buf_str.size() > conf.getMaxBodySize())
+	if (client_socket->buf_str.size() > conf.getMaxBodySize(ntohs(client_socket->addr.sin_port)))
 		setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
-
 	if (client_socket->http_request.getContentLength() <= client_socket->buf_str.size())
 	{
 		client_socket->status = SOCKSTAT_CLIENT_POST;
@@ -276,7 +275,7 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 	{
 		char **arg;
 		char **env;
-		initCgiVariable(arg, env, client_socket, cgi_script_path);
+		this->initCgiVariable(arg, env, client_socket, cgi_script_path);
 		if (close(pipe_fd_result[PIPE_RD]) == -1)
 			exit(-1);
 		if (close(pipe_fd_input[PIPE_RD]) == -1)
@@ -371,7 +370,7 @@ void ServerHandler::getMethod(struct kevent* const & curr_event, SocketData* con
 	std::string		file_path;
 	enum PathState	path_stat;
 
-	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, METHOD_GET) == -1)
+	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->addr.sin_port), METHOD_GET) == -1)
 	{
 		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
@@ -402,7 +401,7 @@ void ServerHandler::postMethod(struct kevent* const & curr_event, SocketData* co
 	std::string		file_path;
 	enum PathState	path_stat;
 
-	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, METHOD_POST) == 0)
+	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->addr.sin_port), METHOD_POST) == 0)
 	{
 		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
@@ -433,7 +432,7 @@ void ServerHandler::deleteMethod(struct kevent* const & curr_event, SocketData* 
 	std::string		file_path;
 	enum PathState	path_stat;
 	
-	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), client_socket->addr.sin_port, METHOD_DELETE) == 0)
+	if (this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->addr.sin_port), METHOD_DELETE) == 0)
 	{
 		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
@@ -640,7 +639,7 @@ void ServerHandler::setErrorPageResponse(StatusCode err_stat, struct kevent* con
 {
 	std::string	err_file_path;
 	
-	if (this->conf.getErrorPage(err_stat, client_socket->addr.sin_port, err_file_path) == -1)
+	if (this->conf.getErrorPage(err_stat, ntohs(client_socket->addr.sin_port), err_file_path) == -1)
 	{
 		switch (err_stat)
 		{
