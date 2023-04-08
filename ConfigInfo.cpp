@@ -1,18 +1,22 @@
 #include "ConfigInfo.hpp"
 #include "ServerConfig.hpp"
 #include "LocationConfig.hpp"
+#include "utils.hpp"
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <stack>
-#include <stdlib.h>
 #include <limits>
-#include "utils.hpp"
+#include <stdlib.h>
+// #include <unistd.h>
+// #include <sys/types.h>
+#include <sys/stat.h>
+// #include <unistd.h>
 
 ConfigInfo::ConfigInfo(void)
-	: whitespace(" \t\n\v\f\r")
+    : whitespace(" \t\n\v\f\r")
 {}
 
 ConfigInfo::~ConfigInfo()
@@ -55,9 +59,36 @@ void ConfigInfo::parseConfig(const char *file_name)
 	}
 }
 
-const std::vector<ServerConfig> ConfigInfo::getWebservConfig(void) const
+const std::vector<ServerConfig>& ConfigInfo::getWebservConfig(void) const
 {
     return (this->server_config_vector);
+}
+
+bool	ConfigInfo::getServerConfig(const unsigned short &port, ServerConfig& server_config) const
+{
+	std::vector<ServerConfig>::const_iterator	server_iter;
+
+	server_iter = this->server_config_vector.begin();
+	for (;server_iter != this->server_config_vector.end(); server_iter++)
+	{
+		if (server_iter->getPort() == port)
+		{
+			server_config = *server_iter;
+			return (true);
+		}
+	}
+	return (false);
+}
+
+// 찾고자하는 path가 config에 있다면 파라미터에 location_config으로 설정된 값을 가져옴
+bool	ConfigInfo::getLocationConfig(const unsigned short &port, const std::string &find_path, LocationConfig& location_config) const
+{
+	ServerConfig	server_config;
+
+	if (getServerConfig(port, server_config) && \
+		server_config.getLocationBlock(find_path, location_config))
+		return(true);
+	return (false);
 }
 
 void ConfigInfo::printWebservConfig(void)
@@ -70,7 +101,6 @@ void ConfigInfo::printWebservConfig(void)
 		std::cout << std::endl;
 	}
 }
-
 
 /*
     throw하는 식으로 변경 필요
@@ -949,6 +979,11 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 					if (checkErrorPageConfigField(clean_str) == false)
 						return (false);
 				}
+				else if (first_word == "cgi_pass")
+				{
+					if (checkErrorPageConfigField(clean_str) == false)
+						return (false);
+				}
 				else
 				{
 					std::cerr << RED <<  "Could not found field " << first_word << WHI<<std::endl;
@@ -1308,115 +1343,277 @@ void ConfigInfo::printVector(std::vector<std::string> &word_list, const std::str
 		printContent(*iter, str_name, color);
 }
 
-/*
-	- URI로 들어오는 것이 서버 내에 있는지
-		있다면 어떤 경로에 있는지 찾아준다.
-	- URI로 들어올 수 있는 것들의 경우
-		- full path [servern_name]:[port][directory_path][file_name_with_extension]
-			- localhost:4242/index.html
-		- servern_name:port
-			- localhost:4242
-			- with file_path
-				localhost:4242/
-		- 127.0.0.1:4242/index.php
-	
-	- 어떤 port에 대해서 들어오는지 알아야함 
-		나의 경우 가장 처음 발생하는 '/'로 잘라야한다
-		[host][port]'/'[file_path]
-		- '/'가 없이 들어올 수도 있는가?
-			그런 경우 404
-	- 레퍼런스로 넘어온 file_path에 찾은 경로를 넣어줌
-
-	"URI    "
-	'\t'' ' 
-	trim(whitepace )
-	rfind 
-	.php 
-	입력은 정상적으로 들어온다고 가정한다.
-	"index.php " -> 의도해서 사용자가 보냈다고 생각. ' '가 ascii로 변한됨
-	isCGIRequest()호출하여 사용됨
-	//
-
-	string (1)	
-	int compare (const string& str) const;
-	substrings (2)	
-	int compare (size_t pos, size_t len, const string& str) const;
-	int compare (size_t pos, size_t len, const string& str, size_t subpos, size_t sublen) const;
-	c-string (3)	
-	int compare (const char* s) const;int compare (size_t pos, size_t len, const char* s) const;
-	buffer (4)	
-	int compare (size_t pos, size_t len, const char* s, size_t n) const;
-	enum PathState
+// bool ConfigInfo::testConvUriToPath(const std::string &URI, const unsigned short &port)
+// {
+//     return false;
+// }
+bool ConfigInfo::checkFilePathofURI(const std::string &URI, const std::string &truncated_URI)
+{
+	printContent(truncated_URI, "truncated_URI", BRW);
+	if (truncated_URI.size())
 	{
-		PATH_NOTFOUND,
-		PATH_VALID,
-		PATH_AUTOINDEX,
-		PATH_CGI // 
-	};
-*/
-enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path)
+		printFilePathofURI(URI, truncated_URI);
+	    return false;
+	}
+	else // 제대로 걸렀다면 else문을 타서는 안된다.
+	{
+		std::cout << "there are no path('/') sign" << std::endl;
+	    return true;
+	}
+}
+
+void ConfigInfo::printFilePathofURI(const std::string &URI, const std::string &truncated_URI)
+{
+	printContent(URI, "URI\t\t\t", RED);
+	printContent(truncated_URI, "truncated_URI\t\t", GRN);
+}
+
+bool ConfigInfo::checkMatchFilePathToLocationConfig(const std::string &startline_of_URI, const std::string &file_path_request_URI, const LocationConfig &location_config, bool is_matched_location_config)
+{
+	if (is_matched_location_config)
+	{
+		checkFilePathofURI(startline_of_URI, file_path_request_URI);
+		location_config.printLocationConfingContent(PUP);
+	}
+	else
+	{
+
+		std::cout << "is_matched_location_config is false" << std::endl;
+	}
+    return is_matched_location_config;
+}
+
+std::string getFilePathFromRequestURI(const std::string& startline_of_URI)
 {
 	size_t		file_path_start_idx;
-	std::string	file_path_of_URI;
+	std::string	file_path_request_URI;
 
-	file_path = "";
 	file_path_start_idx = startline_of_URI.find('/');
 	if (file_path_start_idx == std::string::npos)
-		return (PATH_NOTFOUND);
-	// 길이에 +1이 필요할지 확인 필요 substr(file_path_start_idx,  startline_of_URI.size() - file_path_start_idx + 1)
-	file_path_of_URI = startline_of_URI.substr(file_path_start_idx,  startline_of_URI.size() - file_path_start_idx); // substr(start_pos, len)
-	// port를 기준으로 일치하는게 있는지 확인한다.
-	std::vector<ServerConfig>::const_iterator	server_iter;
-	server_iter = this->server_config_vector.begin();
-	for (;server_iter != this->server_config_vector.end(); server_iter++)
+		return ("");
+	file_path_request_URI = startline_of_URI.substr(file_path_start_idx,  startline_of_URI.size() - file_path_start_idx);
+	return (file_path_request_URI);
+}
+
+// location_config으로 설정된 location_config을 받음
+// bool ConfigInfo::matchFilePathToLocationConfig(const std::string &file_path_request_URI, const unsigned short &port, LocationConfig &location_config)
+// {
+// 	if (getLocationConfig(port, file_path_request_URI, location_config))
+// 		return (true);
+// 	return (false);
+// }
+
+/*
+	location block안에 redirect 정보가 있는가?
+*/
+bool ConfigInfo::checkRedirect(const std::string& file_path_request_URI, const unsigned short &port, std::string& file_path)
+{
+	LocationConfig	location_config;
+	
+	if (getLocationConfig(port, file_path_request_URI, location_config) && \
+		(location_config.getRedirect() != ""))
+	{
+		file_path = location_config.getRedirect();
+		return (true);
+	}
+	return (false);
+}
+
+/*
+- location block안에서 찾았다면
+	- location block root + file_path_request_URI
+
+	- server block root + file_path_request_URI
+*/
+std::string ConfigInfo::getAbsFilePath(const std::string &file_path_request_URI, const unsigned short &port)
+{
+	LocationConfig	location_config;
+
+	if (getLocationConfig(port, file_path_request_URI, location_config))
+	{
+		if (location_config.getRoot() != "")
+			return (file_path_request_URI + location_config.getRoot());
+		else
+		{
+			ServerConfig	server_config;
+
+			if (getServerConfig(port, server_config))
+				return (file_path_request_URI + location_config.getRoot());
+			else // 만약 serverConfig를 못찾았어도 문제. 하지만 config 파일에서 port를 읽어서 처리할것으로 예상되므로 괜찮을듯
+				return ("");
+		}
+	}
+	else
 	{
 		ServerConfig	server_config;
 
-		server_config = *server_iter;
-		// location을 돌면서 일치하는게 있나봐야한다.
-		if (server_config.getPort() == port)
-		{
-			// std::vector<ServerConfig>::const_iterator	server_iter;
-			// server_iter = this->server_config_vector.begin();
-			const std::map<std::string, LocationConfig>& location_config_maps = server_config.getLocations();
-
-			std::map<std::string, LocationConfig>::const_iterator location_iter = location_config_maps.begin();
-			for (;location_iter != location_config_maps.end() ;location_iter++)
-			{
-				std::string		location_path;
-				LocationConfig	location_config;
-
-				location_path = location_iter->first;
-				location_config = location_iter->second;
-				// 어느 일부분도 일치하지 않는 경우
-				// 일부분이 일치했다하더라도 찾고자하는 location이 아닐수 있다.
-				// 그러한 케이스 고려 필요. 경로는 항상 완전히 일치하는가?
-				/*
-					location_path => /html/test
-					file_path_of_URI => /test
-					file_path_of_URI => localhost:80/test
-					- location에 root가 없는 경우의 동작 확인 필요
-					동작을 확인한 이후에는 어떻게 처리할 것인가?
-					// testtttt
-					// test
-				*/
-				if (file_path_of_URI.compare(location_path) == 0 && 
-					location_path.compare(file_path_of_URI) == 0)
-					return (PATH_NOTFOUND);
-				else
-				{
-					// location_path
-					// /*
-					// 	root + location_path index와 조합하여 일치하는 것을 찾는다.
-					// 	- stat으로 파일이 존재하는지 확인
-					// 	- 요청이 디렉터리일때 맨마지막에 /포함시키기
-					// 	// "\*/$"
-					// 	PATH_AUTOINDEX,
-					// */
-					// return ();
-				}
-			}
-		}
+			if (getServerConfig(port, server_config))
+				return (file_path_request_URI + location_config.getRoot());
+			else
+				return ("");
 	}
+}
+
+/*
+stat()으로 해당 경로에 존재하는지 확인
+예외처리 필요
+
+*/
+enum FileExistanceType ConfigInfo::getFileExistanceType(const std::string &file_path)
+{
+	struct stat	statbuf;
+
+	
+	if (stat(file_path.c_str(), &statbuf) < 0) {
+		std::cerr << "stat error" << std::endl;
+        exit(1);
+    }
+    if (S_ISREG(statbuf.st_mode))
+    {
+        std::cout << "file_path.c_str() is Regular file : " << file_path.c_str() << std::endl;
+		return (EXIST_DIRECTORY);
+    }
+	else if (S_ISDIR(statbuf.st_mode))
+    {
+        std::cout << "file_path.c_str() is directory : " << file_path.c_str() << std::endl;
+		return (EXIST_FILE);
+    }
+	
+	// (void)file_path;
+
+    return (NO_EXIST);
+}
+
+/*
+	.php가 마지막에 위치하는지 확인 필요
+*/
+bool ConfigInfo::isCgiRequest(const std::string &file_path)
+{
+	(void)file_path;
+	// std::vector<std::string>	
+	//  ft_split(file_path, ".php");
+	// if (file_path.compare(".php") || file_path.compare(".py"))
+	// 	return (true);
+    return (false);
+}
+
+/*
+    - URI로 들어오는 것이 서버 내에 있는지
+        있다면 어떤 경로에 있는지 찾아준다.
+    - URI로 들어올 수 있는 것들의 경우
+        - full path [servern_name]:[port][directory_path][file_name_with_extension]
+            - localhost:4242/index.html
+        - servern_name:port
+            - localhost:4242
+            - with file_path
+                localhost:4242/
+        - 127.0.0.1:4242/index.php
+
+    - 어떤 port에 대해서 들어오는지 알아야함
+        나의 경우 가장 처음 발생하는 '/'로 잘라야한다
+        [host][port]'/'[file_path]
+        - '/'가 없이 들어올 수도 있는가?
+            그런 경우 404
+    - 레퍼런스로 넘어온 file_path에 찾은 경로를 넣어줌
+
+    "URI    "
+    '\t'' '
+    trim(whitepace )
+    rfind
+    .php
+    입력은 정상적으로 들어온다고 가정한다.
+    "index.php " -> 의도해서 사용자가 보냈다고 생각. ' '가 ascii로 변한됨
+    isCGIRequest()호출하여 사용됨
+    //
+
+    string (1)
+    int compare (const string& str) const;
+    substrings (2)
+    int compare (size_t pos, size_t len, const string& str) const;
+    int compare (size_t pos, size_t len, const string& str, size_t subpos, size_t sublen) const;
+    c-string (3)
+    int compare (const char* s) const;int compare (size_t pos, size_t len, const char* s) const;
+    buffer (4)
+    int compare (size_t pos, size_t len, const char* s, size_t n) const;
+    enum PathState
+    {
+        PATH_NOTFOUND,
+        PATH_VALID,
+        PATH_AUTOINDEX,
+        PATH_CGI, //
+        PATH_REDIRECT,
+    };
+*/
+enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path)
+{
+	// enum PathState  path_type;
+    // bool            redirect_flag;
+	// size_t		file_path_start_idx;
+	std::string				file_path_request_URI;
+	// enum FileExistanceType	file_existance_type;
+
+	// file_path = "";
+	// host:port/file_path/file_name
+	// "/file_path/file_name"
+	// "/file_path/file_name.html"
+	file_path_request_URI = getFilePathFromRequestURI(startline_of_URI);
+	if (file_path_request_URI == "")
+		return (PATH_NOTFOUND);
+	// location_config
+	// checkFilePathofURI(startline_of_URI, file_path_request_URI);
+	// std::cout << std::endl << std::endl << std::endl;
+	// (void)port;
+	// is_matched_location_config = matchFilePathToLocationConfig(file_path_request_URI, port, location_config);
+	// checkMatchFilePathToLocationConfig(startline_of_URI, file_path_request_URI, location_config, is_matched_location_config);
+	/*
+		- redirect인지 확인
+		해당 location block에 
+		redirect가 있다면 해당 블럭으로 넘김
+	*/
+	// 확인 필요
+	if (checkRedirect(file_path_request_URI, port, file_path))
+		return (PATH_REDIRECT);
+
+	/*
+		location block root + location_path
+		server block root + location_path
+	*/
+	file_path = getAbsFilePath(file_path_request_URI, port);
+
+	// enum FileExistanceType getFileExistanceType(cont std::string& abs_file_path_of_server)
+	/*
+		존재하는가?
+		한다면 파일인가 디렉터리인가?
+	*/
+	// file_existance_type = getFileExistanceType(file_path);
+	// switch (file_existance_type)
+	// {
+	// 	case EXIST_FILE:
+	// 	{
+	// 		if (isCgiRequest(file_path)); // TODO
+	// 			return (PATH_CGI);
+	// 		return (PATH_VALID);
+	// 		break ;
+	// 	}
+	// 	case EXIST_DIRECTORY:
+	// 	{
+	// 		// (file_path, port);
+	// 		// index에 걸리는지
+	// 		// location block
+	// 		// server block
+	// 		break ;
+	// 	}
+	// 	case NO_EXIST:
+	// 	{
+	// 		return (PATH_NOTFOUND);
+	// 		break ;	
+	// 	}
+	// 	default:
+	// 	{
+	// 		std::cerr << "error in convUriToPath()" << std::endl;
+	// 		return (PATH_NOTFOUND);
+	// 		break ;
+	// 	}
+	// }
 	return (PATH_NOTFOUND);
 }
