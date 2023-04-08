@@ -10,14 +10,14 @@ HTTPResponse::HTTPResponse()
 HTTPResponse::~HTTPResponse()
 {};
 
-void	HTTPResponse::makeStatusLine()
+void HTTPResponse::makeStatusLine()
 {
 	this->response +=	this->version + " " +
 						this->status_code + " " +
 						this->status_message + "\r\n";
 }
 
-void	HTTPResponse::makeHeaderField()
+void HTTPResponse::makeHeaderField()
 {
 	std::map<std::string, std::string>::iterator it, end;
 
@@ -30,45 +30,20 @@ void	HTTPResponse::makeHeaderField()
 	}
 }
 
-void	HTTPResponse::makeBody()
+void HTTPResponse::makeBody()
 {
 	this->response += this->body;
 }
 
-std::string	HTTPResponse::makeResponseMessage()
+std::string HTTPResponse::makeResponseMessage()
 {
-	this->setVersion("HTTP/1.1");
-	this->setStatusCode(STATCODE_OK);
-	this->setStatusMessage("OK");
-
-	this->addHeader(CONTENT_TYPE, "text/html; charset=utf-8");
-	this->addHeader(CONTENT_LENGTH, "163");
-	this->addHeader(CONNECTION, "keep-alive");
-
-	std::ifstream	html("./html/Hello.html");
-	std::string		body;
-
-	if (html.is_open())
-	{
-		std::string buf;
-
-		while (!html.eof())
-		{
-			std::getline(html, buf);
-			body += buf;
-			body += "\n";
-		}
-	}
-
-	this->setBody(body);
-
 	this->makeStatusLine();
 	this->makeHeaderField();
 	this->makeBody();
 
 	std::cout << BRW << this->response << WHI << std::endl; //Test
 
-	return (response);
+	return (this->response);
 }
 
 void	HTTPResponse::setVersion(std::string _version)				{ this->version = _version; }
@@ -76,7 +51,25 @@ void	HTTPResponse::setStatusMessage(std::string _status_message)	{ this->status_
 void	HTTPResponse::setBody(std::string _body) 					{ this->body = _body; }
 void	HTTPResponse::addHeader(const std::string& _header_name, const std::string& _header_value) { header[_header_name] = _header_value; }
 
-void	HTTPResponse::setStatusCode(StatusCode _status_code)
+StatusCode HTTPResponse::getStatusCode(void) const
+{
+	if (this->status_code == "200")
+		return (OK);
+	else if (this->status_code == "301")
+		return (REDIR);
+	else if (this->status_code == "400")
+		return (BADREQ);
+	else if (this->status_code == "404")
+		return (NOTFOUND);
+	else if (this->status_code == "405")
+		return (NOTALLOW);
+	else if (this->status_code == "500")
+		return (SERVERR);
+	else
+		return (static_cast<enum StatusCode>(-1));
+}
+
+void HTTPResponse::setStatusCode(const std::string& _status_code)
 {
 	switch (_status_code)
 	{
@@ -105,7 +98,7 @@ void	HTTPResponse::setStatusCode(StatusCode _status_code)
 	}
 }
 
-void	HTTPResponse::clear()
+void HTTPResponse::clear()
 {
 	this->version.clear();
 	this->status_code.clear();

@@ -8,43 +8,40 @@
 // # include "ServerHandler.hpp"
 
 # define PORT 4242
+# define PIPE_RD 0
+# define PIPE_WR 1
 
 class HTTPRequest;
 class HTTPResponse;
 
 enum IdentType
 {
-	LISTEN_SOCKET,
-	CLIENT_SOCKET,
-	PIPE,
-	PROCESS
+	ID_LISTEN_SOCKET,
+	ID_CLIENT_SOCKET,
 };
 
 enum SocketStatus
 {
-	SERVER_LISTEN,
-	CLIENT_RECV_ERROR,
-	CLIENT_RECV_HEADER,
-	CLIENT_RECV_BODY,
-	CLIENT_SEND_RESPONSE,
-	CLIENT_WAIT_CGI,
-	CLIENT_READY_CGI
+	SOCKSTAT_SERVER_LISTEN,
+	SOCKSTAT_CLIENT_RECV_HEADER,
+	SOCKSTAT_CLIENT_RECV_BODY,
+	SOCKSTAT_CLIENT_MAKE_RESPONSE,
+	SOCKSTAT_CLIENT_MAKE_CGI_RESPONSE,
+	SOCKSTAT_CLIENT_SEND_RESPONSE,
+	SOCKSTAT_CLIENT_GET,
+	SOCKSTAT_CLIENT_POST,
+	SOCKSTAT_CLIENT_DELETE,
 };
 
-struct EventData
+struct SocketData
 {
-	IdentType	id_type;
-};
-
-struct SocketData : public EventData
-{
+	int				sock_fd;
 	sockaddr_in		addr;
+	IdentType		id_type;
 	SocketStatus	status;
 	HTTPRequest		http_request;
 	HTTPResponse	http_response;
-	std::string		header_str;
-	std::string		body_str;
-	ssize_t			body_size;
+	std::string		buf_str;
 };
 
 #endif
