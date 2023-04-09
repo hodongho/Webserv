@@ -79,7 +79,7 @@ class ServerHandler {
 		void		initCgiVariable(char **&arg, char **&env,
 						ClientSocketData* const & socket_data,
 						const std::string& cgi_script_path);
-		void		initCgiArg(char **&arg, const std::string& cgi_script_path);
+		void		initCgiArg(char **&arg, const std::string& cgi_script_path, const unsigned short& port);
 		void		initCgiEnv(char **&arg, char **&env, ClientSocketData* const & socket_data);
 
 		//default error page response generate

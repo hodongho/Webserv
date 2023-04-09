@@ -1393,7 +1393,8 @@ void ConfigInfo::printVector(std::vector<std::string> &word_list, const std::str
 */
 PathState ConfigInfo::convUriToPath(const std::string &URI, std::string &file_path)
 {
-	PathState ret_pathState = PATH_NOTFOUND;
+	PathState ret_pathState = PATH_CGI;
+	// PathState ret_pathState = PATH_NOTFOUND;
 	(void)URI;
 	(void)file_path;
 
@@ -1473,3 +1474,14 @@ size_t ConfigInfo::getMaxBodySize(const unsigned short& port)
 		server_config_iter++;
 	return (server_config_iter->getClientMaxBodySize());
 }
+
+std::string	ConfigInfo::getCgiProgramPath(const std::string& cgi_extension, const unsigned short& port)
+{
+	std::vector<ServerConfig>::iterator			server_config_iter;
+
+	server_config_iter = this->server_config_vector.begin();
+	while (server_config_iter->getPort() != port)
+		server_config_iter++;
+	return(server_config_iter->getCgiProgramPath(cgi_extension));
+}
+
