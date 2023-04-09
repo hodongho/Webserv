@@ -82,7 +82,7 @@ void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 				this->deleteMethod(curr_event, client_data);
 			break;
 		case SOCKSTAT_CLIENT_MAKE_RESPONSE:
-			if (curr_event->filter == EVFILT_WRITE)
+			if (curr_event->filter == EVFILT_READ)
 				this->readFileToBody(curr_event, client_data);
 			break;
 		case SOCKSTAT_CLIENT_MAKE_CGI_RESPONSE:
@@ -201,22 +201,22 @@ void ServerHandler::readFileToBody(struct kevent* const & curr_event, ClientSock
 	char		buf[RECV_BUF_SIZE];
 	ssize_t		ret;
 
-	ret = read(curr_event->ident, buf, RECV_BUF_SIZE - 1);
-	buf[ret] = 0;
-	if (ret <= 0)
+	ret = 1;
+	while (ret)
 	{
-		if (ret < 0)
-			throwError("read respond body: ");
-		close(curr_event->ident);
-		client_socket->buf_str.insert(0, "\r\n");
-		client_socket->http_response.setBody(client_socket->buf_str);
-		client_socket->http_response.setBasicField(client_socket->http_request);
-		client_socket->buf_str.clear();
-		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
-		changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
-		return ;
+		ret = read(curr_event->ident, buf, RECV_BUF_SIZE - 1);
+		buf[ret] = 0;
+		client_socket->buf_str.append(buf, ret);
 	}
-	client_socket->buf_str.append(buf, ret);
+	std::cout << client_socket->buf_str.size() << std::endl;
+	if (ret < 0)
+		throwError("read respond body: ");
+	close(curr_event->ident);
+	client_socket->http_response.setBody(client_socket->buf_str);
+	client_socket->http_response.setBasicField(client_socket->http_request);
+	client_socket->buf_str.clear();
+	client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
+	changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 }
 
 void ServerHandler::readCgiPipeToBody(struct kevent* const & curr_event, ClientSocketData* const & client_socket)
@@ -414,7 +414,6 @@ void ServerHandler::getMethod(struct kevent* const & curr_event, ClientSocketDat
 		this->makeFileIoEvent("200", file_path, curr_event, client_socket);
 		break;
 	case PATH_AUTOINDEX:
-		client_socket->http_response.setStatusCode("200");
 		this->makeAutoIndexResponse(client_socket, file_path);
 		break;
 	case PATH_REDIRECT:
@@ -446,7 +445,6 @@ void ServerHandler::postMethod(struct kevent* const & curr_event, ClientSocketDa
 		this->makeFileIoEvent("200", file_path, curr_event, client_socket);
 		break;
 	case PATH_AUTOINDEX:
-		client_socket->http_response.setStatusCode("200");
 		this->makeAutoIndexResponse(client_socket, file_path);
 		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 		break;
