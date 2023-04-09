@@ -12,10 +12,6 @@ int	HTTPRequest::validateStartLine(void)
 	//일단은 METHOD가 GET이 아닐경우 에러처리, 프로토콜이 HTTP가 아닌 경우 Error
 	if (this->method == METHOD_NONE || this->version.find("HTTP/1.1") == std::string::npos)
 		return (-1);
-
-	//access를 통해 URI가 존재하는 경로인지 확인
-	if (access(URI.c_str(), F_OK) != 0)
-		return (-1);
 	return (0);
 }
 
