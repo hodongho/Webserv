@@ -1402,24 +1402,50 @@ PathState ConfigInfo::convUriToPath(const std::string &URI, std::string &file_pa
 
 bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& port, const enum MethodType& method)
 {
-	size_t									URI_start_idx;
-	std::string								origin_URI;
-	std::vector<ServerConfig>::iterator		server_config_iter = this->server_config_vector.begin();
-	std::map<std::string, LocationConfig>	location_config_map;
-	LocationConfig							location_config;
-	std::map<MethodType, bool>				allowed_method_type_map;
+	size_t													URI_start_idx;
+	std::string												origin_URI;
+	std::vector<ServerConfig>::iterator 					server_config_iter;
+	ServerConfig											server_config;
+	std::map<std::string, LocationConfig>::const_iterator	location_iter;
+	std::map<MethodType, bool>								allowed_method_type_map;
 
     URI_start_idx = URI.find('/');
     if (URI_start_idx == std::string::npos)
         return (false);
     origin_URI = URI.substr(URI_start_idx, URI.size() - URI_start_idx);
-	while (server_config_iter->getPort() != port)
-		server_config_iter++;
-	location_config_map = server_config_iter->getLocations();
-	location_config = location_config_map.find(origin_URI)->second;
-	allowed_method_type_map = location_config.getAllowMethod();
+	
+	for (server_config_iter = this->server_config_vector.begin(); server_config_iter != this->server_config_vector.end(); server_config_iter++)
+	{
+		if (server_config_iter->getPort() == port)
+		{
+			server_config = (*server_config_iter);
+			break;
+		}
+	}
+	if (server_config_iter == this->server_config_vector.end())
+		return (false);
+	/* 
+	if (!this->getServerConfig(port, server_config))
+		return (false);
+	*/
+	location_iter = server_config.getLocations().find(origin_URI);
+	if (location_iter != server_config.getLocations().end())
+	{
+		allowed_method_type_map = location_iter->second.getAllowMethod();
+		return (allowed_method_type_map.find(method)->second);
+	}
+	else
+		return (true);
+	/* 
+	if (this->getLocationBlock())
+	{
+		allowed_method_type_map = location_iter->second.getAllowMethod();
+		return (allowed_method_type_map.find(method)->second);
+	}
+	else
+		return (true);
+ 	*/
 
-	return (allowed_method_type_map.find(method)->second);
 }
 
 int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path)
