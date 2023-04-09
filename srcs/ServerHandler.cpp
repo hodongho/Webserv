@@ -30,7 +30,7 @@ void ServerHandler::keventError(const IdentType& event_id_type)
 		throwError("client socket: ");
 }
 
-void ServerHandler::handleListenEvent(const sockaddr_in& listen_sock_addr)
+void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
 {
 	int					client_sock_fd;
 	socklen_t			client_sock_addr_len;
@@ -38,14 +38,15 @@ void ServerHandler::handleListenEvent(const sockaddr_in& listen_sock_addr)
 
 	client_socket = new ClientSocketData();
 	client_sock_addr_len = sizeof(client_socket->addr);
-	client_sock_fd = accept(this->listen_sock_fd, (sockaddr *)&(client_socket->addr), &client_sock_addr_len);
+	client_sock_fd = accept(listen_sock->sock_fd, (sockaddr *)&(client_socket->addr), &client_sock_addr_len);
 	if (client_sock_fd == -1)
 	{
 		delete client_socket;
 		throwError("accept: ");
 	}
-	this->initClientSocketData(client_socket, client_sock_fd, listen_sock_addr);
+	this->initClientSocketData(client_socket, client_sock_fd, listen_sock->addr);
 	this->sock_list[client_sock_fd] = client_socket;
+	std::cout << "accept port: " << ntohs(listen_sock->addr.sin_port) << std::endl; 
 	std::cout << "accept new client: " << client_sock_fd << std::endl;
 
 	bool	tmp = true;
@@ -59,6 +60,7 @@ void ServerHandler::handleListenEvent(const sockaddr_in& listen_sock_addr)
 void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 {
 	ClientSocketData* client_data = static_cast<ClientSocketData*>(curr_event->udata);
+	std::cout << ntohs(client_data->listen_addr.sin_port) << std::endl;
 	switch (client_data->status)
 	{
 		case SOCKSTAT_CLIENT_RECV_HEADER:
@@ -536,29 +538,29 @@ void ServerHandler::initListenerData(struct SocketData* listen_sock, const Serve
 
 int ServerHandler::serverListen(const ServerConfig& serv_conf)
 {
-	this->listen_sock_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (this->listen_sock_fd == -1)
+	SocketData* serverSocket = new SocketData();
+	serverSocket->sock_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (serverSocket->sock_fd == -1)
 		throwError("socket: ");
 
-	if (fcntl(this->listen_sock_fd, F_SETFL, O_NONBLOCK) == -1)
+	if (fcntl(serverSocket->sock_fd, F_SETFL, O_NONBLOCK) == -1)
 		throwError("fcntl: ");
 
 	int	bf = 1;
 
-	if (setsockopt(this->listen_sock_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&bf, (int)sizeof(bf)) == -1)
+	if (setsockopt(serverSocket->sock_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&bf, (int)sizeof(bf)) == -1)
 		throwError("setsockopt: ");
 
-	SocketData* serverSocket = new SocketData();
 	this->initListenerData(serverSocket, serv_conf);
-	this->sock_list[this->listen_sock_fd] = serverSocket;
+	this->sock_list[serverSocket->sock_fd] = serverSocket;
 
-	if (bind(this->listen_sock_fd, (const sockaddr *)&serverSocket->addr, sizeof(sockaddr_in)) == -1)
+	if (bind(serverSocket->sock_fd, (const sockaddr *)&serverSocket->addr, sizeof(sockaddr_in)) == -1)
 		throwError("bind: ");
 
-	if (listen(this->listen_sock_fd, 5) == -1)
+	if (listen(serverSocket->sock_fd, 5) == -1)
 		throwError("listen: ");
 
-	changeEvent(this->listen_sock_fd, EVFILT_READ, EV_ADD, 0, NULL, serverSocket);
+	changeEvent(serverSocket->sock_fd, EVFILT_READ, EV_ADD, 0, NULL, serverSocket);
 	std::cout << "Server SocketData Created!" << std::endl;
 
 	return (0);
@@ -615,7 +617,7 @@ void ServerHandler::serverRun()
 			switch (sock_type->id_type)
 			{
 				case ID_LISTEN_SOCKET :
-					handleListenEvent(sock_type->addr);
+					handleListenEvent(sock_type);
 					break;
 				case ID_CLIENT_SOCKET :
 					handleClientEvent(curr_event);
