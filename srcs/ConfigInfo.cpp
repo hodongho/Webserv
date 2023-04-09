@@ -1465,10 +1465,10 @@ bool ConfigInfo::checkRedirect(const std::string& file_path_request_URI, const u
 */
 void	ConfigInfo::removeLastSlashSignOfStr(std::string& str)
 {
-	size_t	last_char_idx;
+	int	last_char_idx;
 
 	last_char_idx = str.size() - 1;
-	while (str[last_char_idx] == '/')
+	while ((last_char_idx >= 0) && str[last_char_idx] == '/')
 	{
 		str.erase(last_char_idx, 1);
 		last_char_idx = str.size() - 1;
@@ -1486,18 +1486,12 @@ std::string ConfigInfo::getAbsFilePath(const std::string &file_path_request_URI,
 {
 	LocationConfig	location_config;
 	std::string		root_path;
-	size_t			last_char_idx;
 
 	if (this->getLocationConfig(port, file_path_request_URI, location_config))
 	{
 		root_path = location_config.getRoot();
-		last_char_idx = root_path.size() - 1;
-		// std::cout << WHI << "root_path : " << root_path <<  WHI << std::endl;
-		while (root_path[last_char_idx] == '/')
-		{
-			root_path.erase(last_char_idx, 1);
-			last_char_idx = root_path.size() - 1;
-		}
+		// // std::cout << WHI << "root_path : " << root_path <<  WHI << std::endl;
+		removeLastSlashSignOfStr(root_path);
 		// std::cout << BRW << "Found file_path_request_URI in location config root_path : " << root_path <<  WHI << std::endl;
 	}
 	else
@@ -1508,13 +1502,8 @@ std::string ConfigInfo::getAbsFilePath(const std::string &file_path_request_URI,
 		{
 			root_path = server_config.getRoot();
 			// removeLastSlashSignOfStr(std::string& str) 대체할 것 단, 테스트 필요
-			// std::cout << WHI << "root_path : " << root_path <<  WHI << std::endl;
-			last_char_idx = root_path.size() - 1;
-			while (root_path[last_char_idx] == '/')
-			{
-				root_path.erase(last_char_idx, 1);
-				last_char_idx = root_path.size() - 1;
-			}
+			// // std::cout << WHI << "root_path : " << root_path <<  WHI << std::endl;
+			removeLastSlashSignOfStr(root_path);
 			// std::cout << BRW << "Found file_path_request_URI in server config root_path : " << root_path <<  WHI << std::endl;
 		}
 		else
