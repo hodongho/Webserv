@@ -37,6 +37,7 @@ class ServerConfig
 		void	addErrorPageElement(const int& error_status_code, const std::string& erro_page_uri);
 		void	setLocations(const std::map<std::string, LocationConfig>& _locations);
 		void	addLocationElement(const std::string& location_path, const LocationConfig& location_config);
+		void	addCgiPassElement(const std::string& cgi_extension, const std::string& cgi_program_path);
 
 		// getter()
 		const std::string&							getServerName(void) const;			// 선택 필드, 유일값, 입력 없으면 ""
@@ -48,6 +49,7 @@ class ServerConfig
 		const std::map<int, std::string>&			getDefaultErrorPage(void) const ;		// config에는 없지만 error_page에 없는 status code에 대한 default error page 경로를 담고 있음, 항상 값이 있음
 		const std::map<int, std::string>&			getErrorPage(void) const ;				// 선택 필드, 복수값 입력가능, 입력값 없으면 size() == 0
 		const std::map<std::string, LocationConfig>&getLocations(void) const ;				// 선택 필드, 입력값 없으면 size() == 0
+		const std::string&							getCgiProgramPath(const std::string& cgi_extension) const;
 
 
 		// print
@@ -56,6 +58,7 @@ class ServerConfig
 
 		void	printMapContent(const std::map<int, std::string> &pair_map, std::string name, std::string color) const ;
 		void	printMapContent(const std::map<std::string, LocationConfig> &pair_map, std::string name, std::string color) const ;
+		void	printMapContent(const std::map<std::string, std::string> &pair_map, std::string name, std::string color) const ;
 
 		void	printServerConfingContent(void)  const;
 };
@@ -87,6 +90,16 @@ inline void ServerConfig::printMapContent(const std::map<std::string, LocationCo
 		std::cout << WHI;
 		iter->second.printLocationConfingContent(GRN);
 	}
+}
+
+inline void ServerConfig::printMapContent(const std::map<std::string, std::string> &pair_map, std::string name, std::string color) const
+{
+	std::cout << color << "-----" << name << ": " << pair_map.size() << "-----" << std::endl;
+	for (std::map<std::string, std::string>::const_iterator iter = pair_map.begin(); iter != pair_map.end(); iter++)
+	{
+		std::cout << "CGI_Extension: " << iter->first << " CGI_Program_path: " << getCgiProgramPath(iter->first) << std::endl;
+	}
+	std::cout << WHI;
 }
 
 #endif

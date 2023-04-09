@@ -597,7 +597,7 @@ bool	ConfigInfo::checkCgiPassConfigField(std::string	cgi_pass)
 	size_t 								semicolon_pos;
 	size_t								comment_pos;
 	std::vector<std::string>			cgi_pass_vector;
-	std::vector<std::string>::iterator	cgi_extention_iter;
+	std::vector<std::string>::iterator	cgi_extension_iter;
 	std::vector<std::string>::iterator	cgi_program_path_iter;
 
 	semicolon_pos = cgi_pass.find(';');
@@ -614,12 +614,13 @@ bool	ConfigInfo::checkCgiPassConfigField(std::string	cgi_pass)
 	}
 	cgi_pass = ft_strtrim(cgi_pass, this->whitespace);
 	cgi_pass_vector = ft_split(cgi_pass, this->whitespace);
-	cgi_extention_iter = cgi_pass_vector.begin() + 1;
+	cgi_extension_iter = cgi_pass_vector.begin() + 1;
 	cgi_program_path_iter = cgi_pass_vector.begin() + 2;
-	if (cgi_extention_iter == cgi_pass_vector.end() ||
-		cgi_program_path_iter == cgi_pass_vector.end())
+	if (cgi_extension_iter == cgi_pass_vector.end() ||
+		cgi_program_path_iter == cgi_pass_vector.end() ||
+		(cgi_program_path_iter + 1) != cgi_pass_vector.end())
 		return (false);
-	if (*cgi_extention_iter != ".php" && *cgi_extention_iter != ".py")
+	if (*cgi_extension_iter != ".php" && *cgi_extension_iter != ".py")
 		return (false);
     return (true);
 }
@@ -824,10 +825,14 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 					for (; error_page_iter != error_page_map.end(); error_page_iter++)
 						server_config.addErrorPageElement(error_page_iter->first, error_page_iter->second);
 				}
-				// else if (first_word == "cgi_pass")
-				// {
-				// 	parseCgiPassConfigField();
-				// }
+				else if (first_word == "cgi_pass")
+				{
+					std::string	cgi_extension;
+					std::string	cgi_program_path;
+
+					parseCgiPassConfigField(clean_str, cgi_extension, cgi_program_path);
+					server_config.addCgiPassElement(cgi_extension, cgi_program_path);
+				}
 				else
 				{
 					std::cerr << RED <<  "Could not found field " << first_word << WHI<<std::endl;
@@ -870,6 +875,18 @@ bool	ConfigInfo::parseErrorPageConfigField(std::string error_page, std::map<int,
 		error_status_code = std::atoi(error_status_code_str.c_str());
 		error_page_map[error_status_code] = error_page_end_value;
 	}
+    return (true);
+}
+
+bool	ConfigInfo::parseCgiPassConfigField(std::string cgi_pass, std::string& cgi_extension, std::string& cgi_program_path)
+{
+	std::vector<std::string>	cgi_pass_vector;
+
+	cgi_pass = removeAfterSemicolon(cgi_pass);
+	cgi_pass = ft_strtrim(cgi_pass, this->whitespace);
+	cgi_pass_vector = ft_split(cgi_pass, this->whitespace);
+	cgi_extension = *(cgi_pass_vector.begin() + 1);
+	cgi_program_path = *(cgi_pass_vector.begin() + 2);
     return (true);
 }
 

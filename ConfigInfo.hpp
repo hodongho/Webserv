@@ -93,6 +93,7 @@ class ConfigInfo
         bool    checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::ValidateFieldInfo> validate_server_field_map);
 
         bool    parseErrorPageConfigField(std::string error_page, std::map<int, std::string>& error_page_map);
+        bool    parseCgiPassConfigField(std::string cgi_pass, std::string& cgi_extension, std::string& cgi_program_path);
 
         // get validate info
         std::map<std::string, ValidateFieldInfo>	getValidateServerFieldMap(void);
