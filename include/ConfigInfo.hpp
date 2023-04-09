@@ -102,8 +102,18 @@ class ConfigInfo
 		bool    checkErrorPageConfigField(std::string error_page);
 		bool    checkErrorPageStatusCodde(const std::string& status_code);
 		bool    checkAllowMethodConfigField(std::string allow_method);
-
 		bool    checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::ValidateFieldInfo> validate_server_field_map);
+
+		// config util
+		std::string	removeAfterSemicolon(const std::string& origin_value);
+		bool		findOpenCurlyBracket(const std::vector<std::string>::iterator& begin_iter,
+								const std::vector<std::string>::iterator& end_iter,
+								bool& server_flag,
+								bool& location_flag,
+								bool& error_flag);
+		bool		findCloseCurlyBracket(const std::vector<std::string>::iterator& begin_iter,
+								const std::vector<std::string>::iterator& end_iter,
+								bool& error_flag);
 
 		bool    parseErrorPageConfigField(std::string error_page, std::map<int, std::string>& error_page_map);
 
@@ -119,7 +129,7 @@ class ConfigInfo
 									ServerConfig& server_config);
 		void	setRootToLocationConfig(void);
 
-		//util
+		//print
 		void	    printContent(const std::string& str, const std::string& str_name, const std::string& color);
 		void	    printVector(std::vector<std::string>& word_list, const std::string& str_name, const std::string& color);
 		
@@ -133,6 +143,7 @@ class ConfigInfo
 		// convUriToPath utils
 		// bool					matchFilePathToLocationConfig(const std::string& file_path_request_URI, const unsigned short& port, LocationConfig& location_config);
 		bool					checkRedirect(const std::string& file_path_request_URI, const unsigned short &port, std::string& file_path);
+		std::string				getFilePathFromRequestURI(const std::string& startline_of_URI);
 		std::string				getAbsFilePath(const std::string &file_path_request_URI, const unsigned short &port);
 		enum FileExistanceType	getFileExistanceType(const std::string& file_path);
 		bool					isCgiRequest(const std::string& file_path);

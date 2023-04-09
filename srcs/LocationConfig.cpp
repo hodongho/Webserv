@@ -73,7 +73,6 @@ const std::map<MethodType, bool>& LocationConfig::getAllowMethod(void) const
     return (this->allow_method);
 }
 
-
 void LocationConfig::printLocationConfingContent(std::string color) const
 {
     std::cout << color << "--------------------(LOCATION CONTENT_DATA)-------------------------" << std::endl;

@@ -12,21 +12,26 @@ void	testConvUriToPath(ConfigInfo& conf)
 	std::string	uri_abs_file_path;
 	std::string	request_uri;
 	// - 127.0.0.1:4242/index.php
+	// "http://localhost:4242/index.html/test/j324j32kl4/";
 	request_uri = "localhost:4242/index.html/test/j324j32kl4/";
-	conf.convUriToPath(request_uri, 4242, uri_abs_file_path);
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "/index.html/test/j324j32kl4/";
-	conf.convUriToPath(request_uri, 4242, uri_abs_file_path);
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "index.html";
-	conf.convUriToPath(request_uri, 4242, uri_abs_file_path);
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "localhost:4242//index.html";
-	conf.convUriToPath(request_uri, 4242, uri_abs_file_path);
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "/test/index.html";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "/test";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "/wewew";
-	conf.convUriToPath(request_uri, 4242, uri_abs_file_path);
-	std::string	uri = "localhost:4242/index.html";
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
+	request_uri = "/mnt/d/42/Webserv/seoul.php";
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
+	request_uri = "/mnt/d/42/Webserv/srcs/ConfigInfo.cpp";
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
+	// std::string	uri = "localhost:4242/index.html";
 	// conf.printFilePathofURI(URI);
 	// conf.convUriToPath();
 }

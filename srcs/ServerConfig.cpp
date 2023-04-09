@@ -7,14 +7,7 @@
 
 ServerConfig::ServerConfig(void)
     : server_name(""), host(""), port(0), index("index.html"), client_max_body_size(0)
-{
-    // std::map<int, std::string>              _default_error_page;
-
-    // _default_error_page[403] = "/";
-    // _default_error_page[404] = "/";
-    // _default_error_page[500] = "/";
-    // this->default_error_page = _default_error_page;
-}
+{}
 
 ServerConfig::~ServerConfig(void)
 {}
@@ -48,11 +41,6 @@ void ServerConfig::setClientMaxBodySize(const size_t &_client_max_body_size)
 {
     this->client_max_body_size = _client_max_body_size;
 }
-
-// void ServerConfig::setDefaultErrorPage(const std::map<int, std::string> &_default_error_page)
-// {
-//     this->default_error_page = _default_error_page;
-// }
 
 void ServerConfig::setErrorPage(const std::map<int, std::string> & _error_page)
 {
@@ -103,11 +91,6 @@ const size_t& ServerConfig::getClientMaxBodySize(void) const
     return (this->client_max_body_size);
 }
 
-// const std::map<int, std::string>& ServerConfig::getDefaultErrorPage(void) const
-// {
-//     return (this->default_error_page);
-// }
-
 const std::map<int, std::string>& ServerConfig::getErrorPage(void) const
 {
     return (this->error_page);
@@ -131,7 +114,6 @@ bool ServerConfig::getLocationBlock(const std::string &find_path, LocationConfig
         if (location_path == find_path)
         {
             location_config = location_iter->second;
-            // location_config.printLocationConfingContent(BRW);
             return (true);
         }
     }
