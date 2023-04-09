@@ -109,7 +109,7 @@ class  ValidateFieldInfo
 	bool    parseLocationBlock(std::vector<std::string>::iterator& src_begin_iter,
 								const std::vector<std::string>::iterator& src_end_iter,
 								ServerConfig& server_config);
-	void	setRootToLocationConfig(void);
+	void	setRootToLocationConfig(ServerConfig& server_config);
 
 	//print
 	void	    printContent(const std::string& str, const std::string& str_name, const std::string& color);

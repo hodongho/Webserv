@@ -752,37 +752,27 @@ std::map<std::string, ConfigInfo::ValidateFieldInfo>	ConfigInfo::getValidateLoca
 - location field가 있고 해당 location field에 root항목이 비어있다면 
   sever config block에 있는 root를 넣어준다.
 */
-void	ConfigInfo::setRootToLocationConfig(void)
+void	ConfigInfo::setRootToLocationConfig(ServerConfig& server_config)
 {
-	std::vector<ServerConfig>					webserv_config;
-	std::vector<ServerConfig>::const_iterator	webserv_config_iter;
-
-	webserv_config = this->getWebservConfig();
-	webserv_config_iter = webserv_config.begin();
-	for (;webserv_config_iter != webserv_config.end(); webserv_config_iter++)
+	std::map<std::string, LocationConfig>				location_config_map;
+	std::map<std::string, LocationConfig>::iterator		location_config_map_iter;
+	
+	// server_config.
+	location_config_map = server_config.getLocations();
+	location_config_map_iter = location_config_map.begin();
+	for (;location_config_map_iter != location_config_map.end(); location_config_map_iter++)
 	{
-		ServerConfig											server_config;
-		std::map<std::string, LocationConfig>					location_config_map;
-		std::map<std::string, LocationConfig>::const_iterator	location_config_map_iter;
+		LocationConfig&	location_config = location_config_map_iter->second;
 		
-		server_config = *webserv_config_iter;
-		location_config_map = server_config.getLocations();
-		location_config_map_iter = location_config_map.begin();
-		for (;location_config_map_iter != location_config_map.end(); location_config_map_iter++)
+		if (location_config.getRoot() == "")
 		{
-			LocationConfig	location_config;
-
-			location_config = location_config_map_iter->second;
-			if (location_config.getRoot() == "")
-			{
-				location_config.printLocationConfingContent(BRW);
-				location_config.setRoot(server_config.getRoot());
-				std::cout << std::endl << std::endl << "===== after setRoot ==========" << std::endl << std::endl<< std::endl;
-				location_config.printLocationConfingContent(BRW);
-			}
+			// location_config.printLocationConfingContent(BRW);
+			location_config.setRoot(server_config.getRoot());
+			// std::cout << std::endl << std::endl << "===== after setRoot ==========" << std::endl << std::endl<< std::endl;
+			// location_config.printLocationConfingContent(BRW);
 		}
-
 	}
+	server_config.setLocations(location_config_map);
 }
 
 bool	ConfigInfo::parse(const std::string &file_content)
@@ -817,8 +807,6 @@ bool	ConfigInfo::parse(const std::string &file_content)
 			return (false);
 		cur_iter++;
 	}
-	this->setRootToLocationConfig();
-
 	return (true);
 }
 
@@ -911,6 +899,8 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 		}
 		cur_iter++;
 	}
+	// server_config
+	this->setRootToLocationConfig(server_config);
 	this->server_config_vector.push_back(server_config);
 	return (true);
 }
@@ -1634,10 +1624,10 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 				}
 				else //NO_EXIST or EXIST_DIRECTORY
 				{
-					file_path = abs_file_path_of_server;
 					// autoindex check
 					if (location_config.getAutoindex())
 					{
+						file_path = abs_file_path_of_server;
 						this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_AUTOINDEX", BLU);
 						return (PATH_AUTOINDEX);
 					}
@@ -1652,9 +1642,38 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 			}
 			else
 			{
+				ServerConfig	server_config;
+				// server config에 index를 찾거나
+				// index와 매칭되지 않았으면  PATH_NOTFOUND
 				// std::cerr << "error in EXIST_DIRECTORY of convUriToPath()" << std::endl;
-				this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND location config N.O.T found!!!!!", RED);
-				return (PATH_NOTFOUND);
+
+				// (const std::string& startline_of_URI, const unsigned short& port, std::string& file_path)
+				if (this->getServerConfig(port, server_config))
+				{
+					std::string				index_file;
+					enum FileExistanceType	recycle_file_existance_type;
+
+					index_file = server_config.getIndex();
+					recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);
+					if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
+					{
+						file_path = abs_file_path_of_server + index_file;
+						this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_VALID", GRN);
+						return (PATH_VALID);
+					}
+					else //NO_EXIST or EXIST_DIRECTORY
+					{
+						this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND", RED);
+						return (PATH_NOTFOUND);
+					}
+					// else if (EXIST_DIRECTORY)
+					// 	;
+				}
+				else
+				{
+					this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND location config N.O.T found!!!!!", RED);
+					return (PATH_NOTFOUND);
+				}
 			}
 			break ;
 		}
@@ -1757,8 +1776,10 @@ int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, s
 	else
 	{
 		std::string	serverRoot = server_config_iter->getRoot();
-		if (serverRoot.back() == '/')
-			serverRoot.pop_back();
+
+		// slash_sign_idx = serverRoot.find('/');
+		if (this->isLastPartOfStr(serverRoot, "/"))
+			serverRoot.erase(serverRoot.size() - 1, 1);
 		err_file_path = server_config_iter->getRoot() + '/' + err_page_iter->second;
 		return (0);
 	}

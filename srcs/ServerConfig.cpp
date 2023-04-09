@@ -107,6 +107,11 @@ const std::map<std::string, LocationConfig>& ServerConfig::getLocations(void) co
     return (this->locations);
 }
 
+// const std::map<std::string, LocationConfig>& ServerConfig::getLocations(void) const
+// {
+//     return (this->locations);
+// }
+
 bool ServerConfig::getLocationBlock(const std::string &find_path, LocationConfig& location_config) const
 {
     const std::map<std::string, LocationConfig>& location_config_map = this->getLocations();
