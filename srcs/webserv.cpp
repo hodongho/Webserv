@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 		if (argc != 2)
 			throwError("please input server config file as argument\n\t\te.g) ./webserv server.conf");
 		kqueueServer.serverReady(argv[1]);
-		// kqueueServer.serverRun();
+		kqueueServer.serverRun();
 	}
 	catch (std::exception& e)
 	{

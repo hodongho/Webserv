@@ -1,7 +1,6 @@
 Webserv file/
-.vscode/settings.json
+.vscode/
 .DS_Store
-test/
-*.d
 *.o
+*.d
 webserv

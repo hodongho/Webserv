@@ -30,7 +30,7 @@ class HTTPResponse : public HTTPMessage
 		std::string	makeResponseMessage(void);
 
 		void		setVersion(const std::string& _version);
-		void		setStatusCode(const StatusCode& _status_code);
+		void		setStatusCode(const std::string& _status_code);
 		void		setStatusMessage(const std::string& _status_message);
 		void		setBody(const std::string& _body);
 

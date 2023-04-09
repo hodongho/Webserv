@@ -55,7 +55,7 @@ void ConfigInfo::parseConfig(const char *file_name)
 	}
 }
 
-const std::vector<ServerConfig> ConfigInfo::getWebservConfig(void) const
+const std::vector<ServerConfig>& ConfigInfo::getWebservConfig(void) const
 {
     return (this->server_config_vector);
 }
@@ -1344,22 +1344,29 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
 {
 	size_t									URI_start_idx;
 	std::string								origin_URI;
-	std::vector<ServerConfig>::iterator		server_config_iter = server_config_vector.begin();
+	std::vector<ServerConfig>::iterator		server_config_iter = this->server_config_vector.begin();
 	std::map<std::string, LocationConfig>	location_config_map;
 	LocationConfig							location_config;
 	std::map<MethodType, bool>				allowed_method_type_map;
 
     URI_start_idx = URI.find('/');
     if (URI_start_idx == std::string::npos)
-        return (PATH_NOTFOUND);
+        return (false);
     origin_URI = URI.substr(URI_start_idx, URI.size() - URI_start_idx);
 	while (server_config_iter->getPort() != port)
 		server_config_iter++;
 	location_config_map = server_config_iter->getLocations();
+	std::cout << location_config_map["/"].getRoot() << std::endl;
 	location_config = location_config_map.find(origin_URI)->second;
 	allowed_method_type_map = location_config.getAllowMethod();
 
 	return (allowed_method_type_map.find(method)->second);
+}
+
+std::string ConfigInfo::getCgiProgramPath(const std::string& cgi_ext)
+{
+	(void)cgi_ext;
+	return ("");
 }
 
 int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path)
@@ -1387,13 +1394,19 @@ int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, s
 	case STATCODE_SERVERR:
 		err_code = 500;
 		break;
+	default:
+		return (-1);
+		break;
 	}
 	err_page_iter = err_page.find(err_code);
 	if (err_page_iter == err_page.end())
 		return (-1);
 	else
 	{
-		err_file_path = err_page_iter->second;
+		std::string	serverRoot = server_config_iter->getRoot();
+		if (serverRoot.back() == '/')
+			serverRoot.pop_back();
+		err_file_path = server_config_iter->getRoot() + '/' + err_page_iter->second;
 		return (0);
 	}
 }
