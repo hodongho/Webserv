@@ -11,6 +11,7 @@
 # include <map>
 # include <unistd.h>
 # include <fcntl.h>
+
 # include <dirent.h>
 # include <sys/stat.h>
 # include <sys/event.h>
@@ -67,8 +68,9 @@ class ServerHandler {
 						const std::string& file_path,
 						struct kevent* const & curr_event,
 						ClientSocketData* const & client_socket);
-		void		makeAutoIndexResponse(HTTPResponse& res,
+		void		makeAutoIndexResponse(ClientSocketData* const & client_socket,
 						std::string dir_path);
+		void		makeRedirectResponse(ClientSocketData* const & client_socket, const std::string& redir_loc);
 
 		void		getMethod(struct kevent* const & curr_event, ClientSocketData* const & client_socket);
 		void		postMethod(struct kevent* const & curr_event, ClientSocketData* const & client_socket);

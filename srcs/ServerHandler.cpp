@@ -129,7 +129,7 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, ClientSocketDa
 
 	if (client_socket->buf_str.size() > MAX_HEADER_SIZE)
 	{
-		setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
 		return ;
 	}
 
@@ -150,7 +150,7 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, ClientSocketDa
 				break;
 			case METHOD_POST :
 				if (client_socket->http_request.getContentLength() < 0)
-					setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
+					this->setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
 				else
 					client_socket->status = SOCKSTAT_CLIENT_RECV_BODY;
 				break;
@@ -160,7 +160,7 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, ClientSocketDa
 				changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 				break;
 			case METHOD_NONE :
-				setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
+				this->setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
 				break;
 		}
 	}
@@ -185,7 +185,7 @@ void ServerHandler::recvBody(struct kevent* const & curr_event, ClientSocketData
 	client_socket->buf_str.append(buf, ret);
 
 	if (client_socket->buf_str.size() > conf.getMaxBodySize(ntohs(client_socket->listen_addr.sin_port)))
-		setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
 	if (static_cast<size_t>(client_socket->http_request.getContentLength()) <= client_socket->buf_str.size())
 	{
 		client_socket->status = SOCKSTAT_CLIENT_POST;
@@ -350,7 +350,7 @@ void ServerHandler::makeFileIoEvent(const std::string& stat_code,
 	changeEvent(file_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
 }
 
-void ServerHandler::makeAutoIndexResponse(HTTPResponse& res, std::string dir_path)
+void ServerHandler::makeAutoIndexResponse(ClientSocketData* const & client_socket, std::string dir_path)
 {
 	DIR* dir_ptr;
 	dirent* dirent_ptr;
@@ -379,7 +379,19 @@ void ServerHandler::makeAutoIndexResponse(HTTPResponse& res, std::string dir_pat
 	page_body += "    <hr>\r\n";
 	page_body += "</body>\r\n";
 	page_body += "</html>\r\n";
-	res.setBody(page_body);
+	client_socket->http_response.setStatusCode("200");
+	client_socket->http_response.setBody(page_body);
+	client_socket->http_response.setBasicField(client_socket->http_request);
+	client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
+}
+
+void ServerHandler::makeRedirectResponse(ClientSocketData* const & client_socket,
+									const std::string& redir_loc)
+{
+	client_socket->http_response.setStatusCode("301");
+	client_socket->http_response.addHeader("Location", redir_loc);
+	client_socket->http_response.setBasicField(client_socket->http_request);
+	client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 }
 
 void ServerHandler::getMethod(struct kevent* const & curr_event, ClientSocketData* const & client_socket)
@@ -389,25 +401,27 @@ void ServerHandler::getMethod(struct kevent* const & curr_event, ClientSocketDat
 
 	if (!this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->listen_addr.sin_port), METHOD_GET))
 	{
-		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
 	}
-	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
+	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), htons(client_socket->listen_addr.sin_port), file_path);
 	switch (path_stat)
 	{
 	case PATH_NOTFOUND:
-		setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
 		break;
 	case PATH_VALID:
 		this->makeFileIoEvent("200", file_path, curr_event, client_socket);
 		break;
 	case PATH_AUTOINDEX:
 		client_socket->http_response.setStatusCode("200");
-		this->makeAutoIndexResponse(client_socket->http_response, file_path);
-		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
+		this->makeAutoIndexResponse(client_socket, file_path);
+		break;
+	case PATH_REDIRECT:
+		this->makeRedirectResponse(client_socket, file_path);
 		break;
 	case PATH_CGI:
-		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		break;
 	}
 }
@@ -419,22 +433,25 @@ void ServerHandler::postMethod(struct kevent* const & curr_event, ClientSocketDa
 
 	if (!this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->listen_addr.sin_port), METHOD_POST))
 	{
-		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
 	}
-	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
+	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), htons(client_socket->listen_addr.sin_port), file_path);
 	switch (path_stat)
 	{
 	case PATH_NOTFOUND:
-		setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
 		break;
 	case PATH_VALID:
 		this->makeFileIoEvent("200", file_path, curr_event, client_socket);
 		break;
 	case PATH_AUTOINDEX:
 		client_socket->http_response.setStatusCode("200");
-		this->makeAutoIndexResponse(client_socket->http_response, file_path);
+		this->makeAutoIndexResponse(client_socket, file_path);
 		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
+		break;
+	case PATH_REDIRECT:
+		this->makeRedirectResponse(client_socket, file_path);
 		break;
 	case PATH_CGI:
 		this->makeCgiPipeIoEvent(file_path, curr_event, client_socket);
@@ -449,13 +466,13 @@ void ServerHandler::deleteMethod(struct kevent* const & curr_event, ClientSocket
 
 	if (!this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->listen_addr.sin_port), METHOD_DELETE))
 	{
-		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
 	}
-	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
+	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), htons(client_socket->listen_addr.sin_port), file_path);
 	if (path_stat == PATH_NOTFOUND)
 	{
-		setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
 		return ;
 	}
 	else
