@@ -17,15 +17,19 @@ void	testConvUriToPath(ConfigInfo& conf)
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "/index.html/test/j324j32kl4/";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
-	request_uri = "index.html";
+	request_uri = "/srcs/HTTPResponse.cpp";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "localhost:4242//index.html";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "/test/index.html";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
-	request_uri = "/test";
+	request_uri = "/var/form.html";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
-	request_uri = "/wewew";
+	request_uri = "/var/";
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
+	request_uri = "/var";
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
+	request_uri = "/srcs";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "/mnt/d/42/Webserv/seoul.php";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
@@ -52,9 +56,9 @@ int main(int argc, char *argv[])
     */
 		// throwError("please input server config file as argument\n\t\te.g) ./webserv server.conf");
 		conf.parseConfig(argv[1]);
-		conf.printWebservConfig();
+		// conf.printWebservConfig();
 		std::cout << std::endl << std::endl << std::endl;
-		// testConvUriToPath(conf);
+		testConvUriToPath(conf);
 		// kqueueServer.serverReady(argv[1]);
 		// kqueueServer.serverRun();
 		// kqueueServer.serverReady(argv[1]);

@@ -1614,6 +1614,11 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 				std::string				index_file;
 				enum FileExistanceType	recycle_file_existance_type;
 
+				if (this->isLastPartOfStr(abs_file_path_of_server, "/") == false)
+				{
+					this->printContent(abs_file_path_of_server, "abs_file_path_of_server last is '/'", BLU);
+					abs_file_path_of_server.push_back('/');
+				}
 				index_file = location_config.getIndex();
 				recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);
 				if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
@@ -1657,6 +1662,11 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 					recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);
 					if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
 					{
+						if (this->isLastPartOfStr(abs_file_path_of_server, "/") == false)
+						{
+							this->printContent(abs_file_path_of_server, "abs_file_path_of_server last is '/'", BLU);
+							abs_file_path_of_server.push_back('/');
+						}
 						file_path = abs_file_path_of_server + index_file;
 						this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_VALID", GRN);
 						return (PATH_VALID);
