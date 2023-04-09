@@ -283,26 +283,26 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 		}
 		if (close(pipe_fd_input[PIPE_RD]) == -1)
 		{
-			delete[] arg;	
-			delete[] env;	
+			delete[] arg;
+			delete[] env;
 			exit(-1);
 		}
 		if (dup2(pipe_fd_result[PIPE_WR], STDOUT_FILENO) == -1)
 		{
-			delete[] arg;	
-			delete[] env;	
+			delete[] arg;
+			delete[] env;
 			exit(-1);
 		}
 		if (dup2(pipe_fd_input[PIPE_RD], STDIN_FILENO) == -1)
 		{
-			delete[] arg;	
-			delete[] env;	
+			delete[] arg;
+			delete[] env;
 			exit(-1);
 		}
 		if (execve(arg[0], arg, env) == -1) // CGI use
 		{
-			delete[] arg;	
-			delete[] env;	
+			delete[] arg;
+			delete[] env;
 			exit(-1);
 		}
 	}
@@ -654,10 +654,9 @@ void ServerHandler::clearClientSocketData(struct ClientSocketData* client_socket
 	client_socket->buf_str.clear();
 }
 
-void	ServerHandler::initCgiArg(char **&arg, const std::string& cgi_script_path)
+void	ServerHandler::initCgiArg(char **&arg, const std::string& cgi_script_path, const unsigned short& port)
 {
-	std::string cgi_program_path;
-	// std::string cgi_program_path = this->conf.getCgiProgramPath(getExtension(cgi_script_path));
+	std::string cgi_program_path = this->conf.getCgiProgramPath(getExtension(cgi_script_path), port);
 
 	arg = new char *[3];
 	arg[0] = strdup(cgi_program_path.c_str());
@@ -697,14 +696,14 @@ void	ServerHandler::initCgiVariable(char **&arg, char **&env,
 			ClientSocketData* const & socket_data,
 			const std::string& cgi_script_path)
 {
-	this->initCgiArg(arg, cgi_script_path);
+	this->initCgiArg(arg, cgi_script_path, ntohs(socket_data->addr.sin_port));
 	this->initCgiEnv(arg, env, socket_data);
 }
 
 void ServerHandler::setErrorPageResponse(StatusCode err_stat, struct kevent* const & curr_event, ClientSocketData* const & client_socket)
 {
 	std::string	err_file_path;
-	
+
 	if (this->conf.getErrorPage(err_stat, ntohs(client_socket->listen_addr.sin_port), err_file_path) == -1)
 	{
 		switch (err_stat)
