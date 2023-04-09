@@ -1007,10 +1007,7 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 				else if (first_word == "cgi_pass")
 				{
 					if (checkCgiPassConfigField(clean_str) == false)
-					{
-						std::cout << "Cgi_pass" << std::endl;
 						return (false);
-					}
 				}
 				else
 				{
