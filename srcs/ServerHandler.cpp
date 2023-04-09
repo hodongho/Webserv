@@ -392,7 +392,7 @@ void ServerHandler::getMethod(struct kevent* const & curr_event, ClientSocketDat
 		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
 	}
-	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
+	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), htons(client_socket->listen_addr.sin_port), file_path);
 	switch (path_stat)
 	{
 	case PATH_NOTFOUND:
@@ -422,7 +422,7 @@ void ServerHandler::postMethod(struct kevent* const & curr_event, ClientSocketDa
 		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
 	}
-	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
+	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), htons(client_socket->listen_addr.sin_port), file_path);
 	switch (path_stat)
 	{
 	case PATH_NOTFOUND:
@@ -452,7 +452,7 @@ void ServerHandler::deleteMethod(struct kevent* const & curr_event, ClientSocket
 		setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
 		return ;
 	}
-	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), file_path);
+	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), htons(client_socket->listen_addr.sin_port), file_path);
 	if (path_stat == PATH_NOTFOUND)
 	{
 		setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
