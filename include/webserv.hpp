@@ -39,7 +39,6 @@ struct SocketData
 	IdentType		id_type;
 };
 
-
 struct ClientSocketData : public SocketData
 {
 	sockaddr_in		listen_addr;
