@@ -90,6 +90,7 @@ class ConfigInfo
         bool    checkAllowMethodConfigField(std::string allow_method);
         bool    checkCgiPassConfigField(std::string cgi_pass);
 
+
         bool    checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::ValidateFieldInfo> validate_server_field_map);
 
         bool    parseErrorPageConfigField(std::string error_page, std::map<int, std::string>& error_page_map);
@@ -117,7 +118,7 @@ class ConfigInfo
         void    parseConfig(const char *file);
 
         // std::vector<ServerConfig>	webserv_config;
-        const std::vector<ServerConfig> getWebservConfig(void) const;
+        const std::vector<ServerConfig>& getWebservConfig(void) const;
         void    printWebservConfig(void);
 
         // for using config info

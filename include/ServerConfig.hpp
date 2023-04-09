@@ -20,7 +20,6 @@ class ServerConfig
 		std::map<int, std::string>				error_page;				// 선택 필드, 복수값 입력가능, 입력값 없으면 size() == 0
 		std::map<std::string, std::string>		cgi_pass;				// 선택 필드, 복수값 x
 		std::map<std::string, LocationConfig>	locations;				// 선택 필드, 입력값 없으면 size() == 0
-
 	public:
 		ServerConfig(void);
 		virtual	~ServerConfig();
@@ -53,13 +52,14 @@ class ServerConfig
 
 
 		// print
+
+
 		template <typename T>
 		void	printContent(const T &val, std::string name, std::string color) const;
 
 		void	printMapContent(const std::map<int, std::string> &pair_map, std::string name, std::string color) const ;
 		void	printMapContent(const std::map<std::string, LocationConfig> &pair_map, std::string name, std::string color) const ;
 		void	printMapContent(const std::map<std::string, std::string> &pair_map, std::string name, std::string color) const ;
-
 		void	printServerConfingContent(void)  const;
 };
 
