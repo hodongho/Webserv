@@ -591,6 +591,39 @@ bool	ConfigInfo::checkCommonConfigLineForm(std::vector<std::string> word_list)
 	return (true);
 }
 
+bool	ConfigInfo::checkCgiPassConfigField(std::string	cgi_pass)
+{
+	std::string							value;
+	size_t 								semicolon_pos;
+	size_t								comment_pos;
+	std::vector<std::string>			cgi_pass_vector;
+	std::vector<std::string>::iterator	cgi_extention_iter;
+	std::vector<std::string>::iterator	cgi_program_path_iter;
+
+	semicolon_pos = cgi_pass.find(';');
+	if (semicolon_pos == std::string::npos)
+		return (false);
+	cgi_pass = removeAfterSemicolon(cgi_pass);
+	comment_pos = cgi_pass.find('#');
+	if (comment_pos != std::string::npos)
+	{
+		if (semicolon_pos > comment_pos)
+			return (false);
+		else if (semicolon_pos + 1 != comment_pos)
+			return (false);
+	}
+	cgi_pass = ft_strtrim(cgi_pass, this->whitespace);
+	cgi_pass_vector = ft_split(cgi_pass, this->whitespace);
+	cgi_extention_iter = cgi_pass_vector.begin() + 1;
+	cgi_program_path_iter = cgi_pass_vector.begin() + 2;
+	if (cgi_extention_iter == cgi_pass_vector.end() ||
+		cgi_program_path_iter == cgi_pass_vector.end())
+		return (false);
+	if (*cgi_extention_iter != ".php" || *cgi_extention_iter != ".py")
+		return (false);
+    return (true);
+}
+
 bool	ConfigInfo::findServerBlock(std::vector<std::string>::iterator& iter, \
 													const std::vector<std::string>::iterator& src_end_iter, \
 													std::vector<std::string>::iterator& begin_iter, \
@@ -947,6 +980,11 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 				else if (first_word == "error_page")
 				{
 					if (checkErrorPageConfigField(clean_str) == false)
+						return (false);
+				}
+				else if (first_word == "cgi_pass")
+				{
+					if (checkCgiPassConfigField(clean_str) == false)
 						return (false);
 				}
 				else

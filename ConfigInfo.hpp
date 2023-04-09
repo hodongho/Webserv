@@ -88,6 +88,7 @@ class ConfigInfo
         bool    checkErrorPageConfigField(std::string error_page);
         bool    checkErrorPageStatusCodde(const std::string& status_code);
         bool    checkAllowMethodConfigField(std::string allow_method);
+        bool    checkCgiPassConfigField(std::string cgi_pass);
 
         bool    checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::ValidateFieldInfo> validate_server_field_map);
 
