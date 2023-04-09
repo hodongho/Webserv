@@ -2,6 +2,7 @@
 # define HTTPRESPONSE_HPP
 
 # include "HTTPMessage.hpp"
+# include "HTTPRequest.hpp"
 
 # define DATE "Date"
 # define SERVER "Server"
@@ -16,9 +17,11 @@ class HTTPResponse : public HTTPMessage
 		std::string	status_code;
 		std::string	status_message;
 
-		void		makeStatusLine(void);
-		void		makeHeaderField(void);
-		void		makeBody(void);
+		void				makeStatusLine(void);
+		void				makeHeaderField(void);
+		void				makeBody(void);
+
+		const std::string	getBodySize(void);
 
 	public:
 		HTTPResponse(void);
@@ -26,14 +29,18 @@ class HTTPResponse : public HTTPMessage
 
 		std::string	makeResponseMessage(void);
 
-		void		setVersion(std::string _version);
-		void		setStatusCode(StatusCode _status_code);
-		void		setStatusMessage(std::string _status_message);
-		void		setBody(std::string _body);
+		void		setVersion(const std::string& _version);
+		void		setStatusCode(const std::string& _status_code);
+		void		setStatusMessage(const std::string& _status_message);
+		void		setBody(const std::string& _body);
 
-		void		addHeader(std::string _header_name, std::string _header_value);
+		void		addHeader(const std::string& _header_name, const std::string& _header_value);
 
-		void		clear();
+		StatusCode	getStatusCode(void) const;
+
+		void		clear(void);
+
+		void		setBasicField(const HTTPRequest& http_request);
 };
 
 #endif

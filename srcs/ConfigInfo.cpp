@@ -49,7 +49,7 @@ void ConfigInfo::parseConfig(const char *file_name)
 		std::cout << "Config file content is N.O.T validate" << std::endl;
 		exit(1);
 	}
-	
+  
 	if (this->parse(file_content))
 		std::cout << "Config parse is OK" << std::endl;
 	else
@@ -95,6 +95,7 @@ void ConfigInfo::printWebservConfig(void)
 {
 	std::vector<ServerConfig>::iterator	iter = this->server_config_vector.begin();
 	
+
 	for (;iter != this->server_config_vector.end(); iter++)
 	{
 		iter->printServerConfingContent();
@@ -163,7 +164,7 @@ bool	ConfigInfo::checkCurlyBracketPair(const std::string& file_content)
 		for (std::vector<std::string>::iterator word_iter = word_list.begin(); word_iter != word_list.end(); word_iter++)
 		{
 			std::string	word;
-			
+
 			word = *word_iter;
 			if ((word)[0] == '#')
 				break ;
@@ -178,7 +179,7 @@ bool	ConfigInfo::checkCurlyBracketPair(const std::string& file_content)
 				else
 					return (false);
 			}// '{' '}'로 시작하는데 길이가 1보다 크고, #이 ';' 바로 다음에 없으면 error처리
-			else if ((word.at(0) == '{' || word.at(0) == '}') &&  
+			else if ((word.at(0) == '{' || word.at(0) == '}') &&
 				(word.size() > 1 && word.at(1) != '#'))
 				return (false);
 		}
@@ -189,7 +190,7 @@ bool	ConfigInfo::checkCurlyBracketPair(const std::string& file_content)
 /*
 case
 - server {
-- server { #4242 sdf 
+- server { #4242 sdf
 - server
   { # comment dsf erw tdfg
 - serverr test {
@@ -287,7 +288,7 @@ bool	ConfigInfo::findLocationBlock(std::vector<std::string>::iterator& iter, \
 
 /*
 	ValidateFieldInfo 내부에count가 1인지 확인
-	count를 증가시키기 전에 확인할것이므로 중복 필드가 아니면 
+	count를 증가시키기 전에 확인할것이므로 중복 필드가 아니면
 	count가 0이어야 정상이다.
 */
 bool	ConfigInfo::checkDuplicateConfigField(const ValidateFieldInfo& validate_field_info)
@@ -306,6 +307,7 @@ bool	ConfigInfo::checkDuplicateConfigField(const ValidateFieldInfo& validate_fie
 	이미 이전에 확인한 상태이므로 무조건 ;이 #x
 */
 std::string	ConfigInfo::removeAfterSemicolon(const std::string& origin_value)
+
 {
 	std::string	clean_value(origin_value);
 	size_t		end_of_str;
@@ -365,7 +367,7 @@ bool ConfigInfo::checkIpClass(const std::string& ip_class)
 }
 
 /*
-port 
+port
 0 ~ 65526
 */
 bool ConfigInfo::checkPortConfigField(std::string port)
@@ -473,12 +475,12 @@ bool ConfigInfo::checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::Val
 	{
 		if (map_iter->second.getValidateFieldType() == NESSARY_UNIQUE)
 		{
-			if (map_iter->second.getCount() != 1) // 중복 및 누락여부 확인 가능 
+			if (map_iter->second.getCount() != 1) // 중복 및 누락여부 확인 가능
 				return (false);
 		}
 		if (map_iter->second.getValidateFieldType() == NESSARY_MULTI)
 		{
-			if (map_iter->second.getCount() == 0) // 누락여부 확인 가능 
+			if (map_iter->second.getCount() == 0) // 누락여부 확인 가능
 				return (false);
 		}
 		if (map_iter->second.getValidateFieldType() == OPTION_UNIQUE)
@@ -621,6 +623,40 @@ bool	ConfigInfo::checkCommonConfigLineForm(std::vector<std::string> word_list)
 	return (true);
 }
 
+bool	ConfigInfo::checkCgiPassConfigField(std::string	cgi_pass)
+{
+	std::string							value;
+	size_t 								semicolon_pos;
+	size_t								comment_pos;
+	std::vector<std::string>			cgi_pass_vector;
+	std::vector<std::string>::iterator	cgi_extension_iter;
+	std::vector<std::string>::iterator	cgi_program_path_iter;
+
+	semicolon_pos = cgi_pass.find(';');
+	if (semicolon_pos == std::string::npos)
+		return (false);
+	cgi_pass = removeAfterSemicolon(cgi_pass);
+	comment_pos = cgi_pass.find('#');
+	if (comment_pos != std::string::npos)
+	{
+		if (semicolon_pos > comment_pos)
+			return (false);
+		else if (semicolon_pos + 1 != comment_pos)
+			return (false);
+	}
+	cgi_pass = ft_strtrim(cgi_pass, this->whitespace);
+	cgi_pass_vector = ft_split(cgi_pass, this->whitespace);
+	cgi_extension_iter = cgi_pass_vector.begin() + 1;
+	cgi_program_path_iter = cgi_pass_vector.begin() + 2;
+	if (cgi_extension_iter == cgi_pass_vector.end() ||
+		cgi_program_path_iter == cgi_pass_vector.end() ||
+		(cgi_program_path_iter + 1) != cgi_pass_vector.end())
+		return (false);
+	if (*cgi_extension_iter != ".php" && *cgi_extension_iter != ".py")
+		return (false);
+    return (true);
+}
+
 bool	ConfigInfo::findServerBlock(std::vector<std::string>::iterator& iter, \
 													const std::vector<std::string>::iterator& src_end_iter, \
 													std::vector<std::string>::iterator& begin_iter, \
@@ -692,6 +728,7 @@ std::map<std::string, ConfigInfo::ValidateFieldInfo>	ConfigInfo::getValidateServ
 	validate_field_info.setValidateFieldType(OPTION_MULTI);
 	validate_server_field_map["error_page"] = validate_field_info;
 	validate_server_field_map["location"] = validate_field_info;
+	validate_server_field_map["cgi_pass"] = validate_field_info;
 	return (validate_server_field_map);
 }
 
@@ -755,7 +792,7 @@ bool	ConfigInfo::parse(const std::string &file_content)
 	std::vector<std::string>::iterator 	cur_iter;
 	std::vector<std::string>::iterator 	begin_iter;
 	std::vector<std::string>::iterator 	end_iter;
-	
+
 	file_content_vector = ft_split(file_content, "\n");
 	cur_iter = file_content_vector.begin();
 	while (cur_iter != file_content_vector.end())
@@ -769,7 +806,6 @@ bool	ConfigInfo::parse(const std::string &file_content)
 			continue ;
 		}
 		std::vector<std::string>	word_list;
-		
 		word_list = ft_split(*cur_iter, this->whitespace);
 		if (word_list[0] != "server")
 			return (false);
@@ -782,6 +818,7 @@ bool	ConfigInfo::parse(const std::string &file_content)
 		cur_iter++;
 	}
 	this->setRootToLocationConfig();
+
 	return (true);
 }
 
@@ -817,7 +854,6 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 		first_word = *(word_list.begin());
 		if (first_word == "location")
 		{
-			
 			if (this->findLocationBlock(cur_iter, src_end_iter, begin_iter, end_iter) == false)
 				return (false);
 			if (this->parseLocationBlock(begin_iter, end_iter, server_config) == false)
@@ -857,6 +893,14 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 					std::map<int, std::string>::const_iterator error_page_iter = error_page_map.begin();
 					for (; error_page_iter != error_page_map.end(); error_page_iter++)
 						server_config.addErrorPageElement(error_page_iter->first, error_page_iter->second);
+				}
+				else if (first_word == "cgi_pass")
+				{
+					std::string	cgi_extension;
+					std::string	cgi_program_path;
+
+					parseCgiPassConfigField(clean_str, cgi_extension, cgi_program_path);
+					server_config.addCgiPassElement(cgi_extension, cgi_program_path);
 				}
 				else
 				{
@@ -900,6 +944,18 @@ bool	ConfigInfo::parseErrorPageConfigField(std::string error_page, std::map<int,
 		error_status_code = std::atoi(error_status_code_str.c_str());
 		error_page_map[error_status_code] = error_page_end_value;
 	}
+    return (true);
+}
+
+bool	ConfigInfo::parseCgiPassConfigField(std::string cgi_pass, std::string& cgi_extension, std::string& cgi_program_path)
+{
+	std::vector<std::string>	cgi_pass_vector;
+
+	cgi_pass = removeAfterSemicolon(cgi_pass);
+	cgi_pass = ft_strtrim(cgi_pass, this->whitespace);
+	cgi_pass_vector = ft_split(cgi_pass, this->whitespace);
+	cgi_extension = *(cgi_pass_vector.begin() + 1);
+	cgi_program_path = *(cgi_pass_vector.begin() + 2);
     return (true);
 }
 
@@ -1036,7 +1092,7 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 	return (true);
 }
 
-bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begin_iter, 
+bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begin_iter,
 									const std::vector<std::string>::iterator &src_end_iter,
 									ServerConfig& server_config)
 {
@@ -1086,18 +1142,18 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 				std::vector<std::string>::iterator	field_value_iter;
 
 				field_value_iter = word_list.begin() + 1;
-				allow_method_map[GET] = false;
-				allow_method_map[POST] = false;
-				allow_method_map[DELETE] = false;
+				allow_method_map[METHOD_GET] = false;
+				allow_method_map[METHOD_POST] = false;
+				allow_method_map[METHOD_DELETE] = false;
 				for (;field_value_iter != word_list.end(); field_value_iter++)
 				{
 					field_value = this->removeAfterSemicolon(*field_value_iter); // important!s
 					if (field_value == "GET")
-						allow_method_map[GET] = true;
+						allow_method_map[METHOD_GET] = true;
 					else if (field_value == "POST")
-						allow_method_map[POST] = true;
+						allow_method_map[METHOD_POST] = true;
 					else if (field_value == "DELETE")
-						allow_method_map[DELETE] = true;
+						allow_method_map[METHOD_DELETE] = true;
 					else
 					{
 						std::cerr << RED <<  "Unkwon allow method type : " << *field_value_iter << WHI<<std::endl;
@@ -1285,7 +1341,6 @@ bool	ConfigInfo::checkWhole(const std::string& file_content)
 	std::vector<std::string>::iterator 	cur_iter;
 	std::vector<std::string>::iterator 	begin_iter;
 	std::vector<std::string>::iterator 	end_iter;
-	
 	file_content_vector = ft_split(file_content, "\n");
 	cur_iter = file_content_vector.begin();
 	while (cur_iter != file_content_vector.end())
@@ -1299,7 +1354,6 @@ bool	ConfigInfo::checkWhole(const std::string& file_content)
 			continue ;
 		}
 		std::vector<std::string>	word_list;
-		
 		word_list = ft_split(*cur_iter, this->whitespace);
 		if (word_list[0] != "server")
 			return (false);
@@ -1317,7 +1371,7 @@ bool	ConfigInfo::checkWhole(const std::string& file_content)
 
 /*
 	curly bracket pair
-	block이 제대로 되었는지 확인을 추가시킬지 포함 
+	block이 제대로 되었는지 확인을 추가시킬지 포함
 		- server, locatoin 이후에 {}이 왔는지
 		- {}이 아예 안오는 경우
 			다른 key에 {가 붙는 경우
@@ -1384,51 +1438,6 @@ void ConfigInfo::printVector(std::vector<std::string> &word_list, const std::str
 		this->printContent(*iter, str_name, color);
 }
 
-// bool ConfigInfo::testConvUriToPath(const std::string &URI, const unsigned short &port)
-// {
-//     return false;
-// }
-// bool ConfigInfo::checkFilePathofURI(const std::string &URI, const std::string &truncated_URI)
-// {
-// 	printContent(truncated_URI, "truncated_URI", BRW);
-// 	if (truncated_URI.size())
-// 	{
-// 		printFilePathofURI(URI, truncated_URI);
-// 	    return false;
-// 	}
-// 	else // 제대로 걸렀다면 else문을 타서는 안된다.
-// 	{
-// 		std::cout << "there are no path('/') sign" << std::endl;
-// 	    return true;
-// 	}
-// }
-
-void ConfigInfo::printFilePathofURI(const std::string &URI, const std::string &truncated_URI)
-{
-	this->printContent(URI, "URI\t\t\t", RED);
-	this->printContent(truncated_URI, "truncated_URI\t\t", GRN);
-}
-
-// bool ConfigInfo::checkMatchFilePathToLocationConfig(const std::string &startline_of_URI, const std::string &file_path_request_URI, const LocationConfig &location_config, bool is_matched_location_config)
-// {
-// 	if (is_matched_location_config)
-// 	{
-// 		checkFilePathofURI(startline_of_URI, file_path_request_URI);
-// 		location_config.printLocationConfingContent(PUP);
-// 	}
-// 	else
-// 	{
-
-// 		std::cout << "is_matched_location_config is false" << std::endl;
-// 	}
-//     return is_matched_location_config;
-// }
-
-/*
-1.	http://localhost:90/test  	=> //localhost:90/test   
-2.	localhost:90/test      		=> /test   
-
-*/
 std::string	ConfigInfo::getFilePathFromRequestURI(const std::string& startline_of_URI)
 {
 	size_t		file_path_start_idx;
@@ -1440,14 +1449,6 @@ std::string	ConfigInfo::getFilePathFromRequestURI(const std::string& startline_o
 	file_path_request_URI = startline_of_URI.substr(file_path_start_idx,  startline_of_URI.size() - file_path_start_idx);
 	return (file_path_request_URI);
 }
-
-// location_config으로 설정된 location_config을 받음
-// bool ConfigInfo::matchFilePathToLocationConfig(const std::string &file_path_request_URI, const unsigned short &port, LocationConfig &location_config)
-// {
-// 	if (getLocationConfig(port, file_path_request_URI, location_config))
-// 		return (true);
-// 	return (false);
-// }
 
 /*
 	location block안에 redirect 정보가 있는가?
@@ -1572,71 +1573,18 @@ bool ConfigInfo::isCgiRequest(const std::string &file_path)
     return (false);
 }
 
-/*
-    - URI로 들어오는 것이 서버 내에 있는지
-        있다면 어떤 경로에 있는지 찾아준다.
-    - URI로 들어올 수 있는 것들의 경우
-        - full path [servern_name]:[port][directory_path][file_name_with_extension]
-            - localhost:4242/index.html
-        - servern_name:port
-            - localhost:4242
-            - with file_path
-                localhost:4242/
-        - 127.0.0.1:4242/index.php
-
-    - 어떤 port에 대해서 들어오는지 알아야함
-        나의 경우 가장 처음 발생하는 '/'로 잘라야한다
-        [host][port]'/'[file_path]
-        - '/'가 없이 들어올 수도 있는가?
-            그런 경우 404
-    - 레퍼런스로 넘어온 file_path에 찾은 경로를 넣어줌
-
-    "URI    "
-    '\t'' '
-    trim(whitepace )
-    rfind
-    .php
-    입력은 정상적으로 들어온다고 가정한다.
-    "index.php " -> 의도해서 사용자가 보냈다고 생각. ' '가 ascii로 변한됨
-    isCGIRequest()호출하여 사용됨
-    //
-
-    string (1)
-    int compare (const string& str) const;
-    substrings (2)
-    int compare (size_t pos, size_t len, const string& str) const;
-    int compare (size_t pos, size_t len, const string& str, size_t subpos, size_t sublen) const;
-    c-string (3)
-    int compare (const char* s) const;int compare (size_t pos, size_t len, const char* s) const;
-    buffer (4)
-    int compare (size_t pos, size_t len, const char* s, size_t n) const;
-    enum PathState
-    {
-        PATH_NOTFOUND,
-        PATH_VALID,
-        PATH_AUTOINDEX,
-        PATH_CGI, //
-        PATH_REDIRECT,
-    };
-*/
 enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path)
 {
 	std::string				file_path_request_URI;
 	std::string				abs_file_path_of_server;
 	enum FileExistanceType	file_existance_type;
 
-	// file_path = "";
-	// host:port/file_path/file_name
-	// "/file_path/file_name"
-	// "/file_path/file_name.html"
 	file_path_request_URI = this->getFilePathFromRequestURI(startline_of_URI);
 	if (file_path_request_URI == "")
 	{
 		std::cout << RED << "PATH_NOTFOUND : " << startline_of_URI << WHI << std::endl;
 		return (PATH_NOTFOUND);
 	}
-	// is_matched_location_config = matchFilePathToLocationConfig(file_path_request_URI, port, location_config);
-	// 확인 필요
 	if (this->checkRedirect(file_path_request_URI, port, file_path))
 	{
 		std::cout << RED << "PATH_REDIRECT : " << startline_of_URI << WHI << std::endl;
@@ -1724,4 +1672,114 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 		}
 	}
 	return (PATH_NOTFOUND);
+}
+
+bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& port, const enum MethodType& method)
+{
+	size_t													URI_start_idx;
+	std::string												origin_URI;
+	std::vector<ServerConfig>::iterator 					server_config_iter;
+	ServerConfig											server_config;
+	std::map<std::string, LocationConfig>::const_iterator	location_iter;
+	std::map<MethodType, bool>								allowed_method_type_map;
+
+    URI_start_idx = URI.find('/');
+    if (URI_start_idx == std::string::npos)
+        return (false);
+    origin_URI = URI.substr(URI_start_idx, URI.size() - URI_start_idx);
+	
+	for (server_config_iter = this->server_config_vector.begin(); server_config_iter != this->server_config_vector.end(); server_config_iter++)
+	{
+		if (server_config_iter->getPort() == port)
+		{
+			server_config = (*server_config_iter);
+			break;
+		}
+	}
+	if (server_config_iter == this->server_config_vector.end())
+		return (false);
+	/* 
+	if (!this->getServerConfig(port, server_config))
+		return (false);
+	*/
+	location_iter = server_config.getLocations().find(origin_URI);
+	if (location_iter != server_config.getLocations().end())
+	{
+		allowed_method_type_map = location_iter->second.getAllowMethod();
+		return (allowed_method_type_map.find(method)->second);
+	}
+	else
+		return (true);
+	/* 
+	if (this->getLocationBlock())
+	{
+		allowed_method_type_map = location_iter->second.getAllowMethod();
+		return (allowed_method_type_map.find(method)->second);
+	}
+	else
+		return (true);
+ 	*/
+
+}
+
+int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path)
+{
+	int											err_code;
+	std::vector<ServerConfig>::iterator			server_config_iter;
+	std::map<int, std::string>::const_iterator	err_page_iter;
+
+	server_config_iter = this->server_config_vector.begin();
+	while (server_config_iter->getPort() != port)
+		server_config_iter++;
+
+	const std::map<int, std::string>& err_page = server_config_iter->getErrorPage();
+	switch (stat_code)
+	{
+	case STATCODE_BADREQ:
+		err_code = 400;
+		break;
+	case STATCODE_NOTFOUND:
+		err_code = 404;
+		break;
+	case STATCODE_NOTALLOW:
+		err_code = 405;
+		break;
+	case STATCODE_SERVERR:
+		err_code = 500;
+		break;
+	default:
+		return (-1);
+		break;
+	}
+	err_page_iter = err_page.find(err_code);
+	if (err_page_iter == err_page.end())
+		return (-1);
+	else
+	{
+		std::string	serverRoot = server_config_iter->getRoot();
+		if (serverRoot.back() == '/')
+			serverRoot.pop_back();
+		err_file_path = server_config_iter->getRoot() + '/' + err_page_iter->second;
+		return (0);
+	}
+}
+
+size_t ConfigInfo::getMaxBodySize(const unsigned short& port)
+{
+	std::vector<ServerConfig>::iterator			server_config_iter;
+
+	server_config_iter = this->server_config_vector.begin();
+	while (server_config_iter->getPort() != port)
+		server_config_iter++;
+	return (server_config_iter->getClientMaxBodySize());
+}
+
+std::string	ConfigInfo::getCgiProgramPath(const std::string& cgi_extension, const unsigned short& port)
+{
+	std::vector<ServerConfig>::iterator			server_config_iter;
+
+	server_config_iter = this->server_config_vector.begin();
+	while (server_config_iter->getPort() != port)
+		server_config_iter++;
+	return(server_config_iter->getCgiProgramPath(cgi_extension));
 }

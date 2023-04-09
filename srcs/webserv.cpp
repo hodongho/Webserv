@@ -1,4 +1,4 @@
-// #include "ServerHandler.hpp"
+#include "ServerHandler.hpp"
 #include "ConfigInfo.hpp"
 
 //         - full path [servern_name]:[port][directory_path][file_name_with_extension]
@@ -38,7 +38,7 @@ void	testConvUriToPath(ConfigInfo& conf)
 
 int main(int argc, char *argv[])
 {
-	// ServerHandler	kqueueServer;
+	ServerHandler	kqueueServer;
 	ConfigInfo		conf;
 
 	try
@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
 			std::cerr << "please input server config file as argument\n\t\te.g) ./webserv server.conf" << std::endl;
 			return (1);
 		}
+    /*
 			// throwError("please input server config file as argument\n\t\te.g) ./webserv server.conf");
 		conf.parseConfig(argv[1]);
 		// conf.printWebservConfig();
@@ -55,6 +56,9 @@ int main(int argc, char *argv[])
 		testConvUriToPath(conf);
 		// kqueueServer.serverReady(argv[1]);
 		// kqueueServer.serverRun();
+    */
+		kqueueServer.serverReady(argv[1]);
+		kqueueServer.serverRun();
 	}
 	catch (std::exception& e)
 	{

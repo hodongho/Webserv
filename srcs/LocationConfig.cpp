@@ -2,11 +2,11 @@
 #include <iostream> // TODO remove
 
 LocationConfig::LocationConfig(void)
-    : location_path(""), root(""), index("index.html"), redirect(""), autoindex(false)
+: location_path(""), root(""), index("index.html"), redirect(""), autoindex(false)
 {
-    this->allow_method[GET] = true;
-    this->allow_method[POST] = true;
-    this->allow_method[DELETE] = true;
+    this->allow_method[METHOD_GET] = true;
+    this->allow_method[METHOD_POST] = true;
+    this->allow_method[METHOD_DELETE] = true;
 }
 
 LocationConfig::~LocationConfig()
@@ -44,7 +44,6 @@ void LocationConfig::setLocationPath(const std::string &_location_path)
 
 const std::string &LocationConfig::getLocationPath(void) const
 {
-    // TODO: 여기에 return 문을 삽입합니다.
     return (this->location_path);
 }
 

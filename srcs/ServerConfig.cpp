@@ -61,6 +61,12 @@ void ServerConfig::addLocationElement(const std::string &location_path, const Lo
 {
     this->locations[location_path] = location_config;
 }
+
+void ServerConfig::addCgiPassElement(const std::string& cgi_extension, const std::string& cgi_program_path)
+{
+    this->cgi_pass[cgi_extension] = cgi_program_path;
+}
+
 const std::string &ServerConfig::getServerName(void) const
 {
     return (this->server_name);
@@ -120,6 +126,19 @@ bool ServerConfig::getLocationBlock(const std::string &find_path, LocationConfig
     return (false);
 }
 
+const std::string&  ServerConfig::getCgiProgramPath(const std::string& cgi_extension) const
+{
+    std::map<std::string, std::string>::const_iterator  cgi_pass_iter = this->cgi_pass.begin();
+    std::map<std::string, std::string>::const_iterator  cgi_pass_end = this->cgi_pass.end();
+
+    for(; cgi_pass_iter != cgi_pass_end; cgi_pass_iter++)
+    {
+        if (cgi_pass_iter->first == cgi_extension)
+            break;
+    }
+    return (cgi_pass_iter->second);
+}
+
 void ServerConfig::printServerConfingContent(void) const
 {
     std::cout << "--------------------(CONTENT_DATA)-------------------------" << std::endl;
@@ -130,8 +149,8 @@ void ServerConfig::printServerConfingContent(void) const
     this->printContent(this->getIndex(), "this->getIndex()",GRN);
     this->printContent(this->getClientMaxBodySize(), "this->getClientMaxBodySize()",GRN);
     std::cout << "--------------------(MAP_DATA)-------------------------" << std::endl;
-    // this->printMapContent(this->default_error_page, "this->getDefaultErrorPage()", GRN);
     this->printMapContent(this->error_page, "this->getErrorPage()", GRN);
     this->printMapContent(this->locations, "this->getLocations()", GRN);
+    this->printMapContent(this->cgi_pass, "this->getCgiPass()", GRN);
 }
 
