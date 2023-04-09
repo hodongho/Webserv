@@ -619,7 +619,7 @@ bool	ConfigInfo::checkCgiPassConfigField(std::string	cgi_pass)
 	if (cgi_extention_iter == cgi_pass_vector.end() ||
 		cgi_program_path_iter == cgi_pass_vector.end())
 		return (false);
-	if (*cgi_extention_iter != ".php" || *cgi_extention_iter != ".py")
+	if (*cgi_extention_iter != ".php" && *cgi_extention_iter != ".py")
 		return (false);
     return (true);
 }
@@ -695,6 +695,7 @@ std::map<std::string, ConfigInfo::ValidateFieldInfo>	ConfigInfo::getValidateServ
 	validate_field_info.setValidateFieldType(OPTION_MULTI);
 	validate_server_field_map["error_page"] = validate_field_info;
 	validate_server_field_map["location"] = validate_field_info;
+	validate_server_field_map["cgi_pass"] = validate_field_info;
 	return (validate_server_field_map);
 }
 
@@ -823,6 +824,10 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 					for (; error_page_iter != error_page_map.end(); error_page_iter++)
 						server_config.addErrorPageElement(error_page_iter->first, error_page_iter->second);
 				}
+				// else if (first_word == "cgi_pass")
+				// {
+				// 	parseCgiPassConfigField();
+				// }
 				else
 				{
 					std::cerr << RED <<  "Could not found field " << first_word << WHI<<std::endl;
@@ -985,7 +990,10 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 				else if (first_word == "cgi_pass")
 				{
 					if (checkCgiPassConfigField(clean_str) == false)
+					{
+						std::cout << "Cgi_pass" << std::endl;
 						return (false);
+					}
 				}
 				else
 				{
@@ -1424,6 +1432,8 @@ int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, s
 		break;
 	case STATCODE_SERVERR:
 		err_code = 500;
+		break;
+	default:
 		break;
 	}
 	err_page_iter = err_page.find(err_code);
