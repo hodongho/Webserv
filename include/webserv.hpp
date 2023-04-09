@@ -38,6 +38,11 @@ struct SocketData
 	int				sock_fd;
 	sockaddr_in		addr;
 	IdentType		id_type;
+};
+
+struct ClientSocketData : public SocketData
+{
+	sockaddr_in		listen_addr;
 	SocketStatus	status;
 	HTTPRequest		http_request;
 	HTTPResponse	http_response;
