@@ -6,15 +6,8 @@
 
 
 ServerConfig::ServerConfig(void)
-    : server_name(""), host("172.0"), port(0), index("index.html"), client_max_body_size(0)
-{
-    std::map<int, std::string>              _default_error_page;
-
-    _default_error_page[403] = "/";
-    _default_error_page[404] = "/";
-    _default_error_page[500] = "/";
-    this->default_error_page = _default_error_page;
-}
+    : server_name(""), host(""), port(0), index("index.html"), client_max_body_size(0)
+{}
 
 ServerConfig::~ServerConfig(void)
 {}
@@ -47,11 +40,6 @@ void ServerConfig::setIndex(const std::string & _index)
 void ServerConfig::setClientMaxBodySize(const size_t &_client_max_body_size)
 {
     this->client_max_body_size = _client_max_body_size;
-}
-
-void ServerConfig::setDefaultErrorPage(const std::map<int, std::string> &_default_error_page)
-{
-    this->default_error_page = _default_error_page;
 }
 
 void ServerConfig::setErrorPage(const std::map<int, std::string> & _error_page)
@@ -109,11 +97,6 @@ const size_t& ServerConfig::getClientMaxBodySize(void) const
     return (this->client_max_body_size);
 }
 
-const std::map<int, std::string>& ServerConfig::getDefaultErrorPage(void) const
-{
-    return (this->default_error_page);
-}
-
 const std::map<int, std::string>& ServerConfig::getErrorPage(void) const
 {
     return (this->error_page);
@@ -122,6 +105,25 @@ const std::map<int, std::string>& ServerConfig::getErrorPage(void) const
 const std::map<std::string, LocationConfig>& ServerConfig::getLocations(void) const
 {
     return (this->locations);
+}
+
+bool ServerConfig::getLocationBlock(const std::string &find_path, LocationConfig& location_config) const
+{
+    const std::map<std::string, LocationConfig>& location_config_map = this->getLocations();
+
+    std::map<std::string, LocationConfig>::const_iterator location_iter = location_config_map.begin();
+    for (;location_iter != location_config_map.end() ;location_iter++)
+    {
+        std::string		location_path;
+
+        location_path = location_iter->first;
+        if (location_path == find_path)
+        {
+            location_config = location_iter->second;
+            return (true);
+        }
+    }
+    return (false);
 }
 
 const std::string&  ServerConfig::getCgiProgramPath(const std::string& cgi_extension) const
@@ -147,7 +149,6 @@ void ServerConfig::printServerConfingContent(void) const
     this->printContent(this->getIndex(), "this->getIndex()",GRN);
     this->printContent(this->getClientMaxBodySize(), "this->getClientMaxBodySize()",GRN);
     std::cout << "--------------------(MAP_DATA)-------------------------" << std::endl;
-    this->printMapContent(this->default_error_page, "this->getDefaultErrorPage()", GRN);
     this->printMapContent(this->error_page, "this->getErrorPage()", GRN);
     this->printMapContent(this->locations, "this->getLocations()", GRN);
     this->printMapContent(this->cgi_pass, "this->getCgiPass()", GRN);

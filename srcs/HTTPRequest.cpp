@@ -182,5 +182,3 @@ void	HTTPRequest::clear()
 	this->header.clear();
 	this->body.clear();
 }
-
-// std::cerr << RED << "400 Bad Request!" << WHI << std::endl;
