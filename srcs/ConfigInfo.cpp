@@ -1393,8 +1393,7 @@ void ConfigInfo::printVector(std::vector<std::string> &word_list, const std::str
 */
 PathState ConfigInfo::convUriToPath(const std::string &URI, std::string &file_path)
 {
-	PathState ret_pathState = PATH_CGI;
-	// PathState ret_pathState = PATH_NOTFOUND;
+	PathState ret_pathState = PATH_NOTFOUND;
 	(void)URI;
 	(void)file_path;
 
