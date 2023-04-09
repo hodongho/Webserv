@@ -17,11 +17,12 @@ class HTTPResponse;
 enum IdentType
 {
 	ID_LISTEN_SOCKET,
-	ID_CLIENT_SOCKET
+	ID_CLIENT_SOCKET,
 };
 
 enum SocketStatus
 {
+	SOCKSTAT_SERVER_LISTEN,
 	SOCKSTAT_CLIENT_RECV_HEADER,
 	SOCKSTAT_CLIENT_RECV_BODY,
 	SOCKSTAT_CLIENT_MAKE_RESPONSE,
@@ -37,12 +38,6 @@ struct SocketData
 	int				sock_fd;
 	sockaddr_in		addr;
 	IdentType		id_type;
-};
-
-
-struct ClientSocketData : public SocketData
-{
-	sockaddr_in		listen_addr;
 	SocketStatus	status;
 	HTTPRequest		http_request;
 	HTTPResponse	http_response;
