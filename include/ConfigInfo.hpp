@@ -14,14 +14,14 @@ enum PathState
 	PATH_VALID,
 	PATH_AUTOINDEX,
 	PATH_CGI,
-	PATH_REDIRECT,
+	PATH_REDIRECT
 };
 
 enum	FileExistanceType
 {
+	NO_EXIST,
 	EXIST_FILE,
-	EXIST_DIRECTORY,
-	NO_EXIST
+	EXIST_DIRECTORY
 };
 
 class ConfigInfo
@@ -147,6 +147,7 @@ class ConfigInfo
 		std::string				getAbsFilePath(const std::string &file_path_request_URI, const unsigned short &port);
 		enum FileExistanceType	getFileExistanceType(const std::string& file_path);
 		bool					isCgiRequest(const std::string& file_path);
+		bool					isLastPartOfStr(const std::string& origin_str, const std::string& find_str);
 
 	public:
 		ConfigInfo(void);

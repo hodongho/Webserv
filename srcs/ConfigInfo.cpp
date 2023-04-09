@@ -1424,6 +1424,11 @@ void ConfigInfo::printFilePathofURI(const std::string &URI, const std::string &t
 //     return is_matched_location_config;
 // }
 
+/*
+1.	http://localhost:90/test  	=> //localhost:90/test   
+2.	localhost:90/test      		=> /test   
+
+*/
 std::string	ConfigInfo::getFilePathFromRequestURI(const std::string& startline_of_URI)
 {
 	size_t		file_path_start_idx;
@@ -1525,7 +1530,7 @@ enum FileExistanceType ConfigInfo::getFileExistanceType(const std::string &file_
 
 	
 	if (stat(file_path.c_str(), &statbuf) < 0) {
-		std::cerr << PUP << "stat error" << WHI << std::endl;
+		// std::cerr << PUP << "stat error" << WHI << std::endl;
         // exit(1);
 		return (NO_EXIST);
     }
@@ -1539,7 +1544,19 @@ enum FileExistanceType ConfigInfo::getFileExistanceType(const std::string &file_
         std::cout << "file_path.c_str() is directory : " << file_path.c_str() << std::endl;
 		return (EXIST_DIRECTORY);
     }
+	std::cerr << RED << "Unknow error in getFileExistanceType() " << BRW << "file_path : " << file_path  << WHI << std::endl;
     return (NO_EXIST);
+}
+
+bool	ConfigInfo::isLastPartOfStr(const std::string& origin_str, const std::string& find_str)
+{
+	size_t	find_str_pos;
+
+	find_str_pos = origin_str.rfind(find_str);
+	if (find_str_pos != std::string::npos &&
+		find_str_pos + find_str.size() == origin_str.size())
+		return (true);
+	return (false);
 }
 
 /*
@@ -1549,11 +1566,9 @@ enum FileExistanceType ConfigInfo::getFileExistanceType(const std::string &file_
 */
 bool ConfigInfo::isCgiRequest(const std::string &file_path)
 {
-	(void)file_path;
-	// std::vector<std::string>	
-	//  ft_split(file_path, ".php");
-	// if (file_path.compare(".php") || file_path.compare(".py"))
-	// 	return (true);
+	// config에 있는 cgi정보 이용 필요
+	if (isLastPartOfStr(file_path, ".php") || isLastPartOfStr(file_path, ".py"))
+		return (true);
     return (false);
 }
 
@@ -1628,43 +1643,85 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 		return (PATH_REDIRECT);
 	}
 	abs_file_path_of_server = this->getAbsFilePath(file_path_request_URI, port);
-	printContent(abs_file_path_of_server, "abs_file_path_of_server", GRN);
+	printContent(abs_file_path_of_server, "abs_file_path_of_server", PUP);
 	// enum FileExistanceType getFileExistanceType(cont std::string& abs_file_path_of_server)
 	file_existance_type = this->getFileExistanceType(abs_file_path_of_server);
-	std::cout << "file_existance_type : " << file_existance_type << std::endl;
+	// std::cout << "file_existance_type : " << file_existance_type << std::endl;
 	/*
 		존재하는가?
 		한다면 파일인가 디렉터리인가?
 	*/
-	//file_path에 계속 더해줌
-	// switch (file_existance_type)
-	// {
-	// 	case EXIST_FILE:
-	// 	{
-	// 		if (isCgiRequest(file_path)); // TODO
-	// 			return (PATH_CGI);
-	// 		return (PATH_VALID);
-	// 		break ;
-	// 	}
-	// 	case EXIST_DIRECTORY:
-	// 	{
-	// 		// (file_path, port);
-	// 		// index에 걸리는지
-	// 		// location block
-	// 		// server block
-	// 		break ;
-	// 	}
-	// 	case NO_EXIST:
-	// 	{
-	// 		return (PATH_NOTFOUND);
-	// 		break ;	
-	// 	}
-	// 	default:
-	// 	{
-	// 		std::cerr << "error in convUriToPath()" << std::endl;
-	// 		return (PATH_NOTFOUND);
-	// 		break ;
-	// 	}
-	// }
+	// file_path에 계속 더해줌
+	switch (file_existance_type)
+	{
+		case EXIST_FILE:
+		{
+			file_path = abs_file_path_of_server;
+			if (isCgiRequest(file_path)) // TODO adjust cgi config info
+			{
+				this->printContent(file_path, "file_path match to index file in EXIST_FILE, PATH_VALID", CYN);
+				return (PATH_CGI);
+			}
+			this->printContent(file_path, "file_path match to index file in EXIST_FILE, PATH_VALID", GRN);
+			return (PATH_VALID);
+			break ;
+		}
+		case EXIST_DIRECTORY:
+		{
+			LocationConfig	location_config;
+
+			// index에 걸리는지
+			if (this->getLocationConfig(port, file_path_request_URI, location_config))
+			{
+				std::string				index_file;
+				enum FileExistanceType	recycle_file_existance_type;
+
+				index_file = location_config.getIndex();
+				recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);
+				if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
+				{
+					file_path = abs_file_path_of_server + index_file;
+					this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_VALID", GRN);
+					return (PATH_VALID);
+				}
+				else //NO_EXIST or EXIST_DIRECTORY
+				{
+					file_path = abs_file_path_of_server;
+					// autoindex check
+					if (location_config.getAutoindex())
+					{
+						this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_AUTOINDEX", BLU);
+						return (PATH_AUTOINDEX);
+					}
+					else
+					{
+						this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND", RED);
+						return (PATH_NOTFOUND);
+					}
+				}
+				// else if (EXIST_DIRECTORY)
+				// 	;
+			}
+			else
+			{
+				// std::cerr << "error in EXIST_DIRECTORY of convUriToPath()" << std::endl;
+				this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND location config N.O.T found!!!!!", RED);
+				return (PATH_NOTFOUND);
+			}
+			break ;
+		}
+		case NO_EXIST:
+		{
+			this->printContent(file_path, "file_path match to index file in NO_EXIST, PATH_NOTFOUND", RED);
+			return (PATH_NOTFOUND);
+			break ;	
+		}
+		default:
+		{
+			// std::cerr << "error in convUriToPath()" << std::endl;
+			return (PATH_NOTFOUND);
+			break ;
+		}
+	}
 	return (PATH_NOTFOUND);
 }
