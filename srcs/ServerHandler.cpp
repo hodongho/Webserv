@@ -656,7 +656,8 @@ void ServerHandler::clearClientSocketData(struct ClientSocketData* client_socket
 
 void	ServerHandler::initCgiArg(char **&arg, const std::string& cgi_script_path)
 {
-	std::string cgi_program_path = this->conf.getCgiProgramPath(getExtension(cgi_script_path));
+	std::string cgi_program_path;
+	// std::string cgi_program_path = this->conf.getCgiProgramPath(getExtension(cgi_script_path));
 
 	arg = new char *[3];
 	arg[0] = strdup(cgi_program_path.c_str());
