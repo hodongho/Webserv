@@ -88,10 +88,13 @@ class ConfigInfo
         bool    checkErrorPageConfigField(std::string error_page);
         bool    checkErrorPageStatusCodde(const std::string& status_code);
         bool    checkAllowMethodConfigField(std::string allow_method);
+        bool    checkCgiPassConfigField(std::string cgi_pass);
+
 
         bool    checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::ValidateFieldInfo> validate_server_field_map);
 
         bool    parseErrorPageConfigField(std::string error_page, std::map<int, std::string>& error_page_map);
+        bool    parseCgiPassConfigField(std::string cgi_pass, std::string& cgi_extension, std::string& cgi_program_path);
 
         // get validate info
         std::map<std::string, ValidateFieldInfo>	getValidateServerFieldMap(void);
@@ -120,11 +123,10 @@ class ConfigInfo
 
         // for using config info
 
-        enum		PathState convUriToPath(const std::string& URI, std::string& file_path);
-        bool		isAllowedMethod(const std::string& URI, const unsigned short& port, const enum MethodType& method);
-		std::string	getCgiProgramPath(const std::string& cgi_ext);
-    	int			getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path);
-		size_t		getMaxBodySize(const unsigned short& port);
+        enum	PathState convUriToPath(const std::string& URI, std::string& file_path);
+        bool isAllowedMethod(const std::string& URI, const unsigned short& port, const enum MethodType& method);
+    		int		getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path);
+		    size_t	getMaxBodySize(const unsigned short& port);
 };
 
 #endif

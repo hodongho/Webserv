@@ -107,7 +107,6 @@ static void	printRecvData(const int& fd, const std::string& data, const ssize_t&
 			<< std::endl;
 }
 
-
 void ServerHandler::recvHeader(struct kevent* const & curr_event, ClientSocketData* const & client_socket)
 {
 	char		buf[RECV_BUF_SIZE];

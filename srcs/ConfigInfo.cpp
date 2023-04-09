@@ -591,6 +591,40 @@ bool	ConfigInfo::checkCommonConfigLineForm(std::vector<std::string> word_list)
 	return (true);
 }
 
+bool	ConfigInfo::checkCgiPassConfigField(std::string	cgi_pass)
+{
+	std::string							value;
+	size_t 								semicolon_pos;
+	size_t								comment_pos;
+	std::vector<std::string>			cgi_pass_vector;
+	std::vector<std::string>::iterator	cgi_extension_iter;
+	std::vector<std::string>::iterator	cgi_program_path_iter;
+
+	semicolon_pos = cgi_pass.find(';');
+	if (semicolon_pos == std::string::npos)
+		return (false);
+	cgi_pass = removeAfterSemicolon(cgi_pass);
+	comment_pos = cgi_pass.find('#');
+	if (comment_pos != std::string::npos)
+	{
+		if (semicolon_pos > comment_pos)
+			return (false);
+		else if (semicolon_pos + 1 != comment_pos)
+			return (false);
+	}
+	cgi_pass = ft_strtrim(cgi_pass, this->whitespace);
+	cgi_pass_vector = ft_split(cgi_pass, this->whitespace);
+	cgi_extension_iter = cgi_pass_vector.begin() + 1;
+	cgi_program_path_iter = cgi_pass_vector.begin() + 2;
+	if (cgi_extension_iter == cgi_pass_vector.end() ||
+		cgi_program_path_iter == cgi_pass_vector.end() ||
+		(cgi_program_path_iter + 1) != cgi_pass_vector.end())
+		return (false);
+	if (*cgi_extension_iter != ".php" && *cgi_extension_iter != ".py")
+		return (false);
+    return (true);
+}
+
 bool	ConfigInfo::findServerBlock(std::vector<std::string>::iterator& iter, \
 													const std::vector<std::string>::iterator& src_end_iter, \
 													std::vector<std::string>::iterator& begin_iter, \
@@ -662,6 +696,7 @@ std::map<std::string, ConfigInfo::ValidateFieldInfo>	ConfigInfo::getValidateServ
 	validate_field_info.setValidateFieldType(OPTION_MULTI);
 	validate_server_field_map["error_page"] = validate_field_info;
 	validate_server_field_map["location"] = validate_field_info;
+	validate_server_field_map["cgi_pass"] = validate_field_info;
 	return (validate_server_field_map);
 }
 
@@ -790,6 +825,14 @@ bool ConfigInfo::parseServerBlock(std::vector<std::string> server_block_vec)
 					for (; error_page_iter != error_page_map.end(); error_page_iter++)
 						server_config.addErrorPageElement(error_page_iter->first, error_page_iter->second);
 				}
+				else if (first_word == "cgi_pass")
+				{
+					std::string	cgi_extension;
+					std::string	cgi_program_path;
+
+					parseCgiPassConfigField(clean_str, cgi_extension, cgi_program_path);
+					server_config.addCgiPassElement(cgi_extension, cgi_program_path);
+				}
 				else
 				{
 					std::cerr << RED <<  "Could not found field " << first_word << WHI<<std::endl;
@@ -832,6 +875,18 @@ bool	ConfigInfo::parseErrorPageConfigField(std::string error_page, std::map<int,
 		error_status_code = std::atoi(error_status_code_str.c_str());
 		error_page_map[error_status_code] = error_page_end_value;
 	}
+    return (true);
+}
+
+bool	ConfigInfo::parseCgiPassConfigField(std::string cgi_pass, std::string& cgi_extension, std::string& cgi_program_path)
+{
+	std::vector<std::string>	cgi_pass_vector;
+
+	cgi_pass = removeAfterSemicolon(cgi_pass);
+	cgi_pass = ft_strtrim(cgi_pass, this->whitespace);
+	cgi_pass_vector = ft_split(cgi_pass, this->whitespace);
+	cgi_extension = *(cgi_pass_vector.begin() + 1);
+	cgi_program_path = *(cgi_pass_vector.begin() + 2);
     return (true);
 }
 
@@ -947,6 +1002,11 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 				else if (first_word == "error_page")
 				{
 					if (checkErrorPageConfigField(clean_str) == false)
+						return (false);
+				}
+				else if (first_word == "cgi_pass")
+				{
+					if (checkCgiPassConfigField(clean_str) == false)
 						return (false);
 				}
 				else
@@ -1356,17 +1416,10 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
 	while (server_config_iter->getPort() != port)
 		server_config_iter++;
 	location_config_map = server_config_iter->getLocations();
-	std::cout << location_config_map["/"].getRoot() << std::endl;
 	location_config = location_config_map.find(origin_URI)->second;
 	allowed_method_type_map = location_config.getAllowMethod();
 
 	return (allowed_method_type_map.find(method)->second);
-}
-
-std::string ConfigInfo::getCgiProgramPath(const std::string& cgi_ext)
-{
-	(void)cgi_ext;
-	return ("");
 }
 
 int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path)
