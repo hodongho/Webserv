@@ -130,6 +130,7 @@ class  ValidateFieldInfo
 	enum FileExistanceType	getFileExistanceType(const std::string& file_path);
 	bool					isCgiRequest(const std::string& file_path);
 	bool					isLastPartOfStr(const std::string& origin_str, const std::string& find_str);
+	void					removeLastSlashSignOfStr(std::string& str);
 
 public:
 	ConfigInfo(void);

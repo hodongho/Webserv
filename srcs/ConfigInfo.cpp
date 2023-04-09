@@ -1461,6 +1461,21 @@ bool ConfigInfo::checkRedirect(const std::string& file_path_request_URI, const u
 }
 
 /*
+	URI 및 Config root마지막에 있는 slash를 제거하는 용도로 쓰인다.
+*/
+void	ConfigInfo::removeLastSlashSignOfStr(std::string& str)
+{
+	size_t	last_char_idx;
+
+	last_char_idx = str.size() - 1;
+	while (str[last_char_idx] == '/')
+	{
+		str.erase(last_char_idx, 1);
+		last_char_idx = str.size() - 1;
+	}
+}
+
+/*
 - location block안에서 찾았다면
 	- location block root + file_path_request_URI
 
@@ -1492,6 +1507,7 @@ std::string ConfigInfo::getAbsFilePath(const std::string &file_path_request_URI,
 		if (this->getServerConfig(port, server_config))
 		{
 			root_path = server_config.getRoot();
+			// removeLastSlashSignOfStr(std::string& str) 대체할 것 단, 테스트 필요
 			// std::cout << WHI << "root_path : " << root_path <<  WHI << std::endl;
 			last_char_idx = root_path.size() - 1;
 			while (root_path[last_char_idx] == '/')
