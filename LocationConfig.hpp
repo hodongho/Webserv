@@ -8,7 +8,7 @@
 class LocationConfig
 {
 	private:
-		// std::string					location_path;	// 필수 필드 key로 이동 (std::map<std::string, LocationConfig>	locations)
+		std::string						location_path;	// 필수 필드 key로 이동 (std::map<std::string, LocationConfig>	locations)
 		std::string						root;			// 선택 필드, 입력값 없으면 ""
 		std::string						index;			// 선택 필드, 입력값 없으면 ""
 		std::string						redirect;		// 선택 필드, 입력값 없으면 "" , default로 301 code만 들어온다고 가정
@@ -21,6 +21,7 @@ class LocationConfig
 		virtual ~LocationConfig();
 
 		// setter()
+		void	setLocationPath(const std::string& _location_path);
 		void	setRoot(const std::string& _root);
 		void	setIndex(const std::string& _index);
 		void	setRedirect(const std::string& _redirect);
@@ -28,11 +29,12 @@ class LocationConfig
 		void	setAllowMethod(const std::map<MethodType, bool>& _allow_method);
 
 		// getter()
-		const std::string			getRoot(void) const;
-		const std::string			getIndex(void) const;
-		const std::string			getRedirect(void) const;
-		bool						getAutoindex(void) const;
-		std::map<MethodType, bool>	getAllowMethod(void) const;
+		const std::string&					getLocationPath(void) const;
+		const std::string&					getRoot(void) const;
+		const std::string&					getIndex(void) const;
+		const std::string&					getRedirect(void) const;
+		const bool&							getAutoindex(void) const;
+		const std::map<MethodType, bool>&	getAllowMethod(void) const;
 
 		// print 
 		template <typename T>

@@ -711,6 +711,43 @@ std::map<std::string, ConfigInfo::ValidateFieldInfo>	ConfigInfo::getValidateLoca
 	return (validate_location_field_map);
 }
 
+/*
+- location field가 있고 해당 location field에 root항목이 비어있다면 
+  sever config block에 있는 root를 넣어준다.
+*/
+void	ConfigInfo::setRootToLocationConfig(void)
+{
+	std::vector<ServerConfig>					webserv_config;
+	std::vector<ServerConfig>::const_iterator	webserv_config_iter;
+
+	webserv_config = getWebservConfig();
+	webserv_config_iter = webserv_config.begin();
+	for (;webserv_config_iter != webserv_config.end(); webserv_config_iter++)
+	{
+		ServerConfig											server_config;
+		std::map<std::string, LocationConfig>					location_config_map;
+		std::map<std::string, LocationConfig>::const_iterator	location_config_map_iter;
+		
+		server_config = *webserv_config_iter;
+		location_config_map = server_config.getLocations();
+		location_config_map_iter = location_config_map.begin();
+		for (;location_config_map_iter != location_config_map.end(); location_config_map_iter++)
+		{
+			LocationConfig	location_config;
+
+			location_config = location_config_map_iter->second;
+			if (location_config.getRoot() == "")
+			{
+				location_config.printLocationConfingContent(BRW);
+				location_config.setRoot(server_config.getRoot());
+				std::cout << std::endl << std::endl << "===== after setRoot ==========" << std::endl << std::endl<< std::endl;
+				location_config.printLocationConfingContent(BRW);
+			}
+		}
+
+	}
+}
+
 bool	ConfigInfo::parse(const std::string &file_content)
 {
 	std::string							str;
@@ -744,6 +781,7 @@ bool	ConfigInfo::parse(const std::string &file_content)
 			return (false);
 		cur_iter++;
 	}
+	setRootToLocationConfig();
 	return (true);
 }
 
@@ -1037,7 +1075,10 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 			field_value = *(word_list.begin() + 1);
 			field_value = removeAfterSemicolon(field_value); // important!
 			if (first_word == "location")
+			{
 				location_path = field_value;
+				location_config.setLocationPath(location_path);
+			}
 			else if (first_word == "allow_method")
 			{
 				std::map<MethodType, bool>			allow_method_map;
@@ -1347,20 +1388,20 @@ void ConfigInfo::printVector(std::vector<std::string> &word_list, const std::str
 // {
 //     return false;
 // }
-bool ConfigInfo::checkFilePathofURI(const std::string &URI, const std::string &truncated_URI)
-{
-	printContent(truncated_URI, "truncated_URI", BRW);
-	if (truncated_URI.size())
-	{
-		printFilePathofURI(URI, truncated_URI);
-	    return false;
-	}
-	else // 제대로 걸렀다면 else문을 타서는 안된다.
-	{
-		std::cout << "there are no path('/') sign" << std::endl;
-	    return true;
-	}
-}
+// bool ConfigInfo::checkFilePathofURI(const std::string &URI, const std::string &truncated_URI)
+// {
+// 	printContent(truncated_URI, "truncated_URI", BRW);
+// 	if (truncated_URI.size())
+// 	{
+// 		printFilePathofURI(URI, truncated_URI);
+// 	    return false;
+// 	}
+// 	else // 제대로 걸렀다면 else문을 타서는 안된다.
+// 	{
+// 		std::cout << "there are no path('/') sign" << std::endl;
+// 	    return true;
+// 	}
+// }
 
 void ConfigInfo::printFilePathofURI(const std::string &URI, const std::string &truncated_URI)
 {
@@ -1368,20 +1409,20 @@ void ConfigInfo::printFilePathofURI(const std::string &URI, const std::string &t
 	printContent(truncated_URI, "truncated_URI\t\t", GRN);
 }
 
-bool ConfigInfo::checkMatchFilePathToLocationConfig(const std::string &startline_of_URI, const std::string &file_path_request_URI, const LocationConfig &location_config, bool is_matched_location_config)
-{
-	if (is_matched_location_config)
-	{
-		checkFilePathofURI(startline_of_URI, file_path_request_URI);
-		location_config.printLocationConfingContent(PUP);
-	}
-	else
-	{
+// bool ConfigInfo::checkMatchFilePathToLocationConfig(const std::string &startline_of_URI, const std::string &file_path_request_URI, const LocationConfig &location_config, bool is_matched_location_config)
+// {
+// 	if (is_matched_location_config)
+// 	{
+// 		checkFilePathofURI(startline_of_URI, file_path_request_URI);
+// 		location_config.printLocationConfingContent(PUP);
+// 	}
+// 	else
+// 	{
 
-		std::cout << "is_matched_location_config is false" << std::endl;
-	}
-    return is_matched_location_config;
-}
+// 		std::cout << "is_matched_location_config is false" << std::endl;
+// 	}
+//     return is_matched_location_config;
+// }
 
 std::string getFilePathFromRequestURI(const std::string& startline_of_URI)
 {
@@ -1413,6 +1454,10 @@ bool ConfigInfo::checkRedirect(const std::string& file_path_request_URI, const u
 	if (getLocationConfig(port, file_path_request_URI, location_config) && \
 		(location_config.getRedirect() != ""))
 	{
+		// std::cout  << RED << "===========" << WHI << std::endl;
+		// std::cout  << RED << "redirect ||" << WHI << std::endl;
+		// std::cout  << RED << "===========" << WHI << std::endl;
+		// location_config.printLocationConfingContent(RED);
 		file_path = location_config.getRedirect();
 		return (true);
 	}
@@ -1424,10 +1469,12 @@ bool ConfigInfo::checkRedirect(const std::string& file_path_request_URI, const u
 	- location block root + file_path_request_URI
 
 	- server block root + file_path_request_URI
+	root뒤에 '/'가 있다면 제거
 */
 std::string ConfigInfo::getAbsFilePath(const std::string &file_path_request_URI, const unsigned short &port)
 {
 	LocationConfig	location_config;
+	std::string		root_path;
 
 	if (getLocationConfig(port, file_path_request_URI, location_config))
 	{
@@ -1438,7 +1485,7 @@ std::string ConfigInfo::getAbsFilePath(const std::string &file_path_request_URI,
 			ServerConfig	server_config;
 
 			if (getServerConfig(port, server_config))
-				return (file_path_request_URI + location_config.getRoot());
+				return (location_config.getRoot() + file_path_request_URI);
 			else // 만약 serverConfig를 못찾았어도 문제. 하지만 config 파일에서 port를 읽어서 처리할것으로 예상되므로 괜찮을듯
 				return ("");
 		}
@@ -1447,10 +1494,10 @@ std::string ConfigInfo::getAbsFilePath(const std::string &file_path_request_URI,
 	{
 		ServerConfig	server_config;
 
-			if (getServerConfig(port, server_config))
-				return (file_path_request_URI + location_config.getRoot());
-			else
-				return ("");
+		if (getServerConfig(port, server_config))
+			return (server_config.getRoot() + file_path_request_URI);
+		else
+			return ("");
 	}
 }
 
@@ -1546,9 +1593,6 @@ bool ConfigInfo::isCgiRequest(const std::string &file_path)
 */
 enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path)
 {
-	// enum PathState  path_type;
-    // bool            redirect_flag;
-	// size_t		file_path_start_idx;
 	std::string				file_path_request_URI;
 	// enum FileExistanceType	file_existance_type;
 
@@ -1559,12 +1603,8 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 	file_path_request_URI = getFilePathFromRequestURI(startline_of_URI);
 	if (file_path_request_URI == "")
 		return (PATH_NOTFOUND);
-	// location_config
-	// checkFilePathofURI(startline_of_URI, file_path_request_URI);
-	// std::cout << std::endl << std::endl << std::endl;
 	// (void)port;
 	// is_matched_location_config = matchFilePathToLocationConfig(file_path_request_URI, port, location_config);
-	// checkMatchFilePathToLocationConfig(startline_of_URI, file_path_request_URI, location_config, is_matched_location_config);
 	/*
 		- redirect인지 확인
 		해당 location block에 
@@ -1573,18 +1613,19 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 	// 확인 필요
 	if (checkRedirect(file_path_request_URI, port, file_path))
 		return (PATH_REDIRECT);
-
 	/*
 		location block root + location_path
 		server block root + location_path
 	*/
 	file_path = getAbsFilePath(file_path_request_URI, port);
+	printContent(file_path, "file_path", GRN);
 
 	// enum FileExistanceType getFileExistanceType(cont std::string& abs_file_path_of_server)
 	/*
 		존재하는가?
 		한다면 파일인가 디렉터리인가?
 	*/
+	//file_path에 계속 더해줌
 	// file_existance_type = getFileExistanceType(file_path);
 	// switch (file_existance_type)
 	// {

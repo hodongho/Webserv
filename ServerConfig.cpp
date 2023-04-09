@@ -131,7 +131,7 @@ bool ServerConfig::getLocationBlock(const std::string &find_path, LocationConfig
         if (location_path == find_path)
         {
             location_config = location_iter->second;
-            location_config.printLocationConfingContent(BRW);
+            // location_config.printLocationConfingContent(BRW);
             return (true);
         }
     }

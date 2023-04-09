@@ -21,9 +21,9 @@ void	testConvUriToPath(ConfigInfo& conf)
 	request_uri = "localhost:4242//index.html";
 	conf.convUriToPath(request_uri, 4242, uri_abs_file_path);
 	request_uri = "/test/index.html";
-	conf.convUriToPath(request_uri, 4242, uri_abs_file_path);
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "/test";
-	conf.convUriToPath(request_uri, 4242, uri_abs_file_path);
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "/wewew";
 	conf.convUriToPath(request_uri, 4242, uri_abs_file_path);
 	std::string	uri = "localhost:4242/index.html";
