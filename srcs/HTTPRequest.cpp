@@ -48,11 +48,11 @@ int	HTTPRequest::parseStartLine(std::stringstream& request_stream)
 int	HTTPRequest::validateHeaderField(void)
 {
 	//request 필수헤더 검사
-	std::map<std::string, std::string>::iterator	end = header.end();
-	if (header.find(HOST) == end ||
-		header.find(USER_AGENT) == end ||
-		header.find(ACCEPT) == end ||
-		header.find(CONNECTION) == end)
+	std::map<std::string, std::string>::iterator	end = this->header.end();
+	if (this->header.find(HOST) == end ||
+		this->header.find(USER_AGENT) == end ||
+		this->header.find(ACCEPT) == end ||
+		this->header.find(CONNECTION) == end)
 		return (-1);
 	return (0);
 }
@@ -123,12 +123,11 @@ const std::string	HTTPRequest::getConnection() const
 {
 	std::map<std::string, std::string>::const_iterator	connection_it;
 
-	connection_it = header.find(CONNECTION);
-	if (connection_it == header.end())
+	connection_it = this->header.find(CONNECTION);
+	if (connection_it == this->header.end())
 		return ("");
 	else
 		return(connection_it->second);
-
 }
 
 const std::string	HTTPRequest::getServerName() const
@@ -136,8 +135,8 @@ const std::string	HTTPRequest::getServerName() const
 	std::map<std::string, std::string>::const_iterator	server_name_it;
 	size_t												colone_pos;
 
-	server_name_it = header.find(HOST);
-	if (server_name_it == header.end())
+	server_name_it = this->header.find(HOST);
+	if (server_name_it == this->header.end())
 		return ("");
 	colone_pos = server_name_it->second.find(":");
 	return(server_name_it->second.substr(0, colone_pos));
@@ -148,11 +147,37 @@ const std::string	HTTPRequest::getServerPort() const
 	std::map<std::string, std::string>::const_iterator	server_port_it;
 	size_t												colone_pos;
 
-	server_port_it = header.find(HOST);
-	if (server_port_it == header.end())
+	server_port_it = this->header.find(HOST);
+	if (server_port_it == this->header.end())
 		return ("");
 	colone_pos = server_port_it->second.find(":");
 	return(server_port_it->second.substr(colone_pos + 1));
+}
+
+const std::string	HTTPRequest::getLocalPath() const
+{
+	std::map<std::string, std::string>::const_iterator	host_it;
+	size_t												host_pos;
+
+	host_it = this->header.find(HOST);
+	if (host_it == this->header.end())
+		return ("");
+	host_pos = this->URI.find(host_it->second);
+	if (host_pos == std::string::npos)
+		return (this->URI);
+	else
+		return (this->URI.substr(host_pos + host_it->second.size()));
+}
+
+const std::string	HTTPRequest::getContentType() const
+{
+	std::map<std::string, std::string>::const_iterator	content_type_iter;
+
+	content_type_iter = this->header.find("Content-Type");
+	if (content_type_iter == this->header.end())
+		return ("");
+	else
+		return(content_type_iter->second);
 }
 
 ssize_t	HTTPRequest::getContentLength() const
@@ -160,8 +185,8 @@ ssize_t	HTTPRequest::getContentLength() const
 	std::map<std::string, std::string>::const_iterator	content_length_it;
 	ssize_t												content_length;
 
-	content_length_it = header.find("Content-length");
-	if (content_length_it == header.end())
+	content_length_it = this->header.find("Content-Length");
+	if (content_length_it == this->header.end())
 		return (-1);
 
 	for (size_t i = 0; i < content_length_it->second.size(); i++)

@@ -49,7 +49,7 @@ void ConfigInfo::parseConfig(const char *file_name)
 		std::cout << "Config file content is N.O.T validate" << std::endl;
 		exit(1);
 	}
-  
+
 	if (this->parse(file_content))
 		std::cout << "Config parse is OK" << std::endl;
 	else
@@ -96,7 +96,7 @@ bool	ConfigInfo::getLocationConfig(const unsigned short &port, const std::string
 void ConfigInfo::printWebservConfig(void)
 {
 	std::vector<ServerConfig>::iterator	iter = this->server_config_vector.begin();
-	
+
 
 	for (;iter != this->server_config_vector.end(); iter++)
 	{
@@ -143,10 +143,10 @@ std::string ConfigInfo::readFile(std::string file_name)
 }
 
 /*
-	여러번 파일을 읽을것이라서 const불가, 
+	여러번 파일을 읽을것이라서 const불가,
 	reference하면 파일 pos가 맨 밑으로 갈것으로 예상되어서 deep copy되게 놔둠
 	- 짝은 맞지만 불필요한 곳에 {}가 있는 경우에 대한 처리 필요.
-	- split된 인자의시작이 
+	- split된 인자의시작이
 */
 bool	ConfigInfo::checkCurlyBracketPair(const std::string& file_content)
 {
@@ -344,7 +344,7 @@ bool ConfigInfo::checkHostConfigField(std::string field_value)
 			ip_class = "";
 			dot_count++;
 			continue ;
-		}	
+		}
 		ip_class += field_value[idx];
 	}
 	if (this->checkIpClass(ip_class) == false)
@@ -751,7 +751,7 @@ std::map<std::string, ConfigInfo::ValidateFieldInfo>	ConfigInfo::getValidateLoca
 }
 
 /*
-- location field가 있고 해당 location field에 root항목이 비어있다면 
+- location field가 있고 해당 location field에 root항목이 비어있다면
   sever config block에 있는 root를 넣어준다.
 */
 void	ConfigInfo::setRootToLocationConfig(ServerConfig& server_config)
@@ -1258,7 +1258,7 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 					return (false);
 				std::string 	value_with_semicolon_comment;
 				std::string 	value;
-				
+
 				value_with_semicolon_comment = *(word_list.begin() + 1);
 				value = this->removeAfterSemicolon(value_with_semicolon_comment);
 				if (value != "on" && value != "off")
@@ -1472,7 +1472,7 @@ std::string	ConfigInfo::getFilePathFromRequestURI(const std::string& startline_o
 bool ConfigInfo::checkRedirect(const std::string& file_path_request_URI, const unsigned short &port, std::string& file_path)
 {
 	LocationConfig	location_config;
-	
+
 	if (this->getLocationConfig(port, file_path_request_URI, location_config) && \
 		(location_config.getRedirect() != ""))
 	{
@@ -1550,7 +1550,7 @@ enum FileExistanceType ConfigInfo::getFileExistanceType(const std::string &file_
 {
 	struct stat	statbuf;
 
-	
+
 	if (stat(file_path.c_str(), &statbuf) < 0) {
 		// std::cerr << PUP << "stat error" << WHI << std::endl;
         // exit(1);
@@ -1638,9 +1638,9 @@ bool ConfigInfo::isCgiRequest(const std::string &file_path, const unsigned short
 
 enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path)
 {
-	std::string				file_path_request_URI;
-	std::string				abs_file_path_of_server;
-	enum FileExistanceType	file_existance_type;
+    std::string             file_path_request_URI;
+    std::string             abs_file_path_of_server;
+    enum FileExistanceType  file_existance_type;
 
 	file_path_request_URI = this->getFilePathFromRequestURI(startline_of_URI);
 	if (file_path_request_URI == "")
@@ -1800,7 +1800,7 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
     if (URI_start_idx == std::string::npos)
         return (false);
     origin_URI = URI.substr(URI_start_idx, URI.size() - URI_start_idx);
-	
+
 	for (server_config_iter = this->server_config_vector.begin(); server_config_iter != this->server_config_vector.end(); server_config_iter++)
 	{
 		if (server_config_iter->getPort() == port)
@@ -1811,7 +1811,7 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
 	}
 	if (server_config_iter == this->server_config_vector.end())
 		return (false);
-	/* 
+	/*
 	if (!this->getServerConfig(port, server_config))
 		return (false);
 	*/
@@ -1823,7 +1823,7 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
 	}
 	else
 		return (true);
-	/* 
+	/*
 	if (this->getLocationBlock())
 	{
 		allowed_method_type_map = location_iter->second.getAllowMethod();
