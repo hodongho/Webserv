@@ -4,8 +4,8 @@
 ServerHandler::ServerHandler()
 {
 	// initialize content_type_table
-	this->content_type_table_map[".html"] = "text/html";
-	this->content_type_table_map[".txt"] = "text/plain";
+	this->content_type_table_map[".html"] = "text/html; charset=utf-8";
+	this->content_type_table_map[".txt"] = "text/plain; charset=utf-8";
 	this->content_type_table_map[".jpeg"] = "image/jpeg";
 	this->content_type_table_map[".gif"] = "image/gif";
 	this->content_type_table_map[".png"] = "image/png";
@@ -392,6 +392,7 @@ void ServerHandler::makeAutoIndexResponse(ClientSocketData* const & client_socke
 	page_body += "</html>\r\n";
 	client_socket->http_response.setStatusCode("200");
 	client_socket->http_response.setBody(page_body);
+	client_socket->http_response.addHeader("Content-Type", "text/html; charset=utf-8");
 	client_socket->http_response.setBasicField(client_socket->http_request);
 	client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 }
