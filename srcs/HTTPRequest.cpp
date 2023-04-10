@@ -155,6 +155,21 @@ const std::string	HTTPRequest::getServerPort() const
 	return(server_port_it->second.substr(colone_pos + 1));
 }
 
+const std::string	HTTPRequest::getLocalPath(void) const
+{
+	std::map<std::string, std::string>::const_iterator	host_it;
+	size_t												host_pos;
+
+	host_it = this->header.find(HOST);
+	if (host_it == this->header.end())
+		return ("");
+	host_pos = this->URI.find(host_it->second);
+	if (host_pos == std::string::npos)
+		return (this->URI);
+	else
+		return (this->URI.substr(host_pos + host_it->second.size()));
+}
+
 ssize_t	HTTPRequest::getContentLength() const
 {
 	std::map<std::string, std::string>::const_iterator	content_length_it;
