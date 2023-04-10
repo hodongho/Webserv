@@ -21,6 +21,90 @@ ServerHandler::~ServerHandler()
 	this->sock_list.clear();
 };
 
+void ServerHandler::changeEvent(const uintptr_t& ident,
+								const int16_t& filter,
+								const uint16_t& flags,
+								const uint32_t& fflags,
+								const intptr_t& data,
+								void* const & udata)
+{
+	struct kevent	newEvent;
+
+	EV_SET(&newEvent, ident, filter, flags, fflags, data, udata);
+	this->change_list.push_back(newEvent);
+}
+
+void ServerHandler::closeEvent(SocketData * listen_socket)
+{
+	close(listen_socket->sock_fd);
+	this->sock_list.erase(listen_socket->sock_fd);
+	delete (listen_socket);
+}
+
+void ServerHandler::closeEvent(ClientSocketData * client_socket)
+{
+	close(client_socket->sock_fd);
+	this->sock_list.erase(client_socket->sock_fd);
+	delete (client_socket);
+}
+
+void ServerHandler::initClientSocketData(struct ClientSocketData* client_socket, const int& _sock_fd, const sockaddr_in _listen_addr)
+{
+	client_socket->sock_fd = _sock_fd;
+	client_socket->listen_addr = _listen_addr;
+	client_socket->id_type = ID_CLIENT_SOCKET;
+	client_socket->status = SOCKSTAT_CLIENT_RECV_HEADER;
+	client_socket->buf_str = "";
+}
+
+void ServerHandler::clearClientSocketData(struct ClientSocketData* client_socket)
+{
+	client_socket->id_type = ID_CLIENT_SOCKET;
+	client_socket->status = SOCKSTAT_CLIENT_RECV_HEADER;
+	client_socket->http_request.clear();
+	client_socket->http_response.clear();
+	client_socket->buf_str.clear();
+}
+
+int ServerHandler::serverListen(const ServerConfig& serv_conf)
+{
+	SocketData* serverSocket = new SocketData();
+	serverSocket->sock_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (serverSocket->sock_fd == -1)
+		throwError("socket: ");
+
+	if (fcntl(serverSocket->sock_fd, F_SETFL, O_NONBLOCK) == -1)
+		throwError("fcntl: ");
+
+	int	bf = 1;
+
+	if (setsockopt(serverSocket->sock_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&bf, (int)sizeof(bf)) == -1)
+		throwError("setsockopt: ");
+
+	this->initListenerData(serverSocket, serv_conf);
+	this->sock_list[serverSocket->sock_fd] = serverSocket;
+
+	if (bind(serverSocket->sock_fd, (const sockaddr *)&serverSocket->addr, sizeof(sockaddr_in)) == -1)
+		throwError("bind: ");
+
+	if (listen(serverSocket->sock_fd, 5) == -1)
+		throwError("listen: ");
+
+	changeEvent(serverSocket->sock_fd, EVFILT_READ, EV_ADD, 0, NULL, serverSocket);
+	std::cout << "Server SocketData Created!" << std::endl;
+
+	return (0);
+}
+
+void ServerHandler::initListenerData(struct SocketData* listen_sock, const ServerConfig& server_conf)
+{
+	listen_sock->id_type = ID_LISTEN_SOCKET;
+
+	memset(&listen_sock->addr, 0, sizeof(listen_sock->addr));
+	listen_sock->addr.sin_family = AF_INET;
+	inet_pton(AF_INET, server_conf.getHost().c_str(), &listen_sock->addr.sin_addr);
+	listen_sock->addr.sin_port = htons(server_conf.getPort());
+}
 
 void ServerHandler::keventError(const IdentType& event_id_type)
 {
@@ -492,18 +576,18 @@ void ServerHandler::deleteMethod(ClientSocketData* const & client_socket)
 			{
 				client_socket->http_response.setStatusCode("403");
 				client_socket->http_response.setBody("\r\ndelete rejected. (directory delete)");
-				client_socket->http_response.addHeader("Content-Type", "text/plain");
+				client_socket->http_response.addHeader("Content-Type", "text/plain; charset=utf-8");
 				client_socket->http_response.setBasicField(client_socket->http_request);
 				client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 			}
 			else
-				throwError("file unlink: ");
+				throwServerError("file unlink: ", client_socket);
 		}
 		else
 		{
 			client_socket->http_response.setStatusCode("200");
 			client_socket->http_response.setBody("\r\ndelete sucess!");
-			client_socket->http_response.addHeader("Content-Type", "text/plain");
+			client_socket->http_response.addHeader("Content-Type", "text/plain; charset=utf-8");
 			client_socket->http_response.setBasicField(client_socket->http_request);
 			client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 		}
@@ -535,160 +619,54 @@ void ServerHandler::sendResponse(ClientSocketData* const & client_socket)
 	}
 }
 
-void ServerHandler::initListenerData(struct SocketData* listen_sock, const ServerConfig& server_conf)
+void	ServerHandler::setPostBody(ClientSocketData* const & client_socket)
 {
-	listen_sock->id_type = ID_LISTEN_SOCKET;
-
-	memset(&listen_sock->addr, 0, sizeof(listen_sock->addr));
-	listen_sock->addr.sin_family = AF_INET;
-	inet_pton(AF_INET, server_conf.getHost().c_str(), &listen_sock->addr.sin_addr);
-	listen_sock->addr.sin_port = htons(server_conf.getPort());
-}
-
-int ServerHandler::serverListen(const ServerConfig& serv_conf)
-{
-	SocketData* serverSocket = new SocketData();
-	serverSocket->sock_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (serverSocket->sock_fd == -1)
-		throwError("socket: ");
-
-	if (fcntl(serverSocket->sock_fd, F_SETFL, O_NONBLOCK) == -1)
-		throwError("fcntl: ");
-
-	int	bf = 1;
-
-	if (setsockopt(serverSocket->sock_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&bf, (int)sizeof(bf)) == -1)
-		throwError("setsockopt: ");
-
-	this->initListenerData(serverSocket, serv_conf);
-	this->sock_list[serverSocket->sock_fd] = serverSocket;
-
-	if (bind(serverSocket->sock_fd, (const sockaddr *)&serverSocket->addr, sizeof(sockaddr_in)) == -1)
-		throwError("bind: ");
-
-	if (listen(serverSocket->sock_fd, 5) == -1)
-		throwError("listen: ");
-
-	changeEvent(serverSocket->sock_fd, EVFILT_READ, EV_ADD, 0, NULL, serverSocket);
-	std::cout << "Server SocketData Created!" << std::endl;
-
-	return (0);
-}
-
-void ServerHandler::serverReady(const char *conf_file)
-{
-	std::vector<ServerConfig>::const_iterator serv_conf_iter;
-
-	this->conf.parseConfig(conf_file);
-	this->conf.printWebservConfig(); //for test
-	this->kq = kqueue();
-
-	if (this->kq == -1)
-		throwError("kqueue: ");
-	for (serv_conf_iter = this->conf.getWebservConfig().begin(); serv_conf_iter < this->conf.getWebservConfig().end(); serv_conf_iter++)
-		this->serverListen(*serv_conf_iter);
-}
-
-void ServerHandler::serverRun()
-{
-	int				event_count;
-	struct kevent*	curr_event;
-	SocketData*		sock_type;
-	struct stat		stat_buf;
-
-	while (1)
-	{
-		event_count = kevent(this->kq,
-							&this->change_list[0],
-							this->change_list.size(),
-							this->event_list,
-							8, NULL);
-		if (event_count == -1)
-			throwError("kevent: ");
-
-		this->change_list.clear();
-
-		for (int loop = 0; loop < event_count; loop++)
-		{
-			try
-			{
-				curr_event = &this->event_list[loop];
-				sock_type = static_cast<SocketData *>(curr_event->udata);
-				if (fstat(curr_event->ident, &stat_buf) == -1)
-					continue;
-				if (curr_event->filter == EVFILT_PROC)
-				{
-					int status;
-					if (waitpid(static_cast<pid_t>(curr_event->ident), &status, WNOHANG) == -1 || WEXITSTATUS(status) == -1)
-						throwError("cgi proc error: ");
-					continue;
-				}
-				if (curr_event->flags & EV_ERROR)
-					keventError(sock_type->id_type);
-				switch (sock_type->id_type)
-				{
-					case ID_LISTEN_SOCKET :
-						handleListenEvent(sock_type);
-						break;
-					case ID_CLIENT_SOCKET :
-						handleClientEvent(curr_event);
-						break;
-					default:
-						break;
-				}
-			}
-			catch (std::exception& e)
-			{
-				std::cerr << e.what() << std::endl;
-				continue;
-			}
-		}
-	}
-}
-
-void ServerHandler::changeEvent(const uintptr_t& ident,
-								const int16_t& filter,
-								const uint16_t& flags,
-								const uint32_t& fflags,
-								const intptr_t& data,
-								void* const & udata)
-{
-	struct kevent	newEvent;
-
-	EV_SET(&newEvent, ident, filter, flags, fflags, data, udata);
-	this->change_list.push_back(newEvent);
-}
-
-void ServerHandler::closeEvent(SocketData * listen_socket)
-{
-	close(listen_socket->sock_fd);
-	this->sock_list.erase(listen_socket->sock_fd);
-	delete (listen_socket);
-}
-
-void ServerHandler::closeEvent(ClientSocketData * client_socket)
-{
-	close(client_socket->sock_fd);
-	this->sock_list.erase(client_socket->sock_fd);
-	delete (client_socket);
-}
-
-void ServerHandler::initClientSocketData(struct ClientSocketData* client_socket, const int& _sock_fd, const sockaddr_in _listen_addr)
-{
-	client_socket->sock_fd = _sock_fd;
-	client_socket->listen_addr = _listen_addr;
-	client_socket->id_type = ID_CLIENT_SOCKET;
-	client_socket->status = SOCKSTAT_CLIENT_RECV_HEADER;
-	client_socket->buf_str = "";
-}
-
-void ServerHandler::clearClientSocketData(struct ClientSocketData* client_socket)
-{
-	client_socket->id_type = ID_CLIENT_SOCKET;
-	client_socket->status = SOCKSTAT_CLIENT_RECV_HEADER;
-	client_socket->http_request.clear();
-	client_socket->http_response.clear();
+	client_socket->status = SOCKSTAT_CLIENT_POST;
+	client_socket->http_request.saveBody(client_socket->buf_str);
 	client_socket->buf_str.clear();
+	changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+	changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+}
+
+void	ServerHandler::makeCgiPipeResponse(ClientSocketData* const & client_socket)
+{
+	std::string	header_part, body_part;
+	size_t		rnrn_pos = 0;
+
+	rnrn_pos = client_socket->buf_str.find("\r\n\r\n");
+
+	header_part = client_socket->buf_str.substr(0, rnrn_pos + 2);
+	body_part = client_socket->buf_str.substr(rnrn_pos + 4);
+
+	std::stringstream	header_stream(header_part);
+
+	std::string header_name, header_value, end, white_space = " \t";
+
+	while(true)
+	{
+		std::getline(header_stream, header_name, ':');
+		std::getline(header_stream, header_value, '\r');
+		std::getline(header_stream, end, '\n');
+		if (header_stream.eof())
+			break ;
+
+		if (header_value.find_first_not_of(white_space) != 0)
+			header_value.erase(0, 1);
+
+		client_socket->http_response.addHeader(header_name, header_value);
+	}
+	client_socket->http_response.setStatusCode("200");
+	client_socket->http_response.setBody(body_part);
+	client_socket->http_response.setBasicField(client_socket->http_request);
+	client_socket->buf_str.clear();
+}
+
+void	ServerHandler::initCgiVariable(char **&arg, char **&env,
+			ClientSocketData* const & socket_data,
+			const std::string& cgi_script_path)
+{
+	this->initCgiArg(arg, cgi_script_path, ntohs(socket_data->listen_addr.sin_port));
+	this->initCgiEnv(arg, env, socket_data);
 }
 
 void	ServerHandler::initCgiArg(char **&arg, const std::string& cgi_script_path, const unsigned short& port)
@@ -729,14 +707,6 @@ void	ServerHandler::initCgiEnv(char **&arg, char **&env,  ClientSocketData* cons
 		i++;
 	}
 	env[i] = NULL;
-}
-
-void	ServerHandler::initCgiVariable(char **&arg, char **&env,
-			ClientSocketData* const & socket_data,
-			const std::string& cgi_script_path)
-{
-	this->initCgiArg(arg, cgi_script_path, ntohs(socket_data->listen_addr.sin_port));
-	this->initCgiEnv(arg, env, socket_data);
 }
 
 void ServerHandler::throwServerError(std::string msg, ClientSocketData* const & client_socket)
@@ -880,44 +850,73 @@ void ServerHandler::setDefaultServerError(HTTPResponse& http_res, const HTTPRequ
 	http_res.setBasicField(http_req);
 }
 
-void	ServerHandler::setPostBody(ClientSocketData* const & client_socket)
+void ServerHandler::serverReady(const char *conf_file)
 {
-	client_socket->status = SOCKSTAT_CLIENT_POST;
-	client_socket->http_request.saveBody(client_socket->buf_str);
-	client_socket->buf_str.clear();
-	changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-	changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+	std::vector<ServerConfig>::const_iterator serv_conf_iter;
+
+	this->conf.parseConfig(conf_file);
+	this->conf.printWebservConfig(); //for test
+	this->kq = kqueue();
+
+	if (this->kq == -1)
+		throwError("kqueue: ");
+	for (serv_conf_iter = this->conf.getWebservConfig().begin(); serv_conf_iter < this->conf.getWebservConfig().end(); serv_conf_iter++)
+		this->serverListen(*serv_conf_iter);
 }
 
-void	ServerHandler::makeCgiPipeResponse(ClientSocketData* const & client_socket)
+void ServerHandler::serverRun()
 {
-	std::string	header_part, body_part;
-	size_t		rnrn_pos = 0;
+	int				event_count;
+	struct kevent*	curr_event;
+	SocketData*		sock_type;
+	struct stat		stat_buf;
 
-	rnrn_pos = client_socket->buf_str.find("\r\n\r\n");
-
-	header_part = client_socket->buf_str.substr(0, rnrn_pos + 2);
-	body_part = client_socket->buf_str.substr(rnrn_pos + 4);
-
-	std::stringstream	header_stream(header_part);
-
-	std::string header_name, header_value, end, white_space = " \t";
-
-	while(true)
+	while (1)
 	{
-		std::getline(header_stream, header_name, ':');
-		std::getline(header_stream, header_value, '\r');
-		std::getline(header_stream, end, '\n');
-		if (header_stream.eof())
-			break ;
+		event_count = kevent(this->kq,
+							&this->change_list[0],
+							this->change_list.size(),
+							this->event_list,
+							8, NULL);
+		if (event_count == -1)
+			throwError("kevent: ");
 
-		if (header_value.find_first_not_of(white_space) != 0)
-			header_value.erase(0, 1);
+		this->change_list.clear();
 
-		client_socket->http_response.addHeader(header_name, header_value);
+		for (int loop = 0; loop < event_count; loop++)
+		{
+			try
+			{
+				curr_event = &this->event_list[loop];
+				sock_type = static_cast<SocketData *>(curr_event->udata);
+				if (fstat(curr_event->ident, &stat_buf) == -1)
+					continue;
+				if (curr_event->filter == EVFILT_PROC)
+				{
+					int status;
+					if (waitpid(static_cast<pid_t>(curr_event->ident), &status, WNOHANG) == -1 || WEXITSTATUS(status) == -1)
+						throwServerError("cgi proc error: ", static_cast<ClientSocketData *>(sock_type));
+					continue;
+				}
+				if (curr_event->flags & EV_ERROR)
+					keventError(sock_type->id_type);
+				switch (sock_type->id_type)
+				{
+					case ID_LISTEN_SOCKET :
+						handleListenEvent(sock_type);
+						break;
+					case ID_CLIENT_SOCKET :
+						handleClientEvent(curr_event);
+						break;
+					default:
+						break;
+				}
+			}
+			catch (std::exception& e)
+			{
+				std::cerr << e.what() << std::endl;
+				continue;
+			}
+		}
 	}
-	client_socket->http_response.setStatusCode("200");
-	client_socket->http_response.setBody(body_part);
-	client_socket->http_response.setBasicField(client_socket->http_request);
-	client_socket->buf_str.clear();
 }
