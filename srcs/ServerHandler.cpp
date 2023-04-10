@@ -380,7 +380,11 @@ void ServerHandler::makeAutoIndexResponse(ClientSocketData* const & client_socke
         if (dirent_ptr->d_name[0] == '.') {
             continue;
 		}
-		page_body += "        <li><a href=" + dir_path + dirent_ptr->d_name + ">" + dirent_ptr->d_name + "</a></li>\r\n";
+		page_body += "        <li><a href=/";
+		page_body += dirent_ptr->d_name;
+		page_body += ">";
+		page_body += dirent_ptr->d_name;
+		page_body += "</a></li>\r\n";
 	}
 	page_body += "    </ul>\r\n";
 	page_body += "    <hr>\r\n";
