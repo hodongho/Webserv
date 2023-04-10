@@ -1869,9 +1869,11 @@ int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, s
 		std::string	serverRoot = server_config_iter->getRoot();
 
 		// slash_sign_idx = serverRoot.find('/');
-		if (this->isLastPartOfStr(serverRoot, "/"))
+		while (this->isLastPartOfStr(serverRoot, "/"))
 			serverRoot.erase(serverRoot.size() - 1, 1);
-		err_file_path = server_config_iter->getRoot() + '/' + err_page_iter->second;
+		err_file_path = serverRoot + '/' + err_page_iter->second;
+		if (this->getFileExistanceType(err_file_path) != EXIST_FILE)
+			return (-1);
 		return (0);
 	}
 }
