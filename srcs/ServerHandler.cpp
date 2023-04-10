@@ -339,13 +339,12 @@ void ServerHandler::makeFileIoEvent(const std::string& stat_code,
 	std::map<std::string, std::string>::iterator	content_type_iter;
 
 	file_ext = getExtension(file_path);
-
 	client_socket->http_response.setStatusCode(stat_code);
 	content_type_iter = this->content_type_table_map.find(file_ext);
 	if (content_type_iter != content_type_table_map.end())
 		client_socket->http_response.addHeader("Content-Type", content_type_iter->second);
 	else
-		client_socket->http_response.addHeader("Content-Type", "text/plain"); // temp
+		client_socket->http_response.addHeader("Content-Type", "application/octet-stream"); // temp
 	file_fd = open(file_path.c_str(), O_RDONLY | O_NONBLOCK);
 	if (file_fd == -1)
 	{
