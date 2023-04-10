@@ -49,7 +49,7 @@ class ServerHandler {
 		void		initListenerData(struct SocketData* listen_sock, const ServerConfig& server_conf);
 
 		// serverRun sub function
-		void		keventError(const IdentType& event_id_type);
+		void		keventError(struct kevent* const & curr_event, SocketData* const & socket);
 		void		handleListenEvent(SocketData* const & listen_sock);
 		void		handleClientEvent(struct kevent* const & curr_event);
 		void		recvHeader(ClientSocketData* const & client_socket);

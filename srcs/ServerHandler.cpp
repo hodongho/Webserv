@@ -106,12 +106,17 @@ void ServerHandler::initListenerData(struct SocketData* listen_sock, const Serve
 	listen_sock->addr.sin_port = htons(server_conf.getPort());
 }
 
-void ServerHandler::keventError(const IdentType& event_id_type)
+void ServerHandler::keventError(struct kevent* const & curr_event, SocketData* const & socket)
 {
-	if (event_id_type == ID_LISTEN_SOCKET)
+	if (socket->id_type == ID_LISTEN_SOCKET)
 		throwError("sever socket: ");
-	else if (event_id_type == ID_CLIENT_SOCKET)
-		throwError("client socket: ");
+	else if (socket->id_type == ID_CLIENT_SOCKET)
+	{
+		ClientSocketData* client_socket = static_cast<ClientSocketData *>(socket);
+		if (client_socket->sock_fd != static_cast<int>(curr_event->ident))
+			close(curr_event->ident);
+		throwServerError("client socket: ", client_socket);
+	}
 }
 
 void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
@@ -870,7 +875,7 @@ void ServerHandler::serverRun()
 {
 	int				event_count;
 	struct kevent*	curr_event;
-	SocketData*		sock_type;
+	SocketData*		sock;
 	struct stat		stat_buf;
 
 	while (1)
@@ -890,22 +895,22 @@ void ServerHandler::serverRun()
 			try
 			{
 				curr_event = &this->event_list[loop];
-				sock_type = static_cast<SocketData *>(curr_event->udata);
+				sock = static_cast<SocketData *>(curr_event->udata);
 				if (fstat(curr_event->ident, &stat_buf) == -1)
 					continue;
 				if (curr_event->filter == EVFILT_PROC)
 				{
 					int status;
 					if (waitpid(static_cast<pid_t>(curr_event->ident), &status, WNOHANG) == -1 || WEXITSTATUS(status) == -1)
-						throwServerError("cgi proc error: ", static_cast<ClientSocketData *>(sock_type));
+						throwServerError("cgi proc error: ", static_cast<ClientSocketData *>(sock));
 					continue;
 				}
 				if (curr_event->flags & EV_ERROR)
-					keventError(sock_type->id_type);
-				switch (sock_type->id_type)
+					keventError(curr_event, sock);
+				switch (sock->id_type)
 				{
 					case ID_LISTEN_SOCKET :
-						handleListenEvent(sock_type);
+						handleListenEvent(sock);
 						break;
 					case ID_CLIENT_SOCKET :
 						handleClientEvent(curr_event);
