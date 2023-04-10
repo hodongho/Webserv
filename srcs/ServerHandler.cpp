@@ -31,7 +31,6 @@ void ServerHandler::keventError(const IdentType& event_id_type)
 }
 
 void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
-
 {
 	int					client_sock_fd;
 	socklen_t			client_sock_addr_len;
@@ -47,7 +46,7 @@ void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
 	}
 	this->initClientSocketData(client_socket, client_sock_fd, listen_sock->addr);
 	this->sock_list[client_sock_fd] = client_socket;
-	std::cout << "accept port: " << ntohs(listen_sock->addr.sin_port) << std::endl;
+	std::cout << "accept port: " << ntohs(listen_sock->addr.sin_port) << std::endl; 
 	std::cout << "accept new client: " << client_sock_fd << std::endl;
 
 	bool	tmp = true;
@@ -61,6 +60,7 @@ void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
 void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 {
 	ClientSocketData* client_data = static_cast<ClientSocketData*>(curr_event->udata);
+	std::cout << ntohs(client_data->listen_addr.sin_port) << std::endl;
 	switch (client_data->status)
 	{
 		case SOCKSTAT_CLIENT_RECV_HEADER:

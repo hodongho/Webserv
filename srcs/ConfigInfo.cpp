@@ -764,7 +764,6 @@ void	ConfigInfo::setRootToLocationConfig(void)
 		ServerConfig											server_config;
 		std::map<std::string, LocationConfig>					location_config_map;
 		std::map<std::string, LocationConfig>::iterator	location_config_map_iter;
-
 		server_config = *webserv_config_iter;
 		location_config_map = server_config.getLocations();
 		location_config_map_iter = location_config_map.begin();
