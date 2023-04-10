@@ -81,6 +81,8 @@ bool	ConfigInfo::getServerConfig(const unsigned short &port, ServerConfig& serve
 }
 
 // 찾고자하는 path가 config에 있다면 파라미터에 location_config으로 설정된 값을 가져옴
+// localhost:80/find_path/
+// /find_path/
 bool	ConfigInfo::getLocationConfig(const unsigned short &port, const std::string &find_path, LocationConfig& location_config) const
 {
 	ServerConfig	server_config;
@@ -1065,7 +1067,7 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 				}
 				else if (first_word == "cgi_pass")
 				{
-					if (this->checkErrorPageConfigField(clean_str) == false)
+					if (this->checkCgiPassConfigField(clean_str) == false)
 						return (false);
 				}
 				else
@@ -1435,8 +1437,32 @@ std::string	ConfigInfo::getFilePathFromRequestURI(const std::string& startline_o
 
 	file_path_start_idx = startline_of_URI.find('/');
 	if (file_path_start_idx == std::string::npos)
+	{
 		return ("");
+	}
 	file_path_request_URI = startline_of_URI.substr(file_path_start_idx,  startline_of_URI.size() - file_path_start_idx);
+	size_t	cur_idx;
+
+	cur_idx = startline_of_URI.find(':');
+	if (file_path_start_idx != 0)
+	{
+		if (cur_idx == std::string::npos)
+			return ("");
+
+		// std::cout << BLU << "cur_idx : " << cur_idx << WHI << std::endl;
+		// std::cout << CYN << "file_path_start_idx : " << file_path_start_idx << WHI << std::endl;
+		cur_idx++; // ':' 기호 다음을 가리키게 만듦 
+		for (size_t	idx = cur_idx; idx < file_path_start_idx;idx++) //port이어여함
+		{
+			// printContent(&startline_of_URI[idx], "startline_of_URI[idx]", BLU);
+			// std::cout << "idx : " << idx << std::endl;
+			// std::cout << "startline_of_URI : " << startline_of_URI << std::endl;
+			// std::cout << "startline_of_URI[idx] : " << startline_of_URI[idx] << std::endl;
+			if (std::isdigit(startline_of_URI[idx]) == false)
+				return ("");
+		}
+
+	}
 	return (file_path_request_URI);
 }
 
@@ -1532,12 +1558,12 @@ enum FileExistanceType ConfigInfo::getFileExistanceType(const std::string &file_
     }
     if (S_ISREG(statbuf.st_mode))
     {
-        std::cout << "file_path.c_str() is Regular file : " << file_path.c_str() << std::endl;
+        // std::cout << "file_path.c_str() is Regular file : " << file_path.c_str() << std::endl;
 		return (EXIST_FILE);
     }
 	else if (S_ISDIR(statbuf.st_mode))
     {
-        std::cout << "file_path.c_str() is directory : " << file_path.c_str() << std::endl;
+        // std::cout << "file_path.c_str() is directory : " << file_path.c_str() << std::endl;
 		return (EXIST_DIRECTORY);
     }
 	std::cerr << RED << "Unknow error in getFileExistanceType() " << BRW << "file_path : " << file_path  << WHI << std::endl;
@@ -1556,17 +1582,59 @@ bool	ConfigInfo::isLastPartOfStr(const std::string& origin_str, const std::strin
 }
 
 /*
+	하드코딩된 extension을 
+	getExtension을 이용해서 처리하게 변경할 수 있다.
+	그렇게되면 config에 cgi-pass에 있는 extension 타입에 따라 우리의 cgi 적용범위를 더욱 넓게 처리할 수 있다.
+*/
+bool ConfigInfo::isCgiRequest(const std::string &file_path, const unsigned short& port)
+{
+	// config에 있는 cgi정보 이용 필요
+	ServerConfig	server_config;
+
+	if (getServerConfig(port, server_config))
+	{
+		const std::map<std::string, std::string>&			cgi_pass_map = server_config.getCgiPass();
+		std::map<std::string, std::string>::const_iterator	cgi_pass_map_iter;
+
+		cgi_pass_map_iter = cgi_pass_map.begin();
+		for (;cgi_pass_map_iter != cgi_pass_map.end(); cgi_pass_map_iter++)
+		{
+			std::string	cgi_type_str;
+			
+			cgi_type_str = cgi_pass_map_iter->first;
+			// printContent(cgi_type_str, "in isCgiRequest", BRW);
+			// printContent(file_path, "in isCgiRequest if statement. file_path", BRW);
+			if (this->isLastPartOfStr(file_path, ".php") &&
+				this->isLastPartOfStr(cgi_type_str, ".php"))
+				return (true);
+			else if (this->isLastPartOfStr(file_path, ".py") &&
+				this->isLastPartOfStr(cgi_type_str, ".py"))
+				return (true);
+		}
+	}
+	else
+	{
+		std::cerr << RED << "!!!! Could not found server config to match using arument port In isCgiRequest()" << WHI << std::endl;
+		return (false);
+	}
+	// printContent(file_path, "after if statement in isCgiRequest. file_path", BRW);
+	return (false);
+}
+/*
 	.php가 마지막에 위치하는지 확인 필요
 	- config에 있는 cgi항목 확인필요 
 	- (.php or .py ) and ((cgi_pass .php /sdffsd) or (cgi_pass .py /sdffsd) )
 */
-bool ConfigInfo::isCgiRequest(const std::string &file_path)
-{
-	// config에 있는 cgi정보 이용 필요
-	if (isLastPartOfStr(file_path, ".php") || isLastPartOfStr(file_path, ".py"))
-		return (true);
-    return (false);
-}
+// bool ConfigInfo::isCgiRequest(const std::string &file_path)
+// {
+// 	// config에 있는 cgi정보 이용 필요
+// 	if (isLastPartOfStr(file_path, ".php") || isLastPartOfStr(file_path, ".py"))
+// 		return (true);
+//     return (false);
+// 	// if (isCgiRequestToBe(file_path))
+// 	// 	return (true);
+// 	// return (false);
+// }
 
 enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path)
 {
@@ -1580,13 +1648,14 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 		std::cout << RED << "PATH_NOTFOUND : " << startline_of_URI << WHI << std::endl;
 		return (PATH_NOTFOUND);
 	}
+	// this->printContent(file_path_request_URI, "file_path_request_URI", BRW);
 	if (this->checkRedirect(file_path_request_URI, port, file_path))
 	{
-		std::cout << RED << "PATH_REDIRECT : " << startline_of_URI << WHI << std::endl;
+		// std::cout << BLU << "PATH_REDIRECT : " << startline_of_URI << WHI << std::endl;
 		return (PATH_REDIRECT);
 	}
 	abs_file_path_of_server = this->getAbsFilePath(file_path_request_URI, port);
-	printContent(abs_file_path_of_server, "abs_file_path_of_server", PUP);
+	// this->printContent(abs_file_path_of_server, "abs_file_path_of_server", PUP);
 	// enum FileExistanceType getFileExistanceType(cont std::string& abs_file_path_of_server)
 	file_existance_type = this->getFileExistanceType(abs_file_path_of_server);
 	// std::cout << "file_existance_type : " << file_existance_type << std::endl;
@@ -1600,12 +1669,13 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 		case EXIST_FILE:
 		{
 			file_path = abs_file_path_of_server;
-			if (isCgiRequest(file_path)) // TODO adjust cgi config info
+			// this->printContent(file_path, "file_path match to index file in EXIST_FILE before PATH_VALID of PATH_CGI", RED);
+			if (this->isCgiRequest(file_path, port)) // TODO adjust cgi config info
 			{
-				this->printContent(file_path, "file_path match to index file in EXIST_FILE, PATH_VALID", CYN);
+				// this->printContent(file_path, "file_path match to index file in EXIST_FILE, PATH_CGI", CYN);
 				return (PATH_CGI);
 			}
-			this->printContent(file_path, "file_path match to index file in EXIST_FILE, PATH_VALID", GRN);
+			// this->printContent(file_path, "file_path match to index file in EXIST_FILE, PATH_VALID", GRN);
 			return (PATH_VALID);
 			break ;
 		}
@@ -1619,9 +1689,10 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 				std::string				index_file;
 				enum FileExistanceType	recycle_file_existance_type;
 
+				// add slash
 				if (this->isLastPartOfStr(abs_file_path_of_server, "/") == false)
 				{
-					this->printContent(abs_file_path_of_server, "abs_file_path_of_server last is '/'", BLU);
+					// this->printContent(abs_file_path_of_server, "abs_file_path_of_server last is '/'", BLU);
 					abs_file_path_of_server.push_back('/');
 				}
 				index_file = location_config.getIndex();
@@ -1629,7 +1700,7 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 				if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
 				{
 					file_path = abs_file_path_of_server + index_file;
-					this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_VALID", GRN);
+					// this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_VALID", GRN);
 					return (PATH_VALID);
 				}
 				else //NO_EXIST or EXIST_DIRECTORY
@@ -1638,12 +1709,12 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 					if (location_config.getAutoindex())
 					{
 						file_path = abs_file_path_of_server;
-						this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_AUTOINDEX", BLU);
+						// this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_AUTOINDEX", BLU);
 						return (PATH_AUTOINDEX);
 					}
 					else
 					{
-						this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND", RED);
+						// this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND", RED);
 						return (PATH_NOTFOUND);
 					}
 				}
@@ -1663,22 +1734,29 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 					std::string				index_file;
 					enum FileExistanceType	recycle_file_existance_type;
 
+					// add slash
+					if (this->isLastPartOfStr(abs_file_path_of_server, "/") == false)
+					{
+						// this->printContent(abs_file_path_of_server, "abs_file_path_of_server last is '/'", BLU);
+						abs_file_path_of_server.push_back('/');
+					}
 					index_file = server_config.getIndex();
+					// this->printContent(abs_file_path_of_server + index_file, "abs_file_path_of_server + index_file in EXIST_DIRECTORY", BRW);
 					recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);
 					if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
 					{
 						if (this->isLastPartOfStr(abs_file_path_of_server, "/") == false)
 						{
-							this->printContent(abs_file_path_of_server, "abs_file_path_of_server last is '/'", BLU);
+							// this->printContent(abs_file_path_of_server, "abs_file_path_of_server last is '/'", BLU);
 							abs_file_path_of_server.push_back('/');
 						}
 						file_path = abs_file_path_of_server + index_file;
-						this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_VALID", GRN);
+						// this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_VALID", GRN);
 						return (PATH_VALID);
 					}
 					else //NO_EXIST or EXIST_DIRECTORY
 					{
-						this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND", RED);
+						// this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND", BRW);
 						return (PATH_NOTFOUND);
 					}
 					// else if (EXIST_DIRECTORY)
@@ -1694,13 +1772,14 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 		}
 		case NO_EXIST:
 		{
-			this->printContent(file_path, "file_path match to index file in NO_EXIST, PATH_NOTFOUND", RED);
+			// this->printContent(file_path, "file_path match to index file in NO_EXIST, PATH_NOTFOUND", RED);
+			// this->printContent(abs_file_path_of_server, "file_path match to index file in NO_EXIST, PATH_NOTFOUND", RED);
 			return (PATH_NOTFOUND);
 			break ;	
 		}
 		default:
 		{
-			// std::cerr << "error in convUriToPath()" << std::endl;
+			std::cerr << BRW << "error in convUriToPath()" << WHI << std::endl;
 			return (PATH_NOTFOUND);
 			break ;
 		}
@@ -1809,7 +1888,7 @@ size_t ConfigInfo::getMaxBodySize(const unsigned short& port)
 		server_config_iter++;
 	return (server_config_iter->getClientMaxBodySize());
 }
-
+// .php
 std::string	ConfigInfo::getCgiProgramPath(const std::string& cgi_extension, const unsigned short& port)
 {
 	std::vector<ServerConfig>::iterator			server_config_iter;

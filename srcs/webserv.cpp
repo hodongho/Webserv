@@ -12,7 +12,7 @@ void	testConvUriToPath(ConfigInfo& conf)
 	std::string	uri_abs_file_path;
 	std::string	request_uri;
 	// - 127.0.0.1:4242/index.php
-	// "http://localhost:4242/index.html/test/j324j32kl4/";
+	// "http://localhost:4242/index.html/test/j324j32kl4/";   /srcs/HTTPMessage.cpp  
 	request_uri = "localhost:4242/index.html/test/j324j32kl4/";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "/index.html/test/j324j32kl4/";
@@ -31,9 +31,17 @@ void	testConvUriToPath(ConfigInfo& conf)
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "/srcs";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
-	request_uri = "/mnt/d/42/Webserv/seoul.php";
+	request_uri = "/";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
-	request_uri = "/mnt/d/42/Webserv/srcs/ConfigInfo.cpp";
+	request_uri = "/cgi/cgi.php";
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
+	request_uri = "/cgi/cgi.py";
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
+	request_uri = "/srcs/ConfigInfo.cpp";
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
+	request_uri = "/srcs/mine";
+	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
+	request_uri = "should be error/srcs/mine";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	// std::string	uri = "localhost:4242/index.html";
 	// conf.printFilePathofURI(URI);

@@ -107,6 +107,11 @@ const std::map<std::string, LocationConfig>& ServerConfig::getLocations(void) co
     return (this->locations);
 }
 
+const std::map<std::string, std::string> &ServerConfig::getCgiPass(void) const
+{
+    return (this->cgi_pass);
+}
+
 // const std::map<std::string, LocationConfig>& ServerConfig::getLocations(void) const
 // {
 //     return (this->locations);
