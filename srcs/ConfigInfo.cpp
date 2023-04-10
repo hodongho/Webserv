@@ -763,16 +763,15 @@ void	ConfigInfo::setRootToLocationConfig(void)
 	{
 		ServerConfig											server_config;
 		std::map<std::string, LocationConfig>					location_config_map;
-		std::map<std::string, LocationConfig>::const_iterator	location_config_map_iter;
+		std::map<std::string, LocationConfig>::iterator	location_config_map_iter;
 		
 		server_config = *webserv_config_iter;
 		location_config_map = server_config.getLocations();
 		location_config_map_iter = location_config_map.begin();
 		for (;location_config_map_iter != location_config_map.end(); location_config_map_iter++)
 		{
-			LocationConfig	location_config;
+			LocationConfig&	location_config = location_config_map_iter->second;
 
-			location_config = location_config_map_iter->second;
 			if (location_config.getRoot() == "")
 			{
 				location_config.printLocationConfingContent(BRW);

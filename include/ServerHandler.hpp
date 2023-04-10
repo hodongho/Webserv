@@ -27,7 +27,6 @@
 class ServerHandler {
 	private:
 		int									kq;
-		int									listen_sock_fd;
 		std::vector<struct kevent>			change_list;
 		struct kevent						event_list[8];
 		std::map<int, SocketData*>			sock_list;
@@ -50,7 +49,7 @@ class ServerHandler {
 
 		// serverRun sub function
 		void		keventError(const IdentType& event_id_type);
-		void		handleListenEvent(const sockaddr_in& listen_sock_addr);
+		void		handleListenEvent(SocketData* const & listen_sock);
 		void		handleClientEvent(struct kevent* const & curr_event);
 		void		recvHeader(struct kevent* const & curr_event,
 						ClientSocketData* const & client_socket);
