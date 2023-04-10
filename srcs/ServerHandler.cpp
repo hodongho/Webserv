@@ -154,9 +154,7 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, ClientSocketDa
 				if (client_socket->http_request.getContentLength() < 0)
 					this->setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
 				else if (static_cast<size_t>(client_socket->http_request.getContentLength()) == client_socket->buf_str.size())
-				{
 					this->setPostBody(curr_event, client_socket);
-				}
 				else
 					client_socket->status = SOCKSTAT_CLIENT_RECV_BODY;
 				break;

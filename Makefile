@@ -19,15 +19,15 @@ CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -g
 CPPFLAGS = -MMD -I$(INCLUDE_DIR)
 
-SRCS = ServerHandler.cpp \
-	utils.cpp \
-	webserv.cpp \
-	HTTPMessage.cpp \
-	HTTPRequest.cpp \
-	HTTPResponse.cpp \
+SRCS = webserv.cpp \
 	ConfigInfo.cpp \
 	ServerConfig.cpp \
 	LocationConfig.cpp \
+	utils.cpp \
+	ServerHandler.cpp \
+	HTTPMessage.cpp \
+	HTTPRequest.cpp \
+	HTTPResponse.cpp \
 
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)

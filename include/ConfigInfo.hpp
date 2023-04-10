@@ -109,18 +109,12 @@ class  ValidateFieldInfo
 	bool    parseLocationBlock(std::vector<std::string>::iterator& src_begin_iter,
 								const std::vector<std::string>::iterator& src_end_iter,
 								ServerConfig& server_config);
-	void	setRootToLocationConfig(void);
+	void	setRootToLocationConfig(ServerConfig& server_config);
 
 	//print
 	void	    printContent(const std::string& str, const std::string& str_name, const std::string& color);
 	void	    printVector(std::vector<std::string>& word_list, const std::string& str_name, const std::string& color);
-	
 
-	//for convUriToPath test
-	// bool			testConvUriToPath(const std::string& URI, const unsigned short& port);
-	bool			checkFilePathofURI(const std::string& URI, const std::string &truncated_URI);
-	void			printFilePathofURI(const std::string &URI, const std::string &truncated_URI);
-	bool			checkMatchFilePathToLocationConfig(const std::string& startline_of_URI, const std::string& file_path_request_URI, const LocationConfig& location_config, bool is_matched_location_config);
 
 	// convUriToPath utils
 	// bool					matchFilePathToLocationConfig(const std::string& file_path_request_URI, const unsigned short& port, LocationConfig& location_config);
@@ -128,8 +122,12 @@ class  ValidateFieldInfo
 	std::string				getFilePathFromRequestURI(const std::string& startline_of_URI);
 	std::string				getAbsFilePath(const std::string &file_path_request_URI, const unsigned short &port);
 	enum FileExistanceType	getFileExistanceType(const std::string& file_path);
-	bool					isCgiRequest(const std::string& file_path);
+	bool					isCgiRequest(const std::string& file_path, const unsigned short& port);
 	bool					isLastPartOfStr(const std::string& origin_str, const std::string& find_str);
+	void					removeLastSlashSignOfStr(std::string& str);
+	
+	// TODO remove!!!!!
+	// bool					isCgiRequestToBe(const std::string& file_path, const unsigned short& port);
 
 public:
 	ConfigInfo(void);
