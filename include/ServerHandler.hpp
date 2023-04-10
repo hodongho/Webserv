@@ -77,6 +77,7 @@ class ServerHandler {
 		void		sendResponse(struct kevent* const & curr_event, ClientSocketData* const & client_socket);
 
 		void		setPostBody(struct kevent* const & curr_event, ClientSocketData* const & client_socket);
+		void		makeCgiPipeResponse(ClientSocketData* const & client_socket);
 
 		// CGI
 		void		initCgiVariable(char **&arg, char **&env,
