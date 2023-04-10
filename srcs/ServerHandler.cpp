@@ -231,9 +231,6 @@ void ServerHandler::readCgiPipeToBody(struct kevent* const & curr_event, ClientS
 	{
 		ssize_t		wr_size;
 
-		// std::cout << client_socket->buf_str << std::endl;
-		// std::cout << client_socket->buf_str.c_str() << std::endl;
-		// std::cout << client_socket->buf_str.size() << std::endl;
 		std::cout << RED << "EVFILT_WRITE: " << curr_event->ident << WHI << std::endl;
 		wr_size = write(curr_event->ident, client_socket->buf_str.c_str(), client_socket->buf_str.size());
 		if (wr_size <= 0)
@@ -261,7 +258,6 @@ void ServerHandler::readCgiPipeToBody(struct kevent* const & curr_event, ClientS
 			changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 			return ;
 		}
-		std::cout << RED << buf << std::endl;
 		client_socket->buf_str.append(buf, ret);
 	}
 }
@@ -716,7 +712,6 @@ void	ServerHandler::initCgiEnv(char **&arg, char **&env,  ClientSocketData* cons
 	for (std::map<std::string, std::string>::iterator it = env_map.begin(); it != env_map.end(); it++)
 	{
 		env[i] = strdup((it->first + "=" + it->second).c_str());
-		std::cout << BLU << env[i] << std::endl;
 		i++;
 	}
 	env[i] = NULL;
@@ -877,7 +872,7 @@ void	ServerHandler::setPostBody(struct kevent* const & curr_event, ClientSocketD
 void	ServerHandler::makeCgiPipeResponse(ClientSocketData* const & client_socket)
 {
 	std::string	header_part, body_part;
-	size_t		rnrn_pos;
+	size_t		rnrn_pos = 0;
 
 	rnrn_pos = client_socket->buf_str.find("\r\n\r\n");
 
