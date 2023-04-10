@@ -51,7 +51,8 @@ void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
 	std::cout << "accept new client: " << client_sock_fd << std::endl;
 
 	bool	tmp = true;
-	setsockopt(client_sock_fd, SOL_SOCKET, SO_KEEPALIVE, &tmp, sizeof(tmp));
+	if (setsockopt(client_sock_fd, SOL_SOCKET, SO_KEEPALIVE, &tmp, sizeof(tmp)) == -1)
+		this->throwServerError("setsockopt: ", client_socket);
 
 	if (fcntl(client_sock_fd, F_SETFL, O_NONBLOCK) == -1)
 		this->throwServerError("fcntl: ", client_socket);
@@ -120,7 +121,7 @@ void ServerHandler::recvHeader(ClientSocketData* const & client_socket)
 	if (ret <= 0)
 	{
 		if (ret < 0)
-			throwError("recv header: ");
+			throwServerError("recv header: ", client_socket);
 		closeEvent(client_socket);
 		std::cout << "socket closed successfully." << std::endl;
 	}
@@ -154,9 +155,7 @@ void ServerHandler::recvHeader(ClientSocketData* const & client_socket)
 				if (client_socket->http_request.getContentLength() < 0)
 					this->setErrorPageResponse(STATCODE_BADREQ, client_socket);
 				else if (static_cast<size_t>(client_socket->http_request.getContentLength()) == client_socket->buf_str.size())
-				{
 					this->setPostBody(client_socket);
-				}
 				else
 					client_socket->status = SOCKSTAT_CLIENT_RECV_BODY;
 				break;
@@ -182,7 +181,7 @@ void ServerHandler::recvBody(ClientSocketData* const & client_socket)
 	if (ret <= 0)
 	{
 		if (ret < 0)
-			throwError("recv body: ");
+			throwServerError("recv body: ", client_socket);
 		closeEvent(client_socket);
 		std::cout << "socket closed successfully." << std::endl;
 		return ;
@@ -201,15 +200,17 @@ void ServerHandler::readFileToBody(struct kevent* const & curr_event, ClientSock
 	ssize_t		ret;
 
 	ret = 1;
-	while (ret)
+	while (ret > 0)
 	{
 		ret = read(curr_event->ident, buf, RECV_BUF_SIZE - 1);
 		buf[ret] = 0;
 		client_socket->buf_str.append(buf, ret);
 	}
 	if (ret < 0)
-		throwError("read respond body: ");
-	close(curr_event->ident);
+		throwServerError("read respond body: ", client_socket);
+	if (close(curr_event->ident) == -1)
+		throwServerError("close file: ", client_socket);
+		
 	client_socket->http_response.setBody(client_socket->buf_str);
 	client_socket->http_response.setBasicField(client_socket->http_request);
 	client_socket->buf_str.clear();
@@ -228,8 +229,9 @@ void ServerHandler::readCgiPipeToBody(struct kevent* const & curr_event, ClientS
 		if (wr_size <= 0)
 		{
 			if (wr_size < 0)
-				throwError("write to cgi pipe");
-			close(curr_event->ident);
+				throwServerError("write to cgi pipe: ", client_socket);
+			if (close(curr_event->ident))
+				throwServerError("close write pipe: ", client_socket);
 		}
 		client_socket->buf_str.erase(0, wr_size);
 	}
@@ -243,8 +245,9 @@ void ServerHandler::readCgiPipeToBody(struct kevent* const & curr_event, ClientS
 		if (ret <= 0)
 		{
 			if (ret < 0)
-				throwError("read respond body: ");
-			close(curr_event->ident);
+				throwServerError("read from pipe respond body: ", client_socket);
+			if (close(curr_event->ident) == -1)
+				throwServerError("close read pipe: ", client_socket);
 			this->makeCgiPipeResponse(client_socket);
 			client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 			changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
@@ -262,11 +265,13 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 	int pipe_fd_input[2];
 
 	if (pipe(pipe_fd_result))
-		throwError("pipe: ");
+		throwServerError("pipe: ", client_socket);
 	if (pipe(pipe_fd_input))
-		throwError("pipe: ");
+		throwServerError("pipe: ", client_socket);
 	pid = fork();
-	if (pid == 0)
+	if (pid == -1)
+		throwServerError("fork: ", client_socket);
+	else if (pid == 0)
 	{
 		char **arg;
 		char **env;
@@ -305,10 +310,14 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 	}
 	else
 	{
-		close(pipe_fd_result[PIPE_WR]);
-		close(pipe_fd_input[PIPE_RD]);
-		fcntl(pipe_fd_result[PIPE_RD], F_SETFL, O_NONBLOCK);
-		fcntl(pipe_fd_input[PIPE_WR], F_SETFL, O_NONBLOCK);
+		if(close(pipe_fd_result[PIPE_WR]))
+			throwServerError("close parent pipe: ", client_socket);
+		if(close(pipe_fd_input[PIPE_RD]))
+			throwServerError("close parent pipe: ", client_socket);
+		if(fcntl(pipe_fd_result[PIPE_RD], F_SETFL, O_NONBLOCK))
+			throwServerError("fcntl parent pipe: ", client_socket);
+		if(fcntl(pipe_fd_input[PIPE_WR], F_SETFL, O_NONBLOCK))
+			throwServerError("fcntl parent pipe: ", client_socket);
 		client_socket->status = SOCKSTAT_CLIENT_MAKE_CGI_RESPONSE;
 		client_socket->buf_str = client_socket->http_request.getBody();
 		changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
@@ -334,20 +343,20 @@ void ServerHandler::makeFileIoEvent(const std::string& stat_code,
 	if (content_type_iter != content_type_table_map.end())
 		client_socket->http_response.addHeader("Content-Type", content_type_iter->second);
 	else
-		client_socket->http_response.addHeader("Content-Type", "application/octet-stream"); // temp
+		client_socket->http_response.addHeader("Content-Type", "application/octet-stream");
 	file_fd = open(file_path.c_str(), O_RDONLY | O_NONBLOCK);
 	if (file_fd == -1)
 	{
 		setDefaultServerError(client_socket->http_response, client_socket->http_request);
 		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
-		return ;
+		throwError("file open: ");
 	}
 	client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
 	changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
 	changeEvent(file_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
 }
 
-void ServerHandler::makeAutoIndexResponse(ClientSocketData* const & client_socket, std::string dir_path)
+void ServerHandler::makeAutoIndexResponse(ClientSocketData* const & client_socket, const std::string& dir_path)
 {
 	DIR* dir_ptr;
 	dirent* dirent_ptr;
@@ -355,7 +364,7 @@ void ServerHandler::makeAutoIndexResponse(ClientSocketData* const & client_socke
 
 	dir_ptr = opendir(dir_path.c_str());
 	if (dir_ptr == NULL)
-		throwError("opendir: ");
+		throwServerError("opendir: ", client_socket);
 	page_body = "\r\n";
 	page_body += "<!DOCTYPE html>\r\n";
 	page_body += "<html>\r\n";
@@ -422,7 +431,7 @@ void ServerHandler::getMethod(ClientSocketData* const & client_socket)
 		this->makeRedirectResponse(client_socket, file_path);
 		break;
 	case PATH_CGI:
-		this->setErrorPageResponse(STATCODE_NOTALLOW, client_socket);
+		this->makeFileIoEvent("200", file_path, client_socket);
 		break;
 	}
 }
@@ -733,7 +742,6 @@ void	ServerHandler::initCgiVariable(char **&arg, char **&env,
 void ServerHandler::throwServerError(std::string msg, ClientSocketData* const & client_socket)
 {
 	this->setErrorPageResponse(STATCODE_SERVERR, client_socket);
-	client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 	throwError(msg);
 }
 

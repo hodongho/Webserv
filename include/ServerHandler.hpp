@@ -54,18 +54,22 @@ class ServerHandler {
 		void		handleClientEvent(struct kevent* const & curr_event);
 		void		recvHeader(ClientSocketData* const & client_socket);
 		void		recvBody(ClientSocketData* const & client_socket);
+
 		void		readFileToBody(struct kevent* const & curr_event,
 						ClientSocketData* const & client_socket);
 		void		readCgiPipeToBody(struct kevent* const & curr_event,
 						ClientSocketData* const & client_socket);
+
 		void		makeCgiPipeIoEvent(std::string cgi_script_path,
 						ClientSocketData* const & client_socket);
 		void		makeFileIoEvent(const std::string& stat_code,
 						const std::string& file_path,
 						ClientSocketData* const & client_socket);
+						
 		void		makeAutoIndexResponse(ClientSocketData* const & client_socket,
-						std::string dir_path);
-		void		makeRedirectResponse(ClientSocketData* const & client_socket, const std::string& redir_loc);
+						const std::string& dir_path);
+		void		makeRedirectResponse(ClientSocketData* const & client_socket,
+						const std::string& redir_loc);
 
 		void		getMethod(ClientSocketData* const & client_socket);
 		void		postMethod(ClientSocketData* const & client_socket);
