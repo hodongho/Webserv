@@ -694,12 +694,12 @@ void	ServerHandler::initCgiEnv(char **&arg, char **&env,  ClientSocketData* cons
 	env_map["REMOTE_HOST"]			= itos(ntohs(socket_data->listen_addr.sin_port));
 	env_map["SCRIPT_NAME"]			= socket_data->http_request.getURI();
 	env_map["SERVER_NAME"]			= socket_data->http_request.getServerName();
-	env_map["SERVER_PORT"]			= socket_data->http_request.getServerPort();;
+	env_map["SERVER_PORT"]			= socket_data->http_request.getServerPort();
 	env_map["SERVER_SOFTWARE"]		= "42 Web Server";
 	env_map["SCRIPT_FILENAME"]		= arg[1];
 	env_map["REDIRECT_STATUS"]		= "200";
 	env_map[CONTENT_LENGTH]			= itos(socket_data->http_request.getBody().size());
-	env_map[CONTENT_TYPE]			= "application/x-www-form-urlencoded";
+	env_map[CONTENT_TYPE]			= socket_data->http_request.getContentType();
 
 	int i = 0;
 	env = new char *[14];

@@ -128,7 +128,6 @@ const std::string	HTTPRequest::getConnection() const
 		return ("");
 	else
 		return(connection_it->second);
-
 }
 
 const std::string	HTTPRequest::getServerName() const
@@ -155,7 +154,7 @@ const std::string	HTTPRequest::getServerPort() const
 	return(server_port_it->second.substr(colone_pos + 1));
 }
 
-const std::string	HTTPRequest::getLocalPath(void) const
+const std::string	HTTPRequest::getLocalPath() const
 {
 	std::map<std::string, std::string>::const_iterator	host_it;
 	size_t												host_pos;
@@ -168,6 +167,17 @@ const std::string	HTTPRequest::getLocalPath(void) const
 		return (this->URI);
 	else
 		return (this->URI.substr(host_pos + host_it->second.size()));
+}
+
+const std::string	HTTPRequest::getContentType() const
+{
+	std::map<std::string, std::string>::const_iterator	content_type_iter;
+
+	content_type_iter = header.find("Content-Type");
+	if (content_type_iter == header.end())
+		return ("");
+	else
+		return(content_type_iter->second);
 }
 
 ssize_t	HTTPRequest::getContentLength() const

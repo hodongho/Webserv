@@ -42,6 +42,7 @@ class HTTPRequest : public HTTPMessage
 		const std::string							getServerName(void)	const;
 		const std::string							getServerPort(void)	const;
 		const std::string							getLocalPath(void) const;
+		const std::string							getContentType(void) const;
 		ssize_t										getContentLength(void) const;
 
 		void										clear(void);
