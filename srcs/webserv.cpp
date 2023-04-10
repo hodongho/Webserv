@@ -1,12 +1,7 @@
-// #include "ServerHandler.hpp"
+#include "ServerHandler.hpp"
 #include "ConfigInfo.hpp"
 
-//         - full path [servern_name]:[port][directory_path][file_name_with_extension]
-//     - localhost:4242/index.html
-// - servern_name:port
-//     - localhost:4242
-//     - with file_path
-//         localhost:4242/
+
 void	testConvUriToPath(ConfigInfo& conf)
 {
 	std::string	uri_abs_file_path;
@@ -50,7 +45,7 @@ void	testConvUriToPath(ConfigInfo& conf)
 
 int main(int argc, char *argv[])
 {
-	// ServerHandler	kqueueServer;
+	ServerHandler	kqueueServer;
 	ConfigInfo		conf;
 
 	try
@@ -63,12 +58,12 @@ int main(int argc, char *argv[])
     /*
     */
 		// throwError("please input server config file as argument\n\t\te.g) ./webserv server.conf");
-		conf.parseConfig(argv[1]);
+		// conf.parseConfig(argv[1]);
 		// conf.printWebservConfig();
 		std::cout << std::endl << std::endl << std::endl;
-		testConvUriToPath(conf);
-		// kqueueServer.serverReady(argv[1]);
-		// kqueueServer.serverRun();
+		// testConvUriToPath(conf);
+		kqueueServer.serverReady(argv[1]);
+		kqueueServer.serverRun();
 		// kqueueServer.serverReady(argv[1]);
 		// kqueueServer.serverRun();
 	}

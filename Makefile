@@ -24,10 +24,10 @@ SRCS = webserv.cpp \
 	ServerConfig.cpp \
 	LocationConfig.cpp \
 	utils.cpp \
-	# ServerHandler.cpp \
-	# HTTPMessage.cpp \
-	# HTTPRequest.cpp \
-	# HTTPResponse.cpp \
+	ServerHandler.cpp \
+	HTTPMessage.cpp \
+	HTTPRequest.cpp \
+	HTTPResponse.cpp \
 
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
