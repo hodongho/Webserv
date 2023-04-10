@@ -80,15 +80,42 @@ void HTTPResponse::clear()
 	this->response.clear();
 }
 
-const std::string	HTTPResponse::getBodySize()
+const std::string HTTPResponse::getBodySize()
 {
 	std::string size = itos(body.size());
 	return (size);
 }
 
-void	HTTPResponse::setBasicField(const HTTPRequest& http_request)
+void HTTPResponse::setBasicField(const HTTPRequest& http_request)
 {
 	this->setVersion("HTTP/1.1");
+	switch (this->getStatusCode())
+	{
+	case STATCODE_OK:
+		this->setStatusMessage("OK");
+		break;
+	case STATCODE_REDIR:
+		this->setStatusMessage("Moved Permanently");
+		break;
+	case STATCODE_BADREQ:
+		this->setStatusMessage("Bad Request");
+		break;
+	case STATCODE_FORBIDDEN:
+		this->setStatusMessage("Forbidden");
+		break;
+	case STATCODE_NOTFOUND:
+		this->setStatusMessage("Not Found");
+		break;
+	case STATCODE_NOTALLOW:
+		this->setStatusMessage("Method Not Allowed");
+		break;
+	case STATCODE_SERVERR:
+		this->setStatusMessage("Internal Server Error");
+		break;
+	default:
+		this->setStatusMessage("Unknown");
+		break;
+	}
 	this->addHeader(CONTENT_LENGTH, this->getBodySize());
 	this->addHeader(CONNECTION, http_request.getConnection());
 }
