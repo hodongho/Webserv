@@ -53,7 +53,8 @@ void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
 	bool	tmp = true;
 	setsockopt(client_sock_fd, SOL_SOCKET, SO_KEEPALIVE, &tmp, sizeof(tmp));
 
-	fcntl(client_sock_fd, F_SETFL, O_NONBLOCK);
+	if (fcntl(client_sock_fd, F_SETFL, O_NONBLOCK) == -1)
+		this->throwServerError("fcntl: ", client_socket);
 	changeEvent(client_sock_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
 	changeEvent(client_sock_fd, EVFILT_WRITE, EV_ADD | EV_EOF | EV_DISABLE, 0, NULL, client_socket);
 }
@@ -65,23 +66,23 @@ void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 	{
 		case SOCKSTAT_CLIENT_RECV_HEADER:
 			if (curr_event->filter == EVFILT_READ)
-				this->recvHeader(curr_event, client_data);
+				this->recvHeader(client_data);
 			break;
 		case SOCKSTAT_CLIENT_RECV_BODY:
 			if (curr_event->filter == EVFILT_READ)
-				this->recvBody(curr_event, client_data);
+				this->recvBody(client_data);
 			break;
 		case SOCKSTAT_CLIENT_GET:
 			if (curr_event->filter == EVFILT_WRITE)
-				this->getMethod(curr_event, client_data);
+				this->getMethod(client_data);
 			break;
 		case SOCKSTAT_CLIENT_POST:
 			if (curr_event->filter == EVFILT_WRITE)
-				this->postMethod(curr_event, client_data);
+				this->postMethod(client_data);
 			break;
 		case SOCKSTAT_CLIENT_DELETE:
 			if (curr_event->filter == EVFILT_WRITE)
-				this->deleteMethod(curr_event, client_data);
+				this->deleteMethod(client_data);
 			break;
 		case SOCKSTAT_CLIENT_MAKE_RESPONSE:
 			if (curr_event->filter == EVFILT_READ)
@@ -92,7 +93,7 @@ void ServerHandler::handleClientEvent(struct kevent * const & curr_event)
 			break;
 		case SOCKSTAT_CLIENT_SEND_RESPONSE:
 			if (curr_event->filter == EVFILT_WRITE)
-				this->sendResponse(curr_event, client_data);
+				this->sendResponse(client_data);
 			break;
 		default:
 			break;
@@ -109,29 +110,28 @@ static void	printRecvData(const int& fd, const std::string& data, const ssize_t&
 			<< std::endl;
 }
 
-void ServerHandler::recvHeader(struct kevent* const & curr_event, ClientSocketData* const & client_socket)
+void ServerHandler::recvHeader(ClientSocketData* const & client_socket)
 {
 	char		buf[RECV_BUF_SIZE];
 	size_t		header_end_pos;
 	ssize_t		ret;
 
-	ret = recv(curr_event->ident, buf, RECV_BUF_SIZE - 1, 0);
+	ret = recv(client_socket->sock_fd, buf, RECV_BUF_SIZE - 1, 0);
 	if (ret <= 0)
 	{
 		if (ret < 0)
 			throwError("recv header: ");
-		close(curr_event->ident);
+		closeEvent(client_socket);
 		std::cout << "socket closed successfully." << std::endl;
-		sock_list.erase(curr_event->ident);
 	}
 	buf[ret] = 0;
-	printRecvData(curr_event->ident, buf, ret); // for test
+	printRecvData(client_socket->sock_fd, buf, ret); // for test
 	client_socket->buf_str.append(buf, ret);
 	header_end_pos = client_socket->buf_str.rfind("\r\n\r\n");
 
 	if (client_socket->buf_str.size() > MAX_HEADER_SIZE)
 	{
-		this->setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_BADREQ, client_socket);
 		return ;
 	}
 
@@ -147,60 +147,52 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, ClientSocketDa
 		{
 			case METHOD_GET :
 				client_socket->status = SOCKSTAT_CLIENT_GET;
-				changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-				changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+				changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+				changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 				break;
 			case METHOD_POST :
 				if (client_socket->http_request.getContentLength() < 0)
-					this->setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
+					this->setErrorPageResponse(STATCODE_BADREQ, client_socket);
 				else if (static_cast<size_t>(client_socket->http_request.getContentLength()) == client_socket->buf_str.size())
 				{
-					this->setPostBody(curr_event, client_socket);
+					this->setPostBody(client_socket);
 				}
 				else
 					client_socket->status = SOCKSTAT_CLIENT_RECV_BODY;
 				break;
 			case METHOD_DELETE :
 				client_socket->status = SOCKSTAT_CLIENT_DELETE;
-				changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-				changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+				changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+				changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 				break;
 			case METHOD_NONE :
-				this->setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
+				this->setErrorPageResponse(STATCODE_BADREQ, client_socket);
 				break;
 		}
 	}
 }
 
-void ServerHandler::recvBody(struct kevent* const & curr_event, ClientSocketData* const & client_socket)
+void ServerHandler::recvBody(ClientSocketData* const & client_socket)
 {
 	char		buf[RECV_BUF_SIZE];
 	ssize_t		ret;
 
-	ret = recv(curr_event->ident, buf, RECV_BUF_SIZE - 1, 0);
+	ret = recv(client_socket->sock_fd, buf, RECV_BUF_SIZE - 1, 0);
 	buf[ret] = 0;
 	if (ret <= 0)
 	{
 		if (ret < 0)
 			throwError("recv body: ");
-		close(curr_event->ident);
+		closeEvent(client_socket);
 		std::cout << "socket closed successfully." << std::endl;
-		sock_list.erase(curr_event->ident);
 		return ;
 	}
 	client_socket->buf_str.append(buf, ret);
 
 	if (client_socket->buf_str.size() > conf.getMaxBodySize(ntohs(client_socket->listen_addr.sin_port)))
-		this->setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_BADREQ, client_socket);
 	if (static_cast<size_t>(client_socket->http_request.getContentLength()) <= client_socket->buf_str.size())
-	{
-		// client_socket->status = SOCKSTAT_CLIENT_POST;
-		// client_socket->http_request.saveBody(client_socket->buf_str);
-		// client_socket->buf_str.clear();
-		// changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-		// changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
-		this->setPostBody(curr_event, client_socket);
-	}
+		this->setPostBody(client_socket);
 }
 
 void ServerHandler::readFileToBody(struct kevent* const & curr_event, ClientSocketData* const & client_socket)
@@ -263,7 +255,6 @@ void ServerHandler::readCgiPipeToBody(struct kevent* const & curr_event, ClientS
 }
 
 void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
-			struct kevent* const & curr_event,
 			ClientSocketData* const & client_socket)
 {
 	pid_t pid;
@@ -320,7 +311,7 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 		fcntl(pipe_fd_input[PIPE_WR], F_SETFL, O_NONBLOCK);
 		client_socket->status = SOCKSTAT_CLIENT_MAKE_CGI_RESPONSE;
 		client_socket->buf_str = client_socket->http_request.getBody();
-		changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
+		changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
 		changeEvent(pipe_fd_input[PIPE_WR], EVFILT_WRITE, EV_ADD | EV_EOF, 0, NULL, client_socket);
 		changeEvent(pipe_fd_result[PIPE_RD], EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
 		changeEvent(pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, NULL, client_socket);
@@ -331,7 +322,6 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 
 void ServerHandler::makeFileIoEvent(const std::string& stat_code,
 			const std::string& file_path,
-			struct kevent* const & curr_event,
 			ClientSocketData* const & client_socket)
 {
 	int 											file_fd;
@@ -353,7 +343,7 @@ void ServerHandler::makeFileIoEvent(const std::string& stat_code,
 		return ;
 	}
 	client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
-	changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
+	changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
 	changeEvent(file_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
 }
 
@@ -406,24 +396,24 @@ void ServerHandler::makeRedirectResponse(ClientSocketData* const & client_socket
 	client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 }
 
-void ServerHandler::getMethod(struct kevent* const & curr_event, ClientSocketData* const & client_socket)
+void ServerHandler::getMethod(ClientSocketData* const & client_socket)
 {
 	std::string		file_path;
 	enum PathState	path_stat;
 
 	if (!this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->listen_addr.sin_port), METHOD_GET))
 	{
-		this->setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTALLOW, client_socket);
 		return ;
 	}
 	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), htons(client_socket->listen_addr.sin_port), file_path);
 	switch (path_stat)
 	{
 	case PATH_NOTFOUND:
-		this->setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTFOUND, client_socket);
 		break;
 	case PATH_VALID:
-		this->makeFileIoEvent("200", file_path, curr_event, client_socket);
+		this->makeFileIoEvent("200", file_path, client_socket);
 		break;
 	case PATH_AUTOINDEX:
 		this->makeAutoIndexResponse(client_socket, file_path);
@@ -432,29 +422,29 @@ void ServerHandler::getMethod(struct kevent* const & curr_event, ClientSocketDat
 		this->makeRedirectResponse(client_socket, file_path);
 		break;
 	case PATH_CGI:
-		this->setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTALLOW, client_socket);
 		break;
 	}
 }
 
-void ServerHandler::postMethod(struct kevent* const & curr_event, ClientSocketData* const & client_socket)
+void ServerHandler::postMethod(ClientSocketData* const & client_socket)
 {
 	std::string		file_path;
 	enum PathState	path_stat;
 
 	if (!this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->listen_addr.sin_port), METHOD_POST))
 	{
-		this->setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTALLOW, client_socket);
 		return ;
 	}
 	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), htons(client_socket->listen_addr.sin_port), file_path);
 	switch (path_stat)
 	{
 	case PATH_NOTFOUND:
-		this->setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTFOUND, client_socket);
 		break;
 	case PATH_VALID:
-		this->makeFileIoEvent("200", file_path, curr_event, client_socket);
+		this->makeFileIoEvent("200", file_path, client_socket);
 		break;
 	case PATH_AUTOINDEX:
 		this->makeAutoIndexResponse(client_socket, file_path);
@@ -464,25 +454,25 @@ void ServerHandler::postMethod(struct kevent* const & curr_event, ClientSocketDa
 		this->makeRedirectResponse(client_socket, file_path);
 		break;
 	case PATH_CGI:
-		this->makeCgiPipeIoEvent(file_path, curr_event, client_socket);
+		this->makeCgiPipeIoEvent(file_path, client_socket);
 		break;
 	}
 }
 
-void ServerHandler::deleteMethod(struct kevent* const & curr_event, ClientSocketData* const & client_socket)
+void ServerHandler::deleteMethod(ClientSocketData* const & client_socket)
 {
 	std::string		file_path;
 	enum PathState	path_stat;
 
 	if (!this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->listen_addr.sin_port), METHOD_DELETE))
 	{
-		this->setErrorPageResponse(STATCODE_NOTALLOW, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTALLOW, client_socket);
 		return ;
 	}
 	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), htons(client_socket->listen_addr.sin_port), file_path);
 	if (path_stat == PATH_NOTFOUND)
 	{
-		this->setErrorPageResponse(STATCODE_NOTFOUND, curr_event, client_socket);
+		this->setErrorPageResponse(STATCODE_NOTFOUND, client_socket);
 		return ;
 	}
 	else
@@ -511,16 +501,16 @@ void ServerHandler::deleteMethod(struct kevent* const & curr_event, ClientSocket
 	}
 }
 
-void ServerHandler::sendResponse(struct kevent * const & curr_event, ClientSocketData* const & client_socket)
+void ServerHandler::sendResponse(ClientSocketData* const & client_socket)
 {
 	ssize_t ret;
 	std::string res;
 
 	res = client_socket->http_response.makeResponseMessage();
-	ret = send(curr_event->ident, res.c_str(), res.size(), 0);
+	ret = send(client_socket->sock_fd, res.c_str(), res.size(), 0);
 	if (ret == -1)
 	{
-		closeEvent(curr_event);
+		this->closeEvent(client_socket);
 		throwError("send: ");
 	}
 	else
@@ -528,11 +518,11 @@ void ServerHandler::sendResponse(struct kevent * const & curr_event, ClientSocke
 		if (client_socket->http_request.getConnection() == "keep-alive")
 		{
 			this->clearClientSocketData(client_socket);
-			changeEvent(curr_event->ident, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
-			changeEvent(curr_event->ident, EVFILT_READ, EV_ENABLE, 0, NULL, client_socket);
+			changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
+			changeEvent(client_socket->sock_fd, EVFILT_READ, EV_ENABLE, 0, NULL, client_socket);
 		}
 		else
-			this->closeEvent(curr_event);
+			this->closeEvent(client_socket);
 	}
 }
 
@@ -611,29 +601,37 @@ void ServerHandler::serverRun()
 
 		for (int loop = 0; loop < event_count; loop++)
 		{
-			curr_event = &this->event_list[loop];
-			sock_type = static_cast<SocketData *>(curr_event->udata);
-			if (fstat(curr_event->ident, &stat_buf) == -1)
-				continue;
-			if (curr_event->filter == EVFILT_PROC)
+			try
 			{
-				int status;
-				if (waitpid(static_cast<pid_t>(curr_event->ident), &status, WNOHANG) == -1 || WEXITSTATUS(status) == -1)
-					throwError("cgi proc error: ");
-				continue;
+				curr_event = &this->event_list[loop];
+				sock_type = static_cast<SocketData *>(curr_event->udata);
+				if (fstat(curr_event->ident, &stat_buf) == -1)
+					continue;
+				if (curr_event->filter == EVFILT_PROC)
+				{
+					int status;
+					if (waitpid(static_cast<pid_t>(curr_event->ident), &status, WNOHANG) == -1 || WEXITSTATUS(status) == -1)
+						throwError("cgi proc error: ");
+					continue;
+				}
+				if (curr_event->flags & EV_ERROR)
+					keventError(sock_type->id_type);
+				switch (sock_type->id_type)
+				{
+					case ID_LISTEN_SOCKET :
+						handleListenEvent(sock_type);
+						break;
+					case ID_CLIENT_SOCKET :
+						handleClientEvent(curr_event);
+						break;
+					default:
+						break;
+				}
 			}
-			if (curr_event->flags & EV_ERROR)
-				keventError(sock_type->id_type);
-			switch (sock_type->id_type)
+			catch (std::exception& e)
 			{
-				case ID_LISTEN_SOCKET :
-					handleListenEvent(sock_type);
-					break;
-				case ID_CLIENT_SOCKET :
-					handleClientEvent(curr_event);
-					break;
-				default:
-					break;
+				std::cerr << e.what() << std::endl;
+				continue;
 			}
 		}
 	}
@@ -652,15 +650,18 @@ void ServerHandler::changeEvent(const uintptr_t& ident,
 	this->change_list.push_back(newEvent);
 }
 
-void ServerHandler::closeEvent(struct kevent * const & curr_event)
+void ServerHandler::closeEvent(SocketData * listen_socket)
 {
-	SocketData* sock_data = static_cast<SocketData *>(curr_event->udata);
-	close(curr_event->ident);
-	if (sock_data->id_type == ID_LISTEN_SOCKET)
-		delete (sock_data);
-	else
-		delete static_cast<ClientSocketData *>(sock_data);
-	this->sock_list.erase(curr_event->ident);
+	close(listen_socket->sock_fd);
+	this->sock_list.erase(listen_socket->sock_fd);
+	delete (listen_socket);
+}
+
+void ServerHandler::closeEvent(ClientSocketData * client_socket)
+{
+	close(client_socket->sock_fd);
+	this->sock_list.erase(client_socket->sock_fd);
+	delete (client_socket);
 }
 
 void ServerHandler::initClientSocketData(struct ClientSocketData* client_socket, const int& _sock_fd, const sockaddr_in _listen_addr)
@@ -729,7 +730,14 @@ void	ServerHandler::initCgiVariable(char **&arg, char **&env,
 	this->initCgiEnv(arg, env, socket_data);
 }
 
-void ServerHandler::setErrorPageResponse(StatusCode err_stat, struct kevent* const & curr_event, ClientSocketData* const & client_socket)
+void ServerHandler::throwServerError(std::string msg, ClientSocketData* const & client_socket)
+{
+	this->setErrorPageResponse(STATCODE_SERVERR, client_socket);
+	client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
+	throwError(msg);
+}
+
+void ServerHandler::setErrorPageResponse(StatusCode err_stat, ClientSocketData* const & client_socket)
 {
 	std::string	err_file_path;
 
@@ -759,16 +767,16 @@ void ServerHandler::setErrorPageResponse(StatusCode err_stat, struct kevent* con
 		switch (err_stat)
 		{
 		case STATCODE_BADREQ:
-			this->makeFileIoEvent("400", err_file_path, curr_event, client_socket);
+			this->makeFileIoEvent("400", err_file_path, client_socket);
 			break;
 		case STATCODE_NOTFOUND:
-			this->makeFileIoEvent("404", err_file_path, curr_event, client_socket);
+			this->makeFileIoEvent("404", err_file_path, client_socket);
 			break;
 		case STATCODE_NOTALLOW:
-			this->makeFileIoEvent("405", err_file_path, curr_event, client_socket);
+			this->makeFileIoEvent("405", err_file_path, client_socket);
 			break;
 		case STATCODE_SERVERR:
-			this->makeFileIoEvent("500", err_file_path, curr_event, client_socket);
+			this->makeFileIoEvent("500", err_file_path, client_socket);
 			break;
 		default:
 			break;
@@ -864,13 +872,13 @@ void ServerHandler::setDefaultServerError(HTTPResponse& http_res, const HTTPRequ
 	http_res.setBasicField(http_req);
 }
 
-void	ServerHandler::setPostBody(struct kevent* const & curr_event, ClientSocketData* const & client_socket)
+void	ServerHandler::setPostBody(ClientSocketData* const & client_socket)
 {
 	client_socket->status = SOCKSTAT_CLIENT_POST;
 	client_socket->http_request.saveBody(client_socket->buf_str);
 	client_socket->buf_str.clear();
-	changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-	changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+	changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+	changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 }
 
 void	ServerHandler::makeCgiPipeResponse(ClientSocketData* const & client_socket)
