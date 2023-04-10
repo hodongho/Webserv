@@ -13,7 +13,12 @@ const char* funcException::what() const throw()
 
 std::string	getExtension(const std::string& file_path)
 {
-	return (file_path.substr(file_path.rfind(".")));
+	size_t	idx;
+	idx = file_path.rfind(".");
+	if (idx == std::string::npos)
+		return ("");
+	else
+		return (file_path.substr(idx));
 }
 
 std::string	itos(size_t num)

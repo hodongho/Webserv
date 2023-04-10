@@ -76,6 +76,9 @@ class ServerHandler {
 		void		deleteMethod(struct kevent* const & curr_event, ClientSocketData* const & client_socket);
 		void		sendResponse(struct kevent* const & curr_event, ClientSocketData* const & client_socket);
 
+		void		setPostBody(struct kevent* const & curr_event, ClientSocketData* const & client_socket);
+		void		makeCgiPipeResponse(ClientSocketData* const & client_socket);
+
 		// CGI
 		void		initCgiVariable(char **&arg, char **&env,
 						ClientSocketData* const & socket_data,
@@ -89,6 +92,7 @@ class ServerHandler {
 		void		setDefaultNotFound(HTTPResponse& http_res, const HTTPRequest& http_req);
 		void		setDefaultNotAllow(HTTPResponse& http_res, const HTTPRequest& http_req);
 		void		setDefaultServerError(HTTPResponse& http_res, const HTTPRequest& http_req);
+
 
 	public:
 		ServerHandler(void);

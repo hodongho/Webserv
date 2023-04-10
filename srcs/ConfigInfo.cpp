@@ -49,7 +49,7 @@ void ConfigInfo::parseConfig(const char *file_name)
 		std::cout << "Config file content is N.O.T validate" << std::endl;
 		exit(1);
 	}
-  
+
 	if (this->parse(file_content))
 		std::cout << "Config parse is OK" << std::endl;
 	else
@@ -94,7 +94,7 @@ bool	ConfigInfo::getLocationConfig(const unsigned short &port, const std::string
 void ConfigInfo::printWebservConfig(void)
 {
 	std::vector<ServerConfig>::iterator	iter = this->server_config_vector.begin();
-	
+
 
 	for (;iter != this->server_config_vector.end(); iter++)
 	{
@@ -141,10 +141,10 @@ std::string ConfigInfo::readFile(std::string file_name)
 }
 
 /*
-	여러번 파일을 읽을것이라서 const불가, 
+	여러번 파일을 읽을것이라서 const불가,
 	reference하면 파일 pos가 맨 밑으로 갈것으로 예상되어서 deep copy되게 놔둠
 	- 짝은 맞지만 불필요한 곳에 {}가 있는 경우에 대한 처리 필요.
-	- split된 인자의시작이 
+	- split된 인자의시작이
 */
 bool	ConfigInfo::checkCurlyBracketPair(const std::string& file_content)
 {
@@ -342,7 +342,7 @@ bool ConfigInfo::checkHostConfigField(std::string field_value)
 			ip_class = "";
 			dot_count++;
 			continue ;
-		}	
+		}
 		ip_class += field_value[idx];
 	}
 	if (this->checkIpClass(ip_class) == false)
@@ -749,7 +749,7 @@ std::map<std::string, ConfigInfo::ValidateFieldInfo>	ConfigInfo::getValidateLoca
 }
 
 /*
-- location field가 있고 해당 location field에 root항목이 비어있다면 
+- location field가 있고 해당 location field에 root항목이 비어있다면
   sever config block에 있는 root를 넣어준다.
 */
 void	ConfigInfo::setRootToLocationConfig(void)
@@ -764,7 +764,6 @@ void	ConfigInfo::setRootToLocationConfig(void)
 		ServerConfig											server_config;
 		std::map<std::string, LocationConfig>					location_config_map;
 		std::map<std::string, LocationConfig>::iterator	location_config_map_iter;
-		
 		server_config = *webserv_config_iter;
 		location_config_map = server_config.getLocations();
 		location_config_map_iter = location_config_map.begin();
@@ -1074,7 +1073,7 @@ bool        ConfigInfo::validateServerBlock(std::vector<std::string> server_bloc
 				}
 				else if (first_word == "cgi_pass")
 				{
-					if (this->checkErrorPageConfigField(clean_str) == false)
+					if (this->checkCgiPassConfigField(clean_str) == false)
 						return (false);
 				}
 				else
@@ -1265,7 +1264,7 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 					return (false);
 				std::string 	value_with_semicolon_comment;
 				std::string 	value;
-				
+
 				value_with_semicolon_comment = *(word_list.begin() + 1);
 				value = this->removeAfterSemicolon(value_with_semicolon_comment);
 				if (value != "on" && value != "off")
@@ -1455,7 +1454,7 @@ std::string	ConfigInfo::getFilePathFromRequestURI(const std::string& startline_o
 bool ConfigInfo::checkRedirect(const std::string& file_path_request_URI, const unsigned short &port, std::string& file_path)
 {
 	LocationConfig	location_config;
-	
+
 	if (this->getLocationConfig(port, file_path_request_URI, location_config) && \
 		(location_config.getRedirect() != ""))
 	{
@@ -1528,7 +1527,7 @@ enum FileExistanceType ConfigInfo::getFileExistanceType(const std::string &file_
 {
 	struct stat	statbuf;
 
-	
+
 	if (stat(file_path.c_str(), &statbuf) < 0) {
 		// std::cerr << PUP << "stat error" << WHI << std::endl;
         // exit(1);
@@ -1561,7 +1560,7 @@ bool	ConfigInfo::isLastPartOfStr(const std::string& origin_str, const std::strin
 
 /*
 	.php가 마지막에 위치하는지 확인 필요
-	- config에 있는 cgi항목 확인필요 
+	- config에 있는 cgi항목 확인필요
 	- (.php or .py ) and ((cgi_pass .php /sdffsd) or (cgi_pass .py /sdffsd) )
 */
 bool ConfigInfo::isCgiRequest(const std::string &file_path)
@@ -1574,103 +1573,124 @@ bool ConfigInfo::isCgiRequest(const std::string &file_path)
 
 enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path)
 {
-	std::string				file_path_request_URI;
-	std::string				abs_file_path_of_server;
-	enum FileExistanceType	file_existance_type;
+    std::string             file_path_request_URI;
+    std::string             abs_file_path_of_server;
+    enum FileExistanceType  file_existance_type;
 
-	file_path_request_URI = this->getFilePathFromRequestURI(startline_of_URI);
-	if (file_path_request_URI == "")
-	{
-		std::cout << RED << "PATH_NOTFOUND : " << startline_of_URI << WHI << std::endl;
-		return (PATH_NOTFOUND);
-	}
-	if (this->checkRedirect(file_path_request_URI, port, file_path))
-	{
-		std::cout << RED << "PATH_REDIRECT : " << startline_of_URI << WHI << std::endl;
-		return (PATH_REDIRECT);
-	}
-	abs_file_path_of_server = this->getAbsFilePath(file_path_request_URI, port);
-	printContent(abs_file_path_of_server, "abs_file_path_of_server", PUP);
-	// enum FileExistanceType getFileExistanceType(cont std::string& abs_file_path_of_server)
-	file_existance_type = this->getFileExistanceType(abs_file_path_of_server);
-	// std::cout << "file_existance_type : " << file_existance_type << std::endl;
-	/*
-		존재하는가?
-		한다면 파일인가 디렉터리인가?
-	*/
-	// file_path에 계속 더해줌
-	switch (file_existance_type)
-	{
-		case EXIST_FILE:
-		{
-			file_path = abs_file_path_of_server;
-			if (isCgiRequest(file_path)) // TODO adjust cgi config info
-			{
-				this->printContent(file_path, "file_path match to index file in EXIST_FILE, PATH_VALID", CYN);
-				return (PATH_CGI);
-			}
-			this->printContent(file_path, "file_path match to index file in EXIST_FILE, PATH_VALID", GRN);
-			return (PATH_VALID);
-			break ;
-		}
-		case EXIST_DIRECTORY:
-		{
-			LocationConfig	location_config;
+    file_path_request_URI = this->getFilePathFromRequestURI(startline_of_URI);
+    if (file_path_request_URI == "")
+    {
+        std::cout << RED << "PATH_NOTFOUND : " << startline_of_URI << WHI << std::endl;
+        return (PATH_NOTFOUND);
+    }
+    if (this->checkRedirect(file_path_request_URI, port, file_path))
+    {
+        std::cout << RED << "PATH_REDIRECT : " << startline_of_URI << WHI << std::endl;
+        return (PATH_REDIRECT);
+    }
+    abs_file_path_of_server = this->getAbsFilePath(file_path_request_URI, port);
+    printContent(abs_file_path_of_server, "abs_file_path_of_server", PUP);
+    // enum FileExistanceType getFileExistanceType(cont std::string& abs_file_path_of_server)
+    file_existance_type = this->getFileExistanceType(abs_file_path_of_server);
+    // std::cout << "file_existance_type : " << file_existance_type << std::endl;
+    /*
+        존재하는가?
+        한다면 파일인가 디렉터리인가?
+    */
+    // file_path에 계속 더해줌
+    switch (file_existance_type)
+    {
+        case EXIST_FILE:
+        {
+            file_path = abs_file_path_of_server;
+            if (isCgiRequest(file_path)) // TODO adjust cgi config info
+            {
+                this->printContent(file_path, "file_path match to index file in EXIST_FILE, PATH_VALID", CYN);
+                return (PATH_CGI);
+            }
+            this->printContent(file_path, "file_path match to index file in EXIST_FILE, PATH_VALID", GRN);
+            return (PATH_VALID);
+            break ;
+        }
+        case EXIST_DIRECTORY:
+        {
+            LocationConfig  location_config;
 
-			// index에 걸리는지
-			if (this->getLocationConfig(port, file_path_request_URI, location_config))
-			{
-				std::string				index_file;
-				enum FileExistanceType	recycle_file_existance_type;
+            // index에 걸리는지
+            if (this->getLocationConfig(port, file_path_request_URI, location_config))
+            {
+                std::string             index_file;
+                enum FileExistanceType  recycle_file_existance_type;
 
-				index_file = location_config.getIndex();
-				recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);
-				if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
-				{
-					file_path = abs_file_path_of_server + index_file;
-					this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_VALID", GRN);
-					return (PATH_VALID);
-				}
-				else //NO_EXIST or EXIST_DIRECTORY
-				{
-					file_path = abs_file_path_of_server;
-					// autoindex check
-					if (location_config.getAutoindex())
-					{
-						this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_AUTOINDEX", BLU);
-						return (PATH_AUTOINDEX);
-					}
-					else
-					{
-						this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND", RED);
-						return (PATH_NOTFOUND);
-					}
-				}
-				// else if (EXIST_DIRECTORY)
-				// 	;
-			}
-			else
-			{
-				// std::cerr << "error in EXIST_DIRECTORY of convUriToPath()" << std::endl;
-				this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND location config N.O.T found!!!!!", RED);
-				return (PATH_NOTFOUND);
-			}
-			break ;
-		}
-		case NO_EXIST:
-		{
-			this->printContent(file_path, "file_path match to index file in NO_EXIST, PATH_NOTFOUND", RED);
-			return (PATH_NOTFOUND);
-			break ;	
-		}
-		default:
-		{
-			// std::cerr << "error in convUriToPath()" << std::endl;
-			return (PATH_NOTFOUND);
-			break ;
-		}
-	}
-	return (PATH_NOTFOUND);
+                index_file = location_config.getIndex();
+                recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);
+                if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
+                {
+                    file_path = abs_file_path_of_server + index_file;
+                    this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_VALID", GRN);
+                    return (PATH_VALID);
+                }
+                else //NO_EXIST or EXIST_DIRECTORY
+                {
+                    file_path = abs_file_path_of_server;
+                    // autoindex check
+                    if (location_config.getAutoindex())
+                    {
+                        this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_AUTOINDEX", BLU);
+                        return (PATH_AUTOINDEX);
+                    }
+                    else
+                    {
+                        this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND", RED);
+                        return (PATH_NOTFOUND);
+                    }
+                }
+                // else if (EXIST_DIRECTORY)
+                //  ;
+            }
+            else
+            {
+                ServerConfig    server_config;
+
+                if (this->getServerConfig(port, server_config))
+                {
+                    std::string             index_file;
+                    enum FileExistanceType  recycle_file_existance_type;
+
+                    index_file = server_config.getIndex();
+                    recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);
+                    if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
+                    {
+                        file_path = abs_file_path_of_server + index_file;
+                        this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_VALID", GRN);
+                        return (PATH_VALID);
+                    }
+                    // else if (EXIST_DIRECTORY)
+                    //  ;
+                }
+                else
+                {
+                    // std::cerr << "error in EXIST_DIRECTORY of convUriToPath()" << std::endl;
+                    this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND location config N.O.T found!!!!!", RED);
+                    return (PATH_NOTFOUND);
+                }
+            }
+            break ;
+        }
+        case NO_EXIST:
+        {
+            this->printContent(file_path, "file_path match to index file in NO_EXIST, PATH_NOTFOUND", RED);
+            return (PATH_NOTFOUND);
+            break ;
+        }
+        default:
+        {
+            // std::cerr << "error in convUriToPath()" << std::endl;
+            return (PATH_NOTFOUND);
+            break ;
+        }
+    }
+    return (PATH_NOTFOUND);
 }
 
 bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& port, const enum MethodType& method)
@@ -1686,7 +1706,7 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
     if (URI_start_idx == std::string::npos)
         return (false);
     origin_URI = URI.substr(URI_start_idx, URI.size() - URI_start_idx);
-	
+
 	for (server_config_iter = this->server_config_vector.begin(); server_config_iter != this->server_config_vector.end(); server_config_iter++)
 	{
 		if (server_config_iter->getPort() == port)
@@ -1697,7 +1717,7 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
 	}
 	if (server_config_iter == this->server_config_vector.end())
 		return (false);
-	/* 
+	/*
 	if (!this->getServerConfig(port, server_config))
 		return (false);
 	*/
@@ -1709,7 +1729,7 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
 	}
 	else
 		return (true);
-	/* 
+	/*
 	if (this->getLocationBlock())
 	{
 		allowed_method_type_map = location_iter->second.getAllowMethod();
