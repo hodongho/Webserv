@@ -79,7 +79,7 @@ int ServerHandler::serverListen(const ServerConfig& serv_conf)
 	int	bf = 1;
 
 	if (setsockopt(serverSocket->sock_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&bf, (int)sizeof(bf)) == -1)
-		throwError("setsockopt: ");
+		throwError("setsockopt listen: ");
 
 	this->initListenerData(serverSocket, serv_conf);
 	this->sock_list[serverSocket->sock_fd] = serverSocket;
@@ -115,7 +115,6 @@ void ServerHandler::keventError(const IdentType& event_id_type)
 }
 
 void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
-
 {
 	int					client_sock_fd;
 	socklen_t			client_sock_addr_len;
@@ -134,9 +133,12 @@ void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
 	std::cout << "accept port: " << ntohs(listen_sock->addr.sin_port) << std::endl;
 	std::cout << "accept new client: " << client_sock_fd << std::endl;
 
-	bool	tmp = true;
-	if (setsockopt(client_sock_fd, SOL_SOCKET, SO_KEEPALIVE, &tmp, sizeof(tmp)) == -1)
-		this->throwServerError("setsockopt: ", client_socket);
+	int	opt_val;
+	if (setsockopt(client_sock_fd, SOL_SOCKET, SO_KEEPALIVE, &opt_val, sizeof(opt_val)) == -1)
+	{
+		std::cout << errno << std::endl;
+		throwServerError("setsockopt: ", client_socket);
+	}
 
 	if (fcntl(client_sock_fd, F_SETFL, O_NONBLOCK) == -1)
 		this->throwServerError("fcntl: ", client_socket);
