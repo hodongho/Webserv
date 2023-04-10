@@ -8,10 +8,8 @@
 
 # include <iomanip>
 
-# define HOST "Host"
-# define USER_AGENT "User-Agent"
-# define ACCEPT "Accept"
-# define CONNECTION "Connection"
+# define HOST 		"Host"
+# define CONNECTION	"Connection"
 
 class HTTPRequest : public HTTPMessage
 {

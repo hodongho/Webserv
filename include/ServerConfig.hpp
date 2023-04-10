@@ -5,7 +5,6 @@
 # include <string>
 # include "LocationConfig.hpp"
 # include <unistd.h>
-// class LocationConfig;
 
 class ServerConfig
 {
@@ -19,6 +18,7 @@ class ServerConfig
 		std::map<int, std::string>				error_page;				// 선택 필드, 복수값 입력가능, 입력값 없으면 size() == 0
 		std::map<std::string, std::string>		cgi_pass;				// 선택 필드, 키 값 복수 가능, value는 복수 불가
 		std::map<std::string, LocationConfig>	locations;				// 선택 필드, 입력값 없으면 size() == 0
+
 	public:
 		ServerConfig(void);
 		virtual	~ServerConfig();
@@ -38,21 +38,18 @@ class ServerConfig
 
 		// getter()
 		const std::string&							getServerName(void) const;			// 선택 필드, 유일값, 입력 없으면 ""
-		const std::string&							getHost(void) const ;					// 필수 필드, IPv4 style "0.0.0.0"
-		const unsigned short&								getPort(void) const ;					// 필수 필드, 0~65525 범위 내에 존재해야함
-		const std::string&							getRoot(void) const ;					// 필수 필드, 빈 문자열 입력은 허용하지 않음
-		const std::string&							getIndex(void) const ;					// 필수 필드, 빈 문자열 입력은 허용하지 않음
+		const std::string&							getHost(void) const ;				// 필수 필드, IPv4 style "0.0.0.0"
+		const unsigned short&								getPort(void) const ;		// 필수 필드, 0~65525 범위 내에 존재해야함
+		const std::string&							getRoot(void) const ;				// 필수 필드, 빈 문자열 입력은 허용하지 않음
+		const std::string&							getIndex(void) const ;				// 필수 필드, 빈 문자열 입력은 허용하지 않음
 		const size_t&								getClientMaxBodySize(void) const ;	// 필수 필드, 양수만 허용, atoi로 변환하여 처리, 숫자가 아닌 문자열인 경우는?, isdigit()사용
-		const std::map<int, std::string>&			getDefaultErrorPage(void) const ;		// config에는 없지만 error_page에 없는 status code에 대한 default error page 경로를 담고 있음, 항상 값이 있음
-		const std::map<int, std::string>&			getErrorPage(void) const ;				// 선택 필드, 복수값 입력가능, 입력값 없으면 size() == 0
-		const std::map<std::string, LocationConfig>&getLocations(void) const ;				// 선택 필드, 입력값 없으면 size() == 0
-		const std::map<std::string, std::string>&	getCgiPass(void) const ;				// 선택 필드, 키값이 복수로 입력가능
+		const std::map<int, std::string>&			getDefaultErrorPage(void) const ;	// config에는 없지만 error_page에 없는 status code에 대한 default error page 경로를 담고 있음, 항상 값이 있음
+		const std::map<int, std::string>&			getErrorPage(void) const ;			// 선택 필드, 복수값 입력가능, 입력값 없으면 size() == 0
+		const std::map<std::string, LocationConfig>&getLocations(void) const ;			// 선택 필드, 입력값 없으면 size() == 0
+		const std::map<std::string, std::string>&	getCgiPass(void) const ;			// 선택 필드, 키값이 복수로 입력가능
 		const std::string&							getCgiProgramPath(const std::string& cgi_extension) const;
-    bool 											getLocationBlock(const std::string &find_path, \
+    	bool										getLocationBlock(const std::string &find_path, \
 																		LocationConfig& location_config) const;  // location path를 가지고 일치하는 가져옴 
-
-		// print
-
 
 		template <typename T>
 		void	printContent(const T &val, std::string name, std::string color) const;
@@ -62,7 +59,6 @@ class ServerConfig
 		void	printMapContent(const std::map<std::string, std::string> &pair_map, std::string name, std::string color) const ;
 		void	printServerConfingContent(void)  const;
 };
-
 
 #include <iostream>
 template <typename T>

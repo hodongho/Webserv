@@ -4,6 +4,7 @@
 # include "LocationConfig.hpp"
 # include "manageStdout.hpp"
 # include <vector>
+
 enum PathState
 {
 	PATH_NOTFOUND,
@@ -73,7 +74,6 @@ class  ValidateFieldInfo
 
 	// check function for validate
 	bool    checkCommonConfigLineForm(std::vector<std::string> word_list);
-	// bool    checkCommonConfigLineForm(std::string config_line);
 	bool	checkDuplicateConfigField(const ValidateFieldInfo& validate_field_info);
 	bool    checkHostConfigField(std::string field_value);
 	bool    checkIpClass(const std::string& ip_class);
@@ -117,7 +117,6 @@ class  ValidateFieldInfo
 
 
 	// convUriToPath utils
-	// bool					matchFilePathToLocationConfig(const std::string& file_path_request_URI, const unsigned short& port, LocationConfig& location_config);
 	bool					checkRedirect(const std::string& file_path_request_URI, const unsigned short &port, std::string& file_path);
 	std::string				getFilePathFromRequestURI(const std::string& startline_of_URI);
 	std::string				getAbsFilePath(const std::string &file_path_request_URI, const unsigned short &port);
@@ -125,9 +124,7 @@ class  ValidateFieldInfo
 	bool					isCgiRequest(const std::string& file_path, const unsigned short& port);
 	bool					isLastPartOfStr(const std::string& origin_str, const std::string& find_str);
 	void					removeLastSlashSignOfStr(std::string& str);
-	
-	// TODO remove!!!!!
-	// bool					isCgiRequestToBe(const std::string& file_path, const unsigned short& port);
+
 
 public:
 	ConfigInfo(void);
@@ -135,17 +132,16 @@ public:
 	void    parseConfig(const char *file);
 	void    printWebservConfig(void);
 
-	// std::vector<ServerConfig>	webserv_config;
-	const std::vector<ServerConfig>& getWebservConfig(void) const;
-	bool							getServerConfig(const unsigned short &port, ServerConfig& server_config) const;
-	bool							getLocationConfig(const unsigned short &port, const std::string &find_path, LocationConfig& location_path) const;
+	const std::vector<ServerConfig>&	getWebservConfig(void) const;
+	bool								getServerConfig(const unsigned short &port, ServerConfig& server_config) const;
+	bool								getLocationConfig(const unsigned short &port, const std::string &find_path, LocationConfig& location_path) const;
 
 	// for using config info 
 	enum PathState		convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path);
-	bool        isAllowedMethod(const std::string& URI, const unsigned short& port, const enum MethodType& method);
-	int		    getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path);
-	size_t	    getMaxBodySize(const unsigned short& port);
-	std::string getCgiProgramPath(const std::string& cgi_extension, const unsigned short& port);
+	bool        		isAllowedMethod(const std::string& URI, const unsigned short& port, const enum MethodType& method);
+	int		    		getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path);
+	size_t	    		getMaxBodySize(const unsigned short& port);
+	std::string 		getCgiProgramPath(const std::string& cgi_extension, const unsigned short& port);
 };
 
 #endif

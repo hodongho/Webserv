@@ -50,8 +50,6 @@ int	HTTPRequest::validateHeaderField(void)
 	//request 필수헤더 검사
 	std::map<std::string, std::string>::iterator	end = this->header.end();
 	if (this->header.find(HOST) == end ||
-		this->header.find(USER_AGENT) == end ||
-		this->header.find(ACCEPT) == end ||
 		this->header.find(CONNECTION) == end)
 		return (-1);
 	return (0);

@@ -10,10 +10,7 @@
 #include <stack>
 #include <limits>
 #include <stdlib.h>
-// #include <unistd.h>
-// #include <sys/types.h>
 #include <sys/stat.h>
-// #include <unistd.h>
 
 ConfigInfo::ConfigInfo(void)
     : whitespace(" \t\n\v\f\r")

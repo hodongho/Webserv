@@ -4,11 +4,8 @@
 # include "HTTPMessage.hpp"
 # include "HTTPRequest.hpp"
 
-# define DATE "Date"
-# define SERVER "Server"
 # define CONTENT_LENGTH "Content-length"
-# define CONTENT_TYPE "Content-type"
-# define CONNECTION "Connection"
+# define CONTENT_TYPE	"Content-type"
 
 class HTTPResponse : public HTTPMessage
 {
