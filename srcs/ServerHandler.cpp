@@ -153,6 +153,10 @@ void ServerHandler::recvHeader(struct kevent* const & curr_event, ClientSocketDa
 			case METHOD_POST :
 				if (client_socket->http_request.getContentLength() < 0)
 					this->setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
+				else if (static_cast<size_t>(client_socket->http_request.getContentLength()) == client_socket->buf_str.size())
+				{
+					this->setPostBody(curr_event, client_socket);
+				}
 				else
 					client_socket->status = SOCKSTAT_CLIENT_RECV_BODY;
 				break;
@@ -173,7 +177,6 @@ void ServerHandler::recvBody(struct kevent* const & curr_event, ClientSocketData
 	char		buf[RECV_BUF_SIZE];
 	ssize_t		ret;
 
-	std::cout << "recvBody Start!" << std::endl;
 	ret = recv(curr_event->ident, buf, RECV_BUF_SIZE - 1, 0);
 	buf[ret] = 0;
 	if (ret <= 0)
@@ -191,13 +194,13 @@ void ServerHandler::recvBody(struct kevent* const & curr_event, ClientSocketData
 		this->setErrorPageResponse(STATCODE_BADREQ, curr_event, client_socket);
 	if (static_cast<size_t>(client_socket->http_request.getContentLength()) <= client_socket->buf_str.size())
 	{
-		client_socket->status = SOCKSTAT_CLIENT_POST;
-		client_socket->http_request.saveBody(client_socket->buf_str);
-		client_socket->buf_str.clear();
-		changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-		changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+		// client_socket->status = SOCKSTAT_CLIENT_POST;
+		// client_socket->http_request.saveBody(client_socket->buf_str);
+		// client_socket->buf_str.clear();
+		// changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+		// changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+		this->setPostBody(curr_event, client_socket);
 	}
-	std::cout << "recvBody Start!" << std::endl;
 }
 
 void ServerHandler::readFileToBody(struct kevent* const & curr_event, ClientSocketData* const & client_socket)
@@ -852,4 +855,13 @@ void ServerHandler::setDefaultServerError(HTTPResponse& http_res, const HTTPRequ
 	http_res.setBody(body);
 	http_res.addHeader("Content-Type", "text/html");
 	http_res.setBasicField(http_req);
+}
+
+void	ServerHandler::setPostBody(struct kevent* const & curr_event, ClientSocketData* const & client_socket)
+{
+	client_socket->status = SOCKSTAT_CLIENT_POST;
+	client_socket->http_request.saveBody(client_socket->buf_str);
+	client_socket->buf_str.clear();
+	changeEvent(curr_event->ident, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+	changeEvent(curr_event->ident, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 }
