@@ -640,6 +640,7 @@ void	ServerHandler::setPostBody(ClientSocketData* const & client_socket)
 	if (client_socket->buf_str.size() > conf.getMaxBodySize(ntohs(client_socket->listen_addr.sin_port)))
 	{
 		this->setErrorPageResponse(STATCODE_BADREQ, client_socket);
+		return ;
 	}
 	client_socket->status = SOCKSTAT_CLIENT_POST;
 	client_socket->http_request.saveBody(client_socket->buf_str);
