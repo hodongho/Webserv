@@ -131,7 +131,7 @@ void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
 	if (client_sock_fd == -1)
 	{
 		delete client_socket;
-		return ;
+		throwError("accept: ");
 	}
 	this->initClientSocketData(client_socket, client_sock_fd, listen_sock->addr);
 	this->sock_list[client_sock_fd] = client_socket;
@@ -223,6 +223,8 @@ void ServerHandler::recvHeader(ClientSocketData* const & client_socket)
 
 	if (client_socket->buf_str.size() > MAX_HEADER_SIZE)
 	{
+		changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+		changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 		this->setErrorPageResponse(STATCODE_BADREQ, client_socket);
 		return ;
 	}
@@ -244,7 +246,11 @@ void ServerHandler::recvHeader(ClientSocketData* const & client_socket)
 				break;
 			case METHOD_POST :
 				if (client_socket->http_request.getContentLength() < 0)
+				{
+					changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+					changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 					this->setErrorPageResponse(STATCODE_BADREQ, client_socket);
+				}
 				else if (static_cast<size_t>(client_socket->http_request.getContentLength()) == client_socket->buf_str.size())
 					this->setPostBody(client_socket);
 				else
@@ -256,6 +262,8 @@ void ServerHandler::recvHeader(ClientSocketData* const & client_socket)
 				changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 				break;
 			case METHOD_NONE :
+				changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+				changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 				this->setErrorPageResponse(STATCODE_BADREQ, client_socket);
 				break;
 		}
@@ -279,8 +287,14 @@ void ServerHandler::recvBody(ClientSocketData* const & client_socket)
 	}
 	client_socket->buf_str.append(buf, ret);
 
+	std::cout << buf << std::endl;
+
 	if (client_socket->buf_str.size() > conf.getMaxBodySize(ntohs(client_socket->listen_addr.sin_port)))
+	{
+		changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+		changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 		this->setErrorPageResponse(STATCODE_BADREQ, client_socket);
+	}
 	if (static_cast<size_t>(client_socket->http_request.getContentLength()) <= client_socket->buf_str.size())
 		this->setPostBody(client_socket);
 }
@@ -719,6 +733,8 @@ void	ServerHandler::initCgiEnv(char **&arg, char **&env,  ClientSocketData* cons
 
 void ServerHandler::throwServerError(std::string msg, ClientSocketData* const & client_socket)
 {
+	changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+	changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 	this->setErrorPageResponse(STATCODE_SERVERR, client_socket);
 	throwError(msg);
 }
