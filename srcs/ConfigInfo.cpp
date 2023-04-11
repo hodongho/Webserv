@@ -774,6 +774,33 @@ void	ConfigInfo::setRootToLocationConfig(ServerConfig& server_config)
 	server_config.setLocations(location_config_map);
 }
 
+bool	ConfigInfo::checkDuplicatedPort(void)
+{
+	std::vector<ServerConfig>					server_config_vector;
+	std::vector<ServerConfig>::const_iterator	server_config_vector_iter;
+	std::vector<unsigned short>					port_vector;
+
+	server_config_vector = this->getWebservConfig();
+	server_config_vector_iter = server_config_vector.begin();
+	for ( ;server_config_vector_iter != server_config_vector.end(); server_config_vector_iter++)
+	{
+		std::vector<unsigned short>::const_iterator	port_vector_iter;
+
+		port_vector_iter = port_vector.begin();
+		for (; port_vector_iter != port_vector.end(); port_vector_iter++ )
+		{
+			unsigned short	cur_port;
+
+			cur_port = *port_vector_iter;
+			if (server_config_vector_iter->getPort() == cur_port)
+				return (false);
+		}
+		port_vector.push_back(server_config_vector_iter->getPort());
+	}
+	return (true);
+}
+
+
 bool	ConfigInfo::parse(const std::string &file_content)
 {
 	std::string							str;
@@ -806,6 +833,9 @@ bool	ConfigInfo::parse(const std::string &file_content)
 			return (false);
 		cur_iter++;
 	}
+
+	if (this->checkDuplicatedPort() == false)
+		return (false);
 	return (true);
 }
 

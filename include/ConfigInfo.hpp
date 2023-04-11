@@ -84,6 +84,7 @@ class  ValidateFieldInfo
 	bool    checkAllowMethodConfigField(std::string allow_method);
 	bool    checkCgiPassConfigField(std::string cgi_pass);
 	bool    checkNessaryOrUniqueField(std::map<std::string, ConfigInfo::ValidateFieldInfo> validate_server_field_map);
+	bool	checkDuplicatedPort(void);
 
 	// config util
 	std::string	removeAfterSemicolon(const std::string& origin_value);
