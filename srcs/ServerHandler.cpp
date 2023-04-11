@@ -87,7 +87,7 @@ int ServerHandler::serverListen(const ServerConfig& serv_conf)
 	if (bind(serverSocket->sock_fd, (const sockaddr *)&serverSocket->addr, sizeof(sockaddr_in)) == -1)
 		throwError("bind: ");
 
-	if (listen(serverSocket->sock_fd, 5) == -1)
+	if (listen(serverSocket->sock_fd, 50) == -1)
 		throwError("listen: ");
 
 	changeEvent(serverSocket->sock_fd, EVFILT_READ, EV_ADD, 0, NULL, serverSocket);
@@ -131,7 +131,7 @@ void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
 	if (client_sock_fd == -1)
 	{
 		delete client_socket;
-		throwError("accept: ");
+		return ;
 	}
 	this->initClientSocketData(client_socket, client_sock_fd, listen_sock->addr);
 	this->sock_list[client_sock_fd] = client_socket;
