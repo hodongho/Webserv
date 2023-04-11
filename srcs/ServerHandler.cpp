@@ -301,7 +301,7 @@ void ServerHandler::readFileToBody(struct kevent* const & curr_event, ClientSock
 		throwServerError("read respond body: ", client_socket);
 	if (close(curr_event->ident) == -1)
 		throwServerError("close file: ", client_socket);
-		
+
 	client_socket->http_response.setBody(client_socket->buf_str);
 	client_socket->http_response.setBasicField(client_socket->http_request);
 	client_socket->buf_str.clear();
@@ -501,12 +501,12 @@ void ServerHandler::getMethod(ClientSocketData* const & client_socket)
 	std::string		file_path;
 	enum PathState	path_stat;
 
-	if (!this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->listen_addr.sin_port), METHOD_GET))
+	if (!this->conf.isAllowedMethod(client_socket->http_request.getLocalPath(), ntohs(client_socket->listen_addr.sin_port), METHOD_GET))
 	{
 		this->setErrorPageResponse(STATCODE_NOTALLOW, client_socket);
 		return ;
 	}
-	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), htons(client_socket->listen_addr.sin_port), file_path);
+	path_stat = this->conf.convUriToPath(client_socket->http_request.getLocalPath(), htons(client_socket->listen_addr.sin_port), file_path);
 	switch (path_stat)
 	{
 	case PATH_NOTFOUND:
@@ -532,12 +532,12 @@ void ServerHandler::postMethod(ClientSocketData* const & client_socket)
 	std::string		file_path;
 	enum PathState	path_stat;
 
-	if (!this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->listen_addr.sin_port), METHOD_POST))
+	if (!this->conf.isAllowedMethod(client_socket->http_request.getLocalPath(), ntohs(client_socket->listen_addr.sin_port), METHOD_POST))
 	{
 		this->setErrorPageResponse(STATCODE_NOTALLOW, client_socket);
 		return ;
 	}
-	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), htons(client_socket->listen_addr.sin_port), file_path);
+	path_stat = this->conf.convUriToPath(client_socket->http_request.getLocalPath(), htons(client_socket->listen_addr.sin_port), file_path);
 	switch (path_stat)
 	{
 	case PATH_NOTFOUND:
@@ -564,12 +564,12 @@ void ServerHandler::deleteMethod(ClientSocketData* const & client_socket)
 	std::string		file_path;
 	enum PathState	path_stat;
 
-	if (!this->conf.isAllowedMethod(client_socket->http_request.getURI(), ntohs(client_socket->listen_addr.sin_port), METHOD_DELETE))
+	if (!this->conf.isAllowedMethod(client_socket->http_request.getLocalPath(), ntohs(client_socket->listen_addr.sin_port), METHOD_DELETE))
 	{
 		this->setErrorPageResponse(STATCODE_NOTALLOW, client_socket);
 		return ;
 	}
-	path_stat = this->conf.convUriToPath(client_socket->http_request.getURI(), htons(client_socket->listen_addr.sin_port), file_path);
+	path_stat = this->conf.convUriToPath(client_socket->http_request.getLocalPath(), htons(client_socket->listen_addr.sin_port), file_path);
 	if (path_stat == PATH_NOTFOUND)
 	{
 		this->setErrorPageResponse(STATCODE_NOTFOUND, client_socket);
