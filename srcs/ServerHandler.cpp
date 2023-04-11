@@ -480,6 +480,7 @@ void ServerHandler::makeAutoIndexResponse(ClientSocketData* const & client_socke
 	page_body += "    <hr>\r\n";
 	page_body += "</body>\r\n";
 	page_body += "</html>\r\n";
+	closedir(dir_ptr);
 	client_socket->http_response.setStatusCode("200");
 	client_socket->http_response.setBody(page_body);
 	client_socket->http_response.addHeader("Content-Type", "text/html; charset=utf-8");
