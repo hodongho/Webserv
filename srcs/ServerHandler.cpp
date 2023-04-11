@@ -287,14 +287,6 @@ void ServerHandler::recvBody(ClientSocketData* const & client_socket)
 	}
 	client_socket->buf_str.append(buf, ret);
 
-	std::cout << buf << std::endl;
-
-	if (client_socket->buf_str.size() > conf.getMaxBodySize(ntohs(client_socket->listen_addr.sin_port)))
-	{
-		changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-		changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
-		this->setErrorPageResponse(STATCODE_BADREQ, client_socket);
-	}
 	if (static_cast<size_t>(client_socket->http_request.getContentLength()) <= client_socket->buf_str.size())
 		this->setPostBody(client_socket);
 }
@@ -643,11 +635,15 @@ void ServerHandler::sendResponse(ClientSocketData* const & client_socket)
 
 void	ServerHandler::setPostBody(ClientSocketData* const & client_socket)
 {
+	changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
+	changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+	if (client_socket->buf_str.size() > conf.getMaxBodySize(ntohs(client_socket->listen_addr.sin_port)))
+	{
+		this->setErrorPageResponse(STATCODE_BADREQ, client_socket);
+	}
 	client_socket->status = SOCKSTAT_CLIENT_POST;
 	client_socket->http_request.saveBody(client_socket->buf_str);
 	client_socket->buf_str.clear();
-	changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-	changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 }
 
 void	ServerHandler::makeCgiPipeResponse(ClientSocketData* const & client_socket)
