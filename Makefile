@@ -16,7 +16,7 @@ VPATH = ./srcs
 INCLUDE_DIR = ./include
 
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -g
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 CPPFLAGS = -MMD -I$(INCLUDE_DIR)
 
 SRCS = webserv.cpp \
