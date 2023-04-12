@@ -585,7 +585,6 @@ void ServerHandler::postMethod(ClientSocketData* const & client_socket)
 		break;
 	case PATH_AUTOINDEX:
 		this->makeAutoIndexResponse(client_socket, file_path);
-		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 		break;
 	case PATH_REDIRECT:
 		this->makeRedirectResponse(client_socket, file_path);
