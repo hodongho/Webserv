@@ -38,10 +38,10 @@ int	HTTPRequest::parseStartLine(std::stringstream& request_stream)
 		return (-1);
 
 	//Test
-	std::cout	<< BLU << "\n[Check Parsing]\n\n"
-				<< BRW << "method:" << CYN << " [" << this->method << "] "
-				<< BRW << "URI:" << CYN << " [" << this->URI << "] "
-				<< BRW << "version:" << CYN << " [" << this->version << "]\n" << std::endl;
+	// std::cout	<< BLU << "\n[Check Parsing]\n\n"
+	// 			<< BRW << "method:" << CYN << " [" << this->method << "] "
+	// 			<< BRW << "URI:" << CYN << " [" << this->URI << "] "
+	// 			<< BRW << "version:" << CYN << " [" << this->version << "]\n" << std::endl;
 	return (0);
 }
 
@@ -84,8 +84,8 @@ int	HTTPRequest::parseHeaderField(std::stringstream& request_stream)
 		this->header[header_name] = header_value;
 
 		//Test
-		std::cout	<< BRW << "Name: " << CYN << "[" << header_name << "] "
-		<< std::setw(25 - header_name.size()) << BRW << "Value: " << CYN << "[" << this->header[header_name] << "]" << std::endl;
+		// std::cout	<< BRW << "Name: " << CYN << "[" << header_name << "] "
+		// << std::setw(25 - header_name.size()) << BRW << "Value: " << CYN << "[" << this->header[header_name] << "]" << std::endl;
 	}
 	if (this->validateHeaderField() == -1)
 		return (-1);

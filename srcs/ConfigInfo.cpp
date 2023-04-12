@@ -132,10 +132,7 @@ std::string ConfigInfo::readFile(std::string file_name)
 		ifs.read(&s[0], size);
 	}
 	else
-	{
-		// error_handling("Fail to open file", 1);
 		exit(1);
-	}
 	return (s);
 }
 
@@ -560,18 +557,8 @@ bool	ConfigInfo::checkCommonConfigLineForm(std::vector<std::string> word_list)
 	value = *value_iter;
 	if (value.size() == 0 || value[0] == '#')
 		return (false);
-	// value; ,value ;#
-	// value;#sdfjklasdjklfj 이런 케이스는 음
-	// ';'찾은 경우
-	// ';'가 마지막에 있거나 ';'바로 다음이 '#'이어야 한다.
 	semicolon_pos = value.find(';');
-	// std::cout << "semicolon_pos : " << semicolon_pos << std::endl;
 	comment_pos = value.find('#');
-	// std::cout << BRW << "comment_pos : " << comment_pos << WHI << std::endl;
-	// value안에 ';'이 있는 경우 "value;"
-	// value안에 주석이 있었다면 ;이 주석 왼쪽에 있어야한다.
-		// 없다면 value 다음 문자를 확인해야한다.
-	// 주석이 없다면 ;이 "value;" 마지막에 있거나 "value" ";"처럼 value 바로 다음 단어에 첫 글자로 와야한다.
 
 	// "value#;" ";"
 	// "value#;" "#;"
@@ -594,9 +581,6 @@ bool	ConfigInfo::checkCommonConfigLineForm(std::vector<std::string> word_list)
 			next_iter = value_iter + 1;
 			next_word_semicolon_pos = next_iter->find(';');
 
-			// ';'이 다음단어 처음에 나타나는 경우
-			// ';'다음은 없거나 '#'이 ';' 바로 뒤에 나와야함
-			// ";#"허용
 			if (next_word_semicolon_pos == 0)
 			{
 				if (next_iter->size() > 1 && next_iter->at(1) != '#')
@@ -756,7 +740,6 @@ void	ConfigInfo::setRootToLocationConfig(ServerConfig& server_config)
 	std::map<std::string, LocationConfig>				location_config_map;
 	std::map<std::string, LocationConfig>::iterator		location_config_map_iter;
 	
-	// server_config.
 	location_config_map = server_config.getLocations();
 	location_config_map_iter = location_config_map.begin();
 	for (;location_config_map_iter != location_config_map.end(); location_config_map_iter++)
@@ -764,12 +747,7 @@ void	ConfigInfo::setRootToLocationConfig(ServerConfig& server_config)
 		LocationConfig&	location_config = location_config_map_iter->second;
 		
 		if (location_config.getRoot() == "")
-		{
-			// location_config.printLocationConfingContent(BRW);
 			location_config.setRoot(server_config.getRoot());
-			// std::cout << std::endl << std::endl << "===== after setRoot ==========" << std::endl << std::endl<< std::endl;
-			// location_config.printLocationConfingContent(BRW);
-		}
 	}
 	server_config.setLocations(location_config_map);
 }
@@ -1212,30 +1190,6 @@ bool ConfigInfo::parseLocationBlock(std::vector<std::string>::iterator &src_begi
 	return (true);
 }
 
-
-/*
-    1. 유효필드 검사를 위해 map<std::string, ValidateFieldInfo>를 사용한다.
-        struct ValidateFieldInfo
-        {
-            VaildateFieldType	validate_field_type;
-            size_t			count;
-        };
-
-        enum	VaildateFieldType
-        {
-            NESSARY_UNIQUE
-            NESSARY_MULTI
-            OPTION_UNIQUE
-            OPTION_MULTI
-        };
-
-    2. 각 줄을 읽으면서 validate한지 확인한다.
-        - 각 field 마다 value type, value range 등의 제한조건이 다르다.
-        - ;
-        - # 확인 필요
-    3. locatoin이 나오면 find location block을 쓴다.
-
-*/
 bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator& src_begin_iter,
 										const std::vector<std::string>::iterator& src_end_iter)
 {
@@ -1333,26 +1287,6 @@ bool        ConfigInfo::validateLocationBlock(std::vector<std::string>::iterator
 }
 
 
-/*
-	- #주석이후로는 제외
-	- key value 짝이 맞아야함
-		- value가 list로 나올 수도 있다.
-		- 들어온 key가 유효한지, 중복이 된것은 없는지 확인해야한다.
-			- 소문자만 허용!!
-			- host, port index, server_name, root, client_max_body_size
-		- value역시 해당 key에 허용하는 형식인지 확인해야한다
-	- vector 요소의 가장 처음 것은 key이거나 {, 주석이다
-	- 혹은 비어있거나
-	- {, } 이후에 무언가 있다면 바로 다음 것이 주석 이어야한다.
-	- 주석이나 {,} 기호가 없다면 ";"으로 끝나야한다
-	- server, location block 에서 확인하는 validation이 다르다.
-
-	block을 찾는다.
-	server,location이 나오면 그 다음에 나오는 word_list에서 값은 '{' 이어야한다.
-	그렇지 않다면 error
-	begin_iter는 server, location 이후에 나오는 '{'부터이다.
-	end_iter는 '}'
-*/
 bool	ConfigInfo::checkWhole(const std::string& file_content)
 {
 	std::string							str;
@@ -1476,15 +1410,9 @@ std::string	ConfigInfo::getFilePathFromRequestURI(const std::string& startline_o
 		if (cur_idx == std::string::npos)
 			return ("");
 
-		// std::cout << BLU << "cur_idx : " << cur_idx << WHI << std::endl;
-		// std::cout << CYN << "file_path_start_idx : " << file_path_start_idx << WHI << std::endl;
 		cur_idx++; // ':' 기호 다음을 가리키게 만듦 
 		for (size_t	idx = cur_idx; idx < file_path_start_idx;idx++) //port이어여함
 		{
-			// printContent(&startline_of_URI[idx], "startline_of_URI[idx]", BLU);
-			// std::cout << "idx : " << idx << std::endl;
-			// std::cout << "startline_of_URI : " << startline_of_URI << std::endl;
-			// std::cout << "startline_of_URI[idx] : " << startline_of_URI[idx] << std::endl;
 			if (std::isdigit(startline_of_URI[idx]) == false)
 				return ("");
 		}
@@ -1503,10 +1431,6 @@ bool ConfigInfo::checkRedirect(const std::string& file_path_request_URI, const u
 	if (this->getLocationConfig(port, file_path_request_URI, location_config) && \
 		(location_config.getRedirect() != ""))
 	{
-		// std::cout  << RED << "===========" << WHI << std::endl;
-		// std::cout  << RED << "redirect ||" << WHI << std::endl;
-		// std::cout  << RED << "===========" << WHI << std::endl;
-		// location_config.printLocationConfingContent(RED);
 		file_path = location_config.getRedirect();
 		return (true);
 	}
@@ -1543,9 +1467,7 @@ std::string ConfigInfo::getAbsFilePath(const std::string &file_path_request_URI,
 	if (this->getLocationConfig(port, file_path_request_URI, location_config))
 	{
 		root_path = location_config.getRoot();
-		// // std::cout << WHI << "root_path : " << root_path <<  WHI << std::endl;
 		removeLastSlashSignOfStr(root_path);
-		// std::cout << BRW << "Found file_path_request_URI in location config root_path : " << root_path <<  WHI << std::endl;
 	}
 	else
 	{
@@ -1554,10 +1476,7 @@ std::string ConfigInfo::getAbsFilePath(const std::string &file_path_request_URI,
 		if (this->getServerConfig(port, server_config))
 		{
 			root_path = server_config.getRoot();
-			// removeLastSlashSignOfStr(std::string& str) 대체할 것 단, 테스트 필요
-			// // std::cout << WHI << "root_path : " << root_path <<  WHI << std::endl;
 			removeLastSlashSignOfStr(root_path);
-			// std::cout << BRW << "Found file_path_request_URI in server config root_path : " << root_path <<  WHI << std::endl;
 		}
 		else
 		{
@@ -1589,15 +1508,9 @@ enum FileExistanceType ConfigInfo::getFileExistanceType(const std::string &file_
     }
 
     if (S_ISREG(statbuf.st_mode))
-    {
-        // std::cout << "file_path.c_str() is Regular file : " << file_path.c_str() << std::endl;
 		return (EXIST_FILE);
-    }
 	else if (S_ISDIR(statbuf.st_mode))
-    {
-        // std::cout << "file_path.c_str() is directory : " << file_path.c_str() << std::endl;
 		return (EXIST_DIRECTORY);
-    }
 	std::cerr << RED << "Unknow error in getFileExistanceType() " << BRW << "file_path : " << file_path  << WHI << std::endl;
     return (NO_EXIST);
 }
@@ -1620,7 +1533,6 @@ bool	ConfigInfo::isLastPartOfStr(const std::string& origin_str, const std::strin
 */
 bool ConfigInfo::isCgiRequest(const std::string &file_path, const unsigned short& port)
 {
-	// config에 있는 cgi정보 이용 필요
 	ServerConfig	server_config;
 
 	if (getServerConfig(port, server_config))
@@ -1634,8 +1546,6 @@ bool ConfigInfo::isCgiRequest(const std::string &file_path, const unsigned short
 			std::string	cgi_type_str;
 			
 			cgi_type_str = cgi_pass_map_iter->first;
-			// printContent(cgi_type_str, "in isCgiRequest", BRW);
-			// printContent(file_path, "in isCgiRequest if statement. file_path", BRW);
 			if (this->isLastPartOfStr(file_path, ".php") &&
 				this->isLastPartOfStr(cgi_type_str, ".php"))
 				return (true);
@@ -1649,24 +1559,8 @@ bool ConfigInfo::isCgiRequest(const std::string &file_path, const unsigned short
 		std::cerr << RED << "!!!! Could not found server config to match using arument port In isCgiRequest()" << WHI << std::endl;
 		return (false);
 	}
-	// printContent(file_path, "after if statement in isCgiRequest. file_path", BRW);
 	return (false);
 }
-/*
-	.php가 마지막에 위치하는지 확인 필요
-	- config에 있는 cgi항목 확인필요 
-	- (.php or .py ) and ((cgi_pass .php /sdffsd) or (cgi_pass .py /sdffsd) )
-*/
-// bool ConfigInfo::isCgiRequest(const std::string &file_path)
-// {
-// 	// config에 있는 cgi정보 이용 필요
-// 	if (isLastPartOfStr(file_path, ".php") || isLastPartOfStr(file_path, ".py"))
-// 		return (true);
-//     return (false);
-// 	// if (isCgiRequestToBe(file_path))
-// 	// 	return (true);
-// 	// return (false);
-// }
 
 enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path)
 {
@@ -1680,34 +1574,18 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 		std::cout << RED << "PATH_NOTFOUND : " << startline_of_URI << WHI << std::endl;
 		return (PATH_NOTFOUND);
 	}
-	// this->printContent(file_path_request_URI, "file_path_request_URI", BRW);
 	if (this->checkRedirect(file_path_request_URI, port, file_path))
-	{
-		// std::cout << BLU << "PATH_REDIRECT : " << startline_of_URI << WHI << std::endl;
 		return (PATH_REDIRECT);
-	}
 	abs_file_path_of_server = this->getAbsFilePath(file_path_request_URI, port);
-	// this->printContent(abs_file_path_of_server, "abs_file_path_of_server", PUP);
-	// enum FileExistanceType getFileExistanceType(cont std::string& abs_file_path_of_server)
 	file_existance_type = this->getFileExistanceType(abs_file_path_of_server);
-	// std::cout << "file_existance_type : " << file_existance_type << std::endl;
-	/*
-		존재하는가?
-		한다면 파일인가 디렉터리인가?
-	*/
-	// file_path에 계속 더해줌
+
 	switch (file_existance_type)
 	{
 		case EXIST_FILE:
 		{
 			file_path = abs_file_path_of_server;
-			// this->printContent(file_path, "file_path match to index file in EXIST_FILE before PATH_VALID of PATH_CGI", RED);
 			if (this->isCgiRequest(file_path, port)) // TODO adjust cgi config info
-			{
-				// this->printContent(file_path, "file_path match to index file in EXIST_FILE, PATH_CGI", CYN);
 				return (PATH_CGI);
-			}
-			// this->printContent(file_path, "file_path match to index file in EXIST_FILE, PATH_VALID", GRN);
 			return (PATH_VALID);
 			break ;
 		}
@@ -1723,16 +1601,12 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 
 				// add slash
 				if (this->isLastPartOfStr(abs_file_path_of_server, "/") == false)
-				{
-					// this->printContent(abs_file_path_of_server, "abs_file_path_of_server last is '/'", BLU);
 					abs_file_path_of_server.push_back('/');
-				}
 				index_file = location_config.getIndex();
 				recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);
 				if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
 				{
 					file_path = abs_file_path_of_server + index_file;
-					// this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_VALID", GRN);
 					return (PATH_VALID);
 				}
 				else //NO_EXIST or EXIST_DIRECTORY
@@ -1741,26 +1615,16 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 					if (location_config.getAutoindex())
 					{
 						file_path = abs_file_path_of_server;
-						// this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_AUTOINDEX", BLU);
 						return (PATH_AUTOINDEX);
 					}
 					else
-					{
-						// this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND", RED);
 						return (PATH_NOTFOUND);
-					}
 				}
-				// else if (EXIST_DIRECTORY)
-				// 	;
 			}
 			else
 			{
 				ServerConfig	server_config;
-				// server config에 index를 찾거나
-				// index와 매칭되지 않았으면  PATH_NOTFOUND
-				// std::cerr << "error in EXIST_DIRECTORY of convUriToPath()" << std::endl;
 
-				// (const std::string& startline_of_URI, const unsigned short& port, std::string& file_path)
 				if (this->getServerConfig(port, server_config))
 				{
 					std::string				index_file;
@@ -1770,26 +1634,16 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 					if (this->isLastPartOfStr(abs_file_path_of_server, "/") == false)
 						abs_file_path_of_server.push_back('/');
 					index_file = server_config.getIndex();
-					// this->printContent(abs_file_path_of_server + index_file, "abs_file_path_of_server + index_file in EXIST_DIRECTORY", BRW);
 					recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);
 					if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
 					{
 						if (this->isLastPartOfStr(abs_file_path_of_server, "/") == false)
-						{
-							// this->printContent(abs_file_path_of_server, "abs_file_path_of_server last is '/'", BLU);
 							abs_file_path_of_server.push_back('/');
-						}
 						file_path = abs_file_path_of_server + index_file;
-						// this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_VALID", GRN);
 						return (PATH_VALID);
 					}
 					else //NO_EXIST or EXIST_DIRECTORY
-					{
-						// this->printContent(file_path, "file_path match to index file in EXIST_DIRECTORY, PATH_NOTFOUND", BRW);
 						return (PATH_NOTFOUND);
-					}
-					// else if (EXIST_DIRECTORY)
-					// 	;
 				}
 				else
 				{
@@ -1801,8 +1655,6 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 		}
 		case NO_EXIST:
 		{
-			// this->printContent(file_path, "file_path match to index file in NO_EXIST, PATH_NOTFOUND", RED);
-			// this->printContent(abs_file_path_of_server, "file_path match to index file in NO_EXIST, PATH_NOTFOUND", RED);
 			return (PATH_NOTFOUND);
 			break ;	
 		}
@@ -1840,10 +1692,6 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
 	}
 	if (server_config_iter == this->server_config_vector.end())
 		return (false);
-	/*
-	if (!this->getServerConfig(port, server_config))
-		return (false);
-	*/
 	location_iter = server_config.getLocations().find(origin_URI);
 	if (location_iter != server_config.getLocations().end())
 	{
@@ -1852,16 +1700,6 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
 	}
 	else
 		return (true);
-	/*
-	if (this->getLocationBlock())
-	{
-		allowed_method_type_map = location_iter->second.getAllowMethod();
-		return (allowed_method_type_map.find(method)->second);
-	}
-	else
-		return (true);
- 	*/
-
 }
 
 int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path)

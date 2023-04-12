@@ -1,11 +1,10 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
-# include <netinet/in.h> //sockaddr_in
+# include <netinet/in.h>
 # include "utils.hpp"
 # include "HTTPRequest.hpp"
 # include "HTTPResponse.hpp"
-// # include "ServerHandler.hpp"
 
 # define PORT 4242
 # define PIPE_RD 0

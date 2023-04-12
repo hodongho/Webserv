@@ -3,8 +3,9 @@
 
 # include <map>
 # include <string>
-# include "LocationConfig.hpp"
+# include <iostream>
 # include <unistd.h>
+# include "LocationConfig.hpp"
 
 class ServerConfig
 {
@@ -60,7 +61,6 @@ class ServerConfig
 		void	printServerConfingContent(void)  const;
 };
 
-#include <iostream>
 template <typename T>
 inline void ServerConfig::printContent(const T &val, std::string name, std::string color) const
 {

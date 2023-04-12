@@ -212,7 +212,7 @@ void ServerHandler::recvHeader(ClientSocketData* const & client_socket)
 		return ;
 	}
 	buf[ret] = 0;
-	printRecvData(client_socket->sock_fd, buf, ret); // for test
+	printRecvData(client_socket->sock_fd, buf, ret);
 	client_socket->buf_str.append(buf, ret);
 	header_end_pos = client_socket->buf_str.rfind("\r\n\r\n");
 
@@ -317,7 +317,7 @@ void ServerHandler::readCgiPipeToBody(struct kevent* const & curr_event, ClientS
 	{
 		ssize_t		wr_size;
 
-		std::cout << RED << "EVFILT_WRITE: " << curr_event->ident << WHI << std::endl;
+		// std::cout << RED << "EVFILT_WRITE: " << curr_event->ident << WHI << std::endl;
 		wr_size = write(curr_event->ident, client_socket->buf_str.c_str(), client_socket->buf_str.size());
 		if (wr_size <= 0)
 		{
@@ -369,7 +369,7 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 		char **arg;
 		char **env;
 		this->initCgiVariable(arg, env, client_socket, cgi_script_path);
-		std::cout << PUP << std::endl;
+		// std::cout << PUP << std::endl;
 		if (close(pipe_fd_result[PIPE_RD]) == -1)
 		{
 			delete[] arg;
@@ -417,8 +417,8 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 		changeEvent(pipe_fd_input[PIPE_WR], EVFILT_WRITE, EV_ADD | EV_EOF, 0, NULL, client_socket);
 		changeEvent(pipe_fd_result[PIPE_RD], EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
 		changeEvent(pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, NULL, client_socket);
-		std::cout << BLU << "Make Pipe Event(input): " << pipe_fd_input[PIPE_WR] << std::endl;
-		std::cout << BLU << "Make Pipe Event(result): " << pipe_fd_result[PIPE_RD] <<  WHI << std::endl;
+		// std::cout << BLU << "Make Pipe Event(input): " << pipe_fd_input[PIPE_WR] << std::endl;
+		// std::cout << BLU << "Make Pipe Event(result): " << pipe_fd_result[PIPE_RD] <<  WHI << std::endl;
 	}
 }
 
@@ -457,7 +457,6 @@ void ServerHandler::makeFileIoEvent(const std::string& stat_code,
 			throwError("close file: ");
 		client_socket->http_response.setBasicField(client_socket->http_request);
 		client_socket->buf_str.clear();
-		std::cout << client_socket->http_response.makeResponseMessage() << std::endl;
 		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 		changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
 		return ;
@@ -718,7 +717,7 @@ void	ServerHandler::initCgiVariable(char **&arg, char **&env,
 
 void	ServerHandler::initCgiArg(char **&arg, const std::string& cgi_script_path, const unsigned short& port)
 {
-	std::cout << "ext: " << getExtension(cgi_script_path) << " port: " << port << std::endl;
+	// std::cout << "ext: " << getExtension(cgi_script_path) << " port: " << port << std::endl;
 	std::string cgi_program_path = this->conf.getCgiProgramPath(getExtension(cgi_script_path), port);
 
 	arg = new char *[3];
