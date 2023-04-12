@@ -7,7 +7,7 @@ void	testConvUriToPath(ConfigInfo& conf)
 	std::string	uri_abs_file_path;
 	std::string	request_uri;
 	// - 127.0.0.1:4242/index.php
-	// "http://localhost:4242/index.html/test/j324j32kl4/";   /srcs/HTTPMessage.cpp  
+	// "http://localhost:4242/index.html/test/j324j32kl4/";   /srcs/HTTPMessage.cpp
 	request_uri = "localhost:4242/index.html/test/j324j32kl4/";
 	conf.convUriToPath(request_uri, 5525, uri_abs_file_path);
 	request_uri = "/index.html/test/j324j32kl4/";

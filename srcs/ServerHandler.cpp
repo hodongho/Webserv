@@ -115,7 +115,7 @@ void ServerHandler::keventError(struct kevent* const & curr_event, SocketData* c
 		ClientSocketData* client_socket = static_cast<ClientSocketData *>(socket);
 		if (client_socket->sock_fd != static_cast<int>(curr_event->ident))
 			close(curr_event->ident);
-		throwServerError("client socket: ", client_socket);
+		throwError("client socket: ");
 	}
 }
 
@@ -138,15 +138,9 @@ void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
 	std::cout << "accept port: " << ntohs(listen_sock->addr.sin_port) << std::endl;
 	std::cout << "accept new client: " << client_sock_fd << std::endl;
 
-	int	opt_val;
-	if (setsockopt(client_sock_fd, SOL_SOCKET, SO_KEEPALIVE, &opt_val, sizeof(opt_val)) == -1)
-	{
-		std::cout << errno << std::endl;
-		throwServerError("setsockopt: ", client_socket);
-	}
 
 	if (fcntl(client_sock_fd, F_SETFL, O_NONBLOCK) == -1)
-		this->throwServerError("fcntl: ", client_socket);
+		throwError("fcntl: ");
 	changeEvent(client_sock_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
 	changeEvent(client_sock_fd, EVFILT_WRITE, EV_ADD | EV_EOF | EV_DISABLE, 0, NULL, client_socket);
 }
@@ -212,9 +206,10 @@ void ServerHandler::recvHeader(ClientSocketData* const & client_socket)
 	if (ret <= 0)
 	{
 		if (ret < 0)
-			throwServerError("recv header: ", client_socket);
+			throwError("recv header: ");
 		closeEvent(client_socket);
 		std::cout << "socket closed successfully." << std::endl;
+		return ;
 	}
 	buf[ret] = 0;
 	printRecvData(client_socket->sock_fd, buf, ret); // for test
@@ -280,7 +275,7 @@ void ServerHandler::recvBody(ClientSocketData* const & client_socket)
 	if (ret <= 0)
 	{
 		if (ret < 0)
-			throwServerError("recv body: ", client_socket);
+			throwError("recv body: ");
 		closeEvent(client_socket);
 		std::cout << "socket closed successfully." << std::endl;
 		return ;
@@ -304,9 +299,9 @@ void ServerHandler::readFileToBody(struct kevent* const & curr_event, ClientSock
 		client_socket->buf_str.append(buf, ret);
 	}
 	if (ret < 0)
-		throwServerError("read respond body: ", client_socket);
+		throwError("read respond body: ");
 	if (close(curr_event->ident) == -1)
-		throwServerError("close file: ", client_socket);
+		throwError("close file: ");
 
 	client_socket->http_response.setBody(client_socket->buf_str);
 	client_socket->http_response.setBasicField(client_socket->http_request);
@@ -326,9 +321,9 @@ void ServerHandler::readCgiPipeToBody(struct kevent* const & curr_event, ClientS
 		if (wr_size <= 0)
 		{
 			if (wr_size < 0)
-				throwServerError("write to cgi pipe: ", client_socket);
+				throwError("write to cgi pipe: ");
 			if (close(curr_event->ident))
-				throwServerError("close write pipe: ", client_socket);
+				throwError("close write pipe: ");
 		}
 		client_socket->buf_str.erase(0, wr_size);
 	}
@@ -342,9 +337,9 @@ void ServerHandler::readCgiPipeToBody(struct kevent* const & curr_event, ClientS
 		if (ret <= 0)
 		{
 			if (ret < 0)
-				throwServerError("read from pipe respond body: ", client_socket);
+				throwError("read from pipe respond body: ");
 			if (close(curr_event->ident) == -1)
-				throwServerError("close read pipe: ", client_socket);
+				throwError("close read pipe: ");
 			this->makeCgiPipeResponse(client_socket);
 			client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 			changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
@@ -362,12 +357,12 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 	int pipe_fd_input[2];
 
 	if (pipe(pipe_fd_result))
-		throwServerError("pipe: ", client_socket);
+		throwError("pipe: ");
 	if (pipe(pipe_fd_input))
-		throwServerError("pipe: ", client_socket);
+		throwError("pipe: ");
 	pid = fork();
 	if (pid == -1)
-		throwServerError("fork: ", client_socket);
+		throwError("fork: ");
 	else if (pid == 0)
 	{
 		char **arg;
@@ -408,13 +403,13 @@ void ServerHandler::makeCgiPipeIoEvent(std::string cgi_script_path,
 	else
 	{
 		if(close(pipe_fd_result[PIPE_WR]))
-			throwServerError("close parent pipe: ", client_socket);
+			throwError("close parent pipe: ");
 		if(close(pipe_fd_input[PIPE_RD]))
-			throwServerError("close parent pipe: ", client_socket);
+			throwError("close parent pipe: ");
 		if(fcntl(pipe_fd_result[PIPE_RD], F_SETFL, O_NONBLOCK))
-			throwServerError("fcntl parent pipe: ", client_socket);
+			throwError("fcntl parent pipe: ");
 		if(fcntl(pipe_fd_input[PIPE_WR], F_SETFL, O_NONBLOCK))
-			throwServerError("fcntl parent pipe: ", client_socket);
+			throwError("fcntl parent pipe: ");
 		client_socket->status = SOCKSTAT_CLIENT_MAKE_CGI_RESPONSE;
 		client_socket->buf_str = client_socket->http_request.getBody();
 		changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
@@ -461,7 +456,7 @@ void ServerHandler::makeAutoIndexResponse(ClientSocketData* const & client_socke
 
 	dir_ptr = opendir(dir_path.c_str());
 	if (dir_ptr == NULL)
-		throwServerError("opendir: ", client_socket);
+		throwError("opendir: ");
 	page_body = "\r\n";
 	page_body += "<!DOCTYPE html>\r\n";
 	page_body += "<html>\r\n";
@@ -595,7 +590,7 @@ void ServerHandler::deleteMethod(ClientSocketData* const & client_socket)
 				client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 			}
 			else
-				throwServerError("file unlink: ", client_socket);
+				throwError("file unlink: ");
 		}
 		else
 		{
@@ -618,7 +613,7 @@ void ServerHandler::sendResponse(ClientSocketData* const & client_socket)
 	if (ret == -1)
 	{
 		this->closeEvent(client_socket);
-		throwError("send: ");
+		return ;
 	}
 	else
 	{
@@ -728,13 +723,6 @@ void	ServerHandler::initCgiEnv(char **&arg, char **&env,  ClientSocketData* cons
 	env[i] = NULL;
 }
 
-void ServerHandler::throwServerError(std::string msg, ClientSocketData* const & client_socket)
-{
-	changeEvent(client_socket->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, client_socket);
-	changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
-	this->setErrorPageResponse(STATCODE_SERVERR, client_socket);
-	throwError(msg);
-}
 
 void ServerHandler::setErrorPageResponse(StatusCode err_stat, ClientSocketData* const & client_socket)
 {
@@ -892,6 +880,8 @@ void ServerHandler::serverRun()
 	SocketData*		sock;
 	struct stat		stat_buf;
 
+	signal(SIGPIPE, SIG_IGN);
+
 	while (1)
 	{
 		event_count = kevent(this->kq,
@@ -916,7 +906,7 @@ void ServerHandler::serverRun()
 				{
 					int status;
 					if (waitpid(static_cast<pid_t>(curr_event->ident), &status, WNOHANG) == -1 || WEXITSTATUS(status) == -1)
-						throwServerError("cgi proc error: ", static_cast<ClientSocketData *>(sock));
+						throwError("cgi proc error: ");
 					continue;
 				}
 				if (curr_event->flags & EV_ERROR)
@@ -935,6 +925,18 @@ void ServerHandler::serverRun()
 			}
 			catch (std::exception& e)
 			{
+				switch (sock->id_type)
+				{
+					case ID_LISTEN_SOCKET :
+						break;
+					case ID_CLIENT_SOCKET :
+						changeEvent(static_cast<ClientSocketData*>(sock)->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, static_cast<ClientSocketData*>(sock));
+						changeEvent(static_cast<ClientSocketData*>(sock)->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, static_cast<ClientSocketData*>(sock));
+						this->setErrorPageResponse(STATCODE_SERVERR, static_cast<ClientSocketData*>(sock));
+						break;
+					default:
+						break;
+				}
 				std::cerr << e.what() << std::endl;
 				continue;
 			}

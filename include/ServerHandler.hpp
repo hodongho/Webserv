@@ -65,7 +65,7 @@ class ServerHandler {
 		void		makeFileIoEvent(const std::string& stat_code,
 						const std::string& file_path,
 						ClientSocketData* const & client_socket);
-						
+
 		void		makeAutoIndexResponse(ClientSocketData* const & client_socket,
 						const std::string& dir_path);
 		void		makeRedirectResponse(ClientSocketData* const & client_socket,
@@ -87,7 +87,6 @@ class ServerHandler {
 		void		initCgiEnv(char **&arg, char **&env, ClientSocketData* const & socket_data);
 
 		//default error page response generate
-		void		throwServerError(std::string msg, ClientSocketData* const & client_socket);
 		void		setErrorPageResponse(StatusCode err_stat, ClientSocketData* const & client_socket);
 		void		setDefaultBadRequest(HTTPResponse& http_res, const HTTPRequest& http_req);
 		void		setDefaultNotFound(HTTPResponse& http_res, const HTTPRequest& http_req);
