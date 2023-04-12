@@ -9,11 +9,11 @@
       <input type="hidden" name="_method" value="DELETE">
       <button type="submit">Delete</button>
     </form>
-    
+
     <script>
       document.getElementById("deleteForm").addEventListener("submit", function(event) {
         event.preventDefault();
-        
+
         fetch("/asdf", {
           method: "DELETE"
         }).then(function(response) {

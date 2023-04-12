@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import cgi
+import datetime
 
 # Get form data
 form = cgi.FieldStorage()
@@ -13,10 +14,16 @@ print("<head>")
 print("<title>Python CGI</title>")
 print("</head>")
 print("<body>")
-print("<h1>Python CGI</h1>")
+print("<div style=\"text-align: center;\">")
+print("<p>Python CGI</p>")
 if name:
-    print("<p>Hello! {}</p>".format(name))
+    print("<h1>Hello! {}</h1>".format(name))
 else:
     print("<p>No form data submitted.</p>")
+d = datetime.datetime.now()
+print("<p>Today: ")
+print(d.year,'-',d.month,'-',d.day)
+print("</p>")
+print("</div>")
 print("</body>")
 print("</html>")

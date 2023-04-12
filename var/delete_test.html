@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Delete and Upload Files</title>
+	<script>
+		function deleteFile(filename) {
+			fetch(filename, { method: 'DELETE' })
+				.then(response => {
+					if (response.ok) {
+						alert('File deleted successfully');
+						location.reload();
+					} else {
+						alert('Failed to delete file');
+					}
+				})
+				.catch(error => {
+					alert('Error deleting file: ' + error.message);
+				});
+		}
+
+		window.onload = function() {
+			const directory = './uploads/';
+			const table = document.getElementById('file-table');
+
+			fetch(directory)
+				.then(response => response.text())
+				.then(html => {
+					const parser = new DOMParser();
+					const doc = parser.parseFromString(html, 'text/html');
+					const filenames = doc.querySelectorAll('a');
+
+					for (const filename of filenames) {
+						const row = table.insertRow();
+						const cell1 = row.insertCell();
+						const cell2 = row.insertCell();
+						const deleteButton = document.createElement('button');
+
+						cell1.innerHTML = filename.textContent;
+						deleteButton.innerHTML = 'Delete';
+						deleteButton.addEventListener('click', () => {
+							deleteFile(directory + filename.textContent);
+						});
+
+						cell2.appendChild(deleteButton);
+					}
+				})
+				.catch(error => {
+					console.error('Error fetching directory:', error);
+				});
+
+			const form = document.getElementById('file-upload-form');
+			form.addEventListener('submit', (event) => {
+				event.preventDefault();
+				const formData = new FormData(form);
+
+				fetch('new_upload.php', {
+					method: 'POST',
+					body: formData
+				})
+					.then(response => {
+						if (response.ok) {
+							alert('File uploaded successfully');
+							location.reload();
+						} else {
+							alert('Failed to upload file');
+						}
+					})
+					.catch(error => {
+						alert('Error uploading file: ' + error.message);
+					});
+			});
+		};
+	</script>
+</head>
+<body>
+	<h1>Delete and Upload Files</h1>
+
+	<table id="file-table">
+		<thead>
+			<tr>
+				<th>Filename</th>
+				<th>Delete</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+
+	<h2>Upload File</h2>
+	<form id="file-upload-form" method="post" enctype="multipart/form-data">
+		<label for="file">Select a file to upload:</label>
+		<input type="file" id="file" name="file">
+		<button type="submit">Upload</button>
+	</form>
+</body>
+</html>
