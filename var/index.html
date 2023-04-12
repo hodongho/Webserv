@@ -1,18 +1,66 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
-    <title>Webserv</title>
+	<title>My Web Page Tests</title>
+	<style>
+		table {
+			border-collapse: collapse;
+			width: 100%;
+			margin-bottom: 20px;
+		}
+		th, td {
+			text-align: left;
+			padding: 8px;
+		}
+		th {
+			background-color: #4CAF50;
+			color: white;
+		}
+		tr:nth-child(even) {background-color: #f2f2f2;}
+		a {
+			text-decoration: none;
+		}
+	</style>
 </head>
 <body>
 <div style="text-align:center;">
-    <h1 >Hello Webserv!</h1>
-    <img src="/img/Web.png" alt="My Image">
-    <p >Welcome to Webserv Default Page<p>
-	<a href="/Delete.html">delete</a>
-	<a href="/Post_html.html">Post_html</a>
-	<a href="/Post_php.html">Post_php</a>
-	<a href="/Post_py.html">Post_py</a>
-	<a href="/Hello.html">Hello</a>
+	<h1>Webserv Tests</h1>
+	<table>
+		<tr>
+			<th>Test Name</th>
+			<th>Description</th>
+			<th>Link</th>
+		</tr>
+		<tr>
+			<td>Delete Method Test Page (using POST with CGI)</td>
+			<td>Tests sending a DELETE request to a server using a form with POST method and a CGI script</td>
+			<td><a href="delete_test.html">Go to Test</a></td>
+		</tr>
+		<tr>
+			<td>Simple CGI Test Page</td>
+			<td>Tests running a CGI script that simply returns the the message and current date</td>
+			<td><a href="cgi_test.html">Go to Test</a></td>
+		</tr>
+		<tr>
+			<td>Redirection Test Page</td>
+			<td>Tests sending a redirect response to the browser to redirect to a different page</td>
+			<td><a href="/redirect">Go to Test</a></td>
+		</tr>
+		<tr>
+			<td>Simple GET Method Test Page</td>
+			<td>Tests sending a simple GET request to the server and displaying the response</td>
+			<td><a href="get_test.html">Go to Test</a></td>
+		</tr>
+		<tr>
+			<td>Simple Download Test Page</td>
+			<td>Tests download simple file from server</td>
+			<td><a href="/uploads/">Go to Test</a></td>
+		</tr>
+	</table>
+	<p>Thank you for testing!</p>
 </div>
+<footer class="footer">
+	<p>&copy; Made by Jim Yolee Dhyun</p>
+</footer>
 </body>
 </html>
