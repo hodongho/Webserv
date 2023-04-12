@@ -1,3 +1,4 @@
+#include "ServerHandler.hpp"
 #include "ConfigInfo.hpp"
 #include "ServerConfig.hpp"
 #include "LocationConfig.hpp"
@@ -1571,29 +1572,19 @@ std::string ConfigInfo::getAbsFilePath(const std::string &file_path_request_URI,
 /*
 stat()으로 해당 경로에 존재하는지 확인
 예외처리 필요
-
+(ClientSocketData* const & client_socket)
 */
-enum FileExistanceType ConfigInfo::getFileExistanceType(const std::string &file_path)
+enum FileExistanceType ConfigInfo::getFileExistanceType(const std::string &file_path, ClientSocketData* const & client_socket)
 {
 	struct stat	statbuf;
 
 
-	if (stat(file_path.c_str(), &statbuf) < 0) {
-		// std::cerr << PUP << "stat error" << WHI << std::endl;
-        // exit(1);
-		return (NO_EXIST);
-    }
+	if (stat(file_path.c_str(), &statbuf) < 0)
+		throwServerError("stat sys call error: ", client_socket);
     if (S_ISREG(statbuf.st_mode))
-    {
-        // std::cout << "file_path.c_str() is Regular file : " << file_path.c_str() << std::endl;
 		return (EXIST_FILE);
-    }
 	else if (S_ISDIR(statbuf.st_mode))
-    {
-        // std::cout << "file_path.c_str() is directory : " << file_path.c_str() << std::endl;
 		return (EXIST_DIRECTORY);
-    }
-	std::cerr << RED << "Unknow error in getFileExistanceType() " << BRW << "file_path : " << file_path  << WHI << std::endl;
     return (NO_EXIST);
 }
 
@@ -1663,7 +1654,7 @@ bool ConfigInfo::isCgiRequest(const std::string &file_path, const unsigned short
 // 	// return (false);
 // }
 
-enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path)
+enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path, ClientSocketData* const & client_socket)
 {
     std::string             file_path_request_URI;
     std::string             abs_file_path_of_server;
@@ -1682,10 +1673,7 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 		return (PATH_REDIRECT);
 	}
 	abs_file_path_of_server = this->getAbsFilePath(file_path_request_URI, port);
-	// this->printContent(abs_file_path_of_server, "abs_file_path_of_server", PUP);
-	// enum FileExistanceType getFileExistanceType(cont std::string& abs_file_path_of_server)
-	file_existance_type = this->getFileExistanceType(abs_file_path_of_server);
-	// std::cout << "file_existance_type : " << file_existance_type << std::endl;
+	file_existance_type = this->getFileExistanceType(abs_file_path_of_server, client_socket);
 	/*
 		존재하는가?
 		한다면 파일인가 디렉터리인가?
@@ -1723,7 +1711,7 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 					abs_file_path_of_server.push_back('/');
 				}
 				index_file = location_config.getIndex();
-				recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);
+				recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file, client_socket);
 				if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
 				{
 					file_path = abs_file_path_of_server + index_file;
@@ -1769,7 +1757,7 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 					}
 					index_file = server_config.getIndex();
 					// this->printContent(abs_file_path_of_server + index_file, "abs_file_path_of_server + index_file in EXIST_DIRECTORY", BRW);
-					recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);
+					recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file, client_socket);
 					if (recycle_file_existance_type == EXIST_FILE)  // index를 여러개 받는 것으로 변경한다면 반복문 안에서 이 동작을 수행
 					{
 						if (this->isLastPartOfStr(abs_file_path_of_server, "/") == false)
@@ -1862,7 +1850,7 @@ bool ConfigInfo::isAllowedMethod(const std::string& URI, const unsigned short& p
 
 }
 
-int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path)
+int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path, ClientSocketData* const & client_socket)
 {
 	int											err_code;
 	std::vector<ServerConfig>::iterator			server_config_iter;
@@ -1902,7 +1890,7 @@ int ConfigInfo::getErrorPage(StatusCode stat_code, const unsigned short& port, s
 		while (this->isLastPartOfStr(serverRoot, "/"))
 			serverRoot.erase(serverRoot.size() - 1, 1);
 		err_file_path = serverRoot + '/' + err_page_iter->second;
-		if (this->getFileExistanceType(err_file_path) != EXIST_FILE)
+		if (this->getFileExistanceType(err_file_path, client_socket) != EXIST_FILE)
 			return (-1);
 		return (0);
 	}
