@@ -140,7 +140,10 @@ void ServerHandler::handleListenEvent(SocketData* const & listen_sock)
 
 
 	if (fcntl(client_sock_fd, F_SETFL, O_NONBLOCK) == -1)
+	{
+		closeEvent(client_socket);
 		throwError("fcntl: ");
+	}
 	changeEvent(client_sock_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
 	changeEvent(client_sock_fd, EVFILT_WRITE, EV_ADD | EV_EOF | EV_DISABLE, 0, NULL, client_socket);
 }
@@ -214,7 +217,7 @@ void ServerHandler::recvHeader(ClientSocketData* const & client_socket)
 	buf[ret] = 0;
 	printRecvData(client_socket->sock_fd, buf, ret);
 	client_socket->buf_str.append(buf, ret);
-	header_end_pos = client_socket->buf_str.rfind("\r\n\r\n");
+	header_end_pos = client_socket->buf_str.find("\r\n\r\n");
 
 	if (client_socket->buf_str.size() > MAX_HEADER_SIZE)
 	{
