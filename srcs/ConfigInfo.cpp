@@ -1768,10 +1768,7 @@ enum PathState ConfigInfo::convUriToPath(const std::string& startline_of_URI, co
 
 					// add slash
 					if (this->isLastPartOfStr(abs_file_path_of_server, "/") == false)
-					{
-						// this->printContent(abs_file_path_of_server, "abs_file_path_of_server last is '/'", BLU);
 						abs_file_path_of_server.push_back('/');
-					}
 					index_file = server_config.getIndex();
 					// this->printContent(abs_file_path_of_server + index_file, "abs_file_path_of_server + index_file in EXIST_DIRECTORY", BRW);
 					recycle_file_existance_type = this->getFileExistanceType(abs_file_path_of_server + index_file);

@@ -291,15 +291,16 @@ void ServerHandler::readFileToBody(struct kevent* const & curr_event, ClientSock
 	char		buf[RECV_BUF_SIZE];
 	ssize_t		ret;
 
+	lseek(curr_event->ident, 0, SEEK_SET);
 	ret = 1;
 	while (ret > 0)
 	{
 		ret = read(curr_event->ident, buf, RECV_BUF_SIZE - 1);
+		if (ret < 0)
+			throwError("read respond body: ");
 		buf[ret] = 0;
 		client_socket->buf_str.append(buf, ret);
 	}
-	if (ret < 0)
-		throwError("read respond body: ");
 	if (close(curr_event->ident) == -1)
 		throwError("close file: ");
 
@@ -443,9 +444,38 @@ void ServerHandler::makeFileIoEvent(const std::string& stat_code,
 		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
 		throwError("file open: ");
 	}
+	char		buf[1];
+	ssize_t		ret;
+
+	ret = 1;
+	ret = read(file_fd, buf, 1);
+	if (ret < 0)
+		throwError("read respond body: ");
+	if (ret == 0)
+	{
+		if (close(file_fd) == -1)
+			throwError("close file: ");
+		client_socket->http_response.setBasicField(client_socket->http_request);
+		client_socket->buf_str.clear();
+		std::cout << client_socket->http_response.makeResponseMessage() << std::endl;
+		client_socket->status = SOCKSTAT_CLIENT_SEND_RESPONSE;
+		changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, client_socket);
+		return ;
+	}
 	client_socket->status = SOCKSTAT_CLIENT_MAKE_RESPONSE;
 	changeEvent(client_socket->sock_fd, EVFILT_WRITE, EV_DISABLE, 0, NULL, client_socket);
 	changeEvent(file_fd, EVFILT_READ, EV_ADD | EV_EOF, 0, NULL, client_socket);
+}
+
+static bool	isLastSlashOfStr(const std::string& origin_str)
+{
+	size_t	find_str_pos;
+
+	find_str_pos = origin_str.rfind('/');
+	if (find_str_pos != std::string::npos &&
+		find_str_pos + 1 == origin_str.size())
+		return (true);
+	return (false);
 }
 
 void ServerHandler::makeAutoIndexResponse(ClientSocketData* const & client_socket, const std::string& dir_path)
@@ -471,7 +501,10 @@ void ServerHandler::makeAutoIndexResponse(ClientSocketData* const & client_socke
         if (dirent_ptr->d_name[0] == '.') {
             continue;
 		}
-		page_body += "        <li><a href=/";
+		page_body += "        <li><a href=";
+		page_body += client_socket->http_request.getLocalPath();
+		if (isLastSlashOfStr(client_socket->http_request.getLocalPath()) == false)
+			page_body += "/";
 		page_body += dirent_ptr->d_name;
 		page_body += ">";
 		page_body += dirent_ptr->d_name;
@@ -864,9 +897,7 @@ void ServerHandler::serverReady(const char *conf_file)
 	std::vector<ServerConfig>::const_iterator serv_conf_iter;
 
 	this->conf.parseConfig(conf_file);
-	this->conf.printWebservConfig(); //for test
 	this->kq = kqueue();
-
 	if (this->kq == -1)
 		throwError("kqueue: ");
 	for (serv_conf_iter = this->conf.getWebservConfig().begin(); serv_conf_iter < this->conf.getWebservConfig().end(); serv_conf_iter++)

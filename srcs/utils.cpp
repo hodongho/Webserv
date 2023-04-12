@@ -25,7 +25,9 @@ std::string	getExtension(const std::string& file_path)
 std::string	itos(size_t num)
 {
 	std::string new_string_num(""), old_string_num("");
-
+	
+	if (num == 0)
+		return ("0");
 	for (; num != 0; num /= 10)
 	{
 		new_string_num = num % 10 + '0';

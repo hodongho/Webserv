@@ -55,17 +55,8 @@ int main(int argc, char *argv[])
 			std::cerr << "please input server config file as argument\n\t\te.g) ./webserv server.conf" << std::endl;
 			return (1);
 		}
-    /*
-    */
-		// throwError("please input server config file as argument\n\t\te.g) ./webserv server.conf");
-		// conf.parseConfig(argv[1]);
-		// conf.printWebservConfig();
-		std::cout << std::endl << std::endl << std::endl;
-		// testConvUriToPath(conf);
 		kqueueServer.serverReady(argv[1]);
 		kqueueServer.serverRun();
-		// kqueueServer.serverReady(argv[1]);
-		// kqueueServer.serverRun();
 	}
 	catch (std::exception& e)
 	{
