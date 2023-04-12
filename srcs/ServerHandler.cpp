@@ -935,6 +935,18 @@ void ServerHandler::serverRun()
 			}
 			catch (std::exception& e)
 			{
+				switch (sock->id_type)
+				{
+					case ID_LISTEN_SOCKET :
+						break;
+					case ID_CLIENT_SOCKET :
+						changeEvent(static_cast<ClientSocketData*>(sock)->sock_fd, EVFILT_READ, EV_DISABLE, 0, NULL, static_cast<ClientSocketData*>(sock));
+						changeEvent(static_cast<ClientSocketData*>(sock)->sock_fd, EVFILT_WRITE, EV_ENABLE, 0, NULL, static_cast<ClientSocketData*>(sock));
+						this->setErrorPageResponse(STATCODE_SERVERR, static_cast<ClientSocketData*>(sock));
+						break;
+					default:
+						break;
+				}
 				std::cerr << e.what() << std::endl;
 				continue;
 			}
