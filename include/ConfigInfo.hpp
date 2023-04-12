@@ -121,7 +121,7 @@ class  ValidateFieldInfo
 	bool					checkRedirect(const std::string& file_path_request_URI, const unsigned short &port, std::string& file_path);
 	std::string				getFilePathFromRequestURI(const std::string& startline_of_URI);
 	std::string				getAbsFilePath(const std::string &file_path_request_URI, const unsigned short &port);
-	enum FileExistanceType	getFileExistanceType(const std::string& file_path, ClientSocketData* const & client_socket);
+	enum FileExistanceType	getFileExistanceType(const std::string& file_path);
 	bool					isCgiRequest(const std::string& file_path, const unsigned short& port);
 	bool					isLastPartOfStr(const std::string& origin_str, const std::string& find_str);
 	void					removeLastSlashSignOfStr(std::string& str);
@@ -138,9 +138,9 @@ public:
 	bool								getLocationConfig(const unsigned short &port, const std::string &find_path, LocationConfig& location_path) const;
 
 	// for using config info 
-	enum PathState		convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path, ClientSocketData* const & client_socket);
+	enum PathState		convUriToPath(const std::string& startline_of_URI, const unsigned short& port, std::string& file_path);
 	bool        		isAllowedMethod(const std::string& URI, const unsigned short& port, const enum MethodType& method);
-	int		    		getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path, ClientSocketData* const & client_socket);
+	int		    		getErrorPage(StatusCode stat_code, const unsigned short& port, std::string& err_file_path);
 	size_t	    		getMaxBodySize(const unsigned short& port);
 	std::string 		getCgiProgramPath(const std::string& cgi_extension, const unsigned short& port);
 };

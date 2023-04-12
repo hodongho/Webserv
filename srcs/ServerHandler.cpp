@@ -513,7 +513,7 @@ void ServerHandler::getMethod(ClientSocketData* const & client_socket)
 		this->setErrorPageResponse(STATCODE_NOTALLOW, client_socket);
 		return ;
 	}
-	path_stat = this->conf.convUriToPath(client_socket->http_request.getLocalPath(), htons(client_socket->listen_addr.sin_port), file_path, client_socket);
+	path_stat = this->conf.convUriToPath(client_socket->http_request.getLocalPath(), htons(client_socket->listen_addr.sin_port), file_path);
 	switch (path_stat)
 	{
 	case PATH_NOTFOUND:
@@ -544,7 +544,7 @@ void ServerHandler::postMethod(ClientSocketData* const & client_socket)
 		this->setErrorPageResponse(STATCODE_NOTALLOW, client_socket);
 		return ;
 	}
-	path_stat = this->conf.convUriToPath(client_socket->http_request.getLocalPath(), htons(client_socket->listen_addr.sin_port), file_path, client_socket);
+	path_stat = this->conf.convUriToPath(client_socket->http_request.getLocalPath(), htons(client_socket->listen_addr.sin_port), file_path);
 	switch (path_stat)
 	{
 	case PATH_NOTFOUND:
@@ -576,7 +576,7 @@ void ServerHandler::deleteMethod(ClientSocketData* const & client_socket)
 		this->setErrorPageResponse(STATCODE_NOTALLOW, client_socket);
 		return ;
 	}
-	path_stat = this->conf.convUriToPath(client_socket->http_request.getLocalPath(), htons(client_socket->listen_addr.sin_port), file_path, client_socket);
+	path_stat = this->conf.convUriToPath(client_socket->http_request.getLocalPath(), htons(client_socket->listen_addr.sin_port), file_path);
 	if (path_stat == PATH_NOTFOUND)
 	{
 		this->setErrorPageResponse(STATCODE_NOTFOUND, client_socket);
@@ -740,7 +740,7 @@ void ServerHandler::setErrorPageResponse(StatusCode err_stat, ClientSocketData* 
 {
 	std::string	err_file_path;
 
-	if (this->conf.getErrorPage(err_stat, ntohs(client_socket->listen_addr.sin_port), err_file_path, client_socket) == -1)
+	if (this->conf.getErrorPage(err_stat, ntohs(client_socket->listen_addr.sin_port), err_file_path) == -1)
 	{
 		switch (err_stat)
 		{
