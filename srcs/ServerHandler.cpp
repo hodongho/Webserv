@@ -461,10 +461,10 @@ void ServerHandler::makeAutoIndexResponse(ClientSocketData* const & client_socke
 	page_body += "<!DOCTYPE html>\r\n";
 	page_body += "<html>\r\n";
 	page_body += "<head>\r\n";
-	page_body += "    <title>Index of " + dir_path + "</title>\r\n";
+	page_body += "    <title>Index of " + client_socket->http_request.getLocalPath() + "</title>\r\n";
 	page_body += "</head>\r\n";
 	page_body += "<body>\r\n";
-	page_body += "    <h1>Index of " + dir_path + "</h1>\r\n";
+	page_body += "    <h1>Index of " + client_socket->http_request.getLocalPath() + "</h1>\r\n";
 	page_body += "    <hr>\r\n";
 	page_body += "    <ul>\r\n";
 	while ((dirent_ptr = readdir(dir_ptr)) != NULL) {
