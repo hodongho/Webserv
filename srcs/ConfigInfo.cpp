@@ -1577,10 +1577,17 @@ enum FileExistanceType ConfigInfo::getFileExistanceType(const std::string &file_
 {
 	struct stat	statbuf;
 
-
+	
 	if (stat(file_path.c_str(), &statbuf) < 0) {
-		throw std::runtime_error("stat error occured in getFileExistanceType()\n");
+		if (errno != ENOENT)
+		{
+			std::cerr << "errno : " << errno << std::endl;  
+			std::cerr << "strerror(errno) : " << strerror(errno) << std::endl;  
+			throw std::runtime_error("stat error occured in getFileExistanceType()\n");
+		}
+		return (NO_EXIST);
     }
+
     if (S_ISREG(statbuf.st_mode))
     {
         // std::cout << "file_path.c_str() is Regular file : " << file_path.c_str() << std::endl;
